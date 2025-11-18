@@ -22,9 +22,16 @@ import java.util.Objects;
 
 /**
  * Utility that provides snapping behavior for X values.
- *
- * <p>This mirrors the original Julia helper that allows selecting a set of X values
- * and snapping input datapoints to the closest X value within a relative tolerance.
+ * <p>
+ * The {@link Snapper} maintains a sorted list of configured X values and
+ * exposes a tolerance-based match for snapping input X coordinates to the
+ * nearest configured value. The tolerance is relative to the magnitude of the
+ * value and defaults to {@code 1e-6}. The {@link #snapPoint} method returns a
+ * new {@link com.digitizer.core.Point} with the snapped X but preserved Y.
+ * <p><strong>Complexity:</strong> Operations that modify the list (add/set) are O(n log n)
+ * due to sorting. A snap operation currently performs a linear search O(n); this
+ * is intentional for small lists (typical scientific datasets). For larger lists
+ * a binary search could be substituted without changing the public API.
  */
 public final class Snapper {
 
@@ -80,7 +87,8 @@ public final class Snapper {
 
     /**
      * Sets the relative tolerance used when matching an input x to a configured snap x.
-     * The match condition uses: |x - target| <= tolerance * max(1.0, |x|)
+    * The match condition uses:
+    * {@code |x - target| <= tolerance * max(1.0, |x|)}
      *
      * @param tolerance relative tolerance (must be >= 0)
      */
@@ -93,6 +101,7 @@ public final class Snapper {
      * Snaps the provided x to a configured snap x if one is within tolerance.
      * Snaps the provided x to the nearest configured snap x (simple rounding).
      * If no snap values are configured the original x is returned.
+     * <p><strong>Complexity:</strong> O(n) over the number of configured snap values.
      *
      * @param x the input x coordinate
      * @return the snapped x (or the original x if no match)

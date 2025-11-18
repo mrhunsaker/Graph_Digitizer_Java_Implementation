@@ -16,6 +16,12 @@
 
 package com.digitizer.io;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.digitizer.core.CalibrationState;
 import com.digitizer.core.Dataset;
 import com.digitizer.core.Point;
@@ -23,16 +29,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Handles JSON import and export of graph digitizer projects.
- * The JSON format contains project metadata, calibration data, and all datasets with points.
+ * <p>
+ * The JSON format contains project metadata (title and axis labels),
+ * calibration settings (numeric ranges and log flags) and the complete list
+ * of datasets and their points. The export path is compatible with the
+ * {@link com.digitizer.io.ProjectJson} model.
  */
 public class JsonExporter {
 
@@ -49,7 +52,7 @@ public class JsonExporter {
      * @param title           the project title
      * @param xlabel          the x-axis label
      * @param ylabel          the y-axis label
-     * @param calibration     the calibration state
+     * @param calibration     the calibration state (may be null; defaults applied if null)
      * @param datasets        the list of datasets to export
      * @throws IOException if writing to the file fails
      */
@@ -68,24 +71,38 @@ public class JsonExporter {
                 pointsList.add(pointPair);
             }
             
-            DatasetJson dsJson = new DatasetJson(
+                DatasetJson dsJson = new DatasetJson(
                     dataset.getName(),
                     dataset.getHexColor(),
-                    pointsList
-            );
+                    pointsList,
+                    // include visibility flag
+                    (dataset instanceof com.digitizer.core.Dataset) ? ((com.digitizer.core.Dataset)dataset).isVisible() : true
+                );
             datasetJsonList.add(dsJson);
+        }
+
+        // Apply defaults if calibration absent (un-calibrated export scenario)
+        double xMin = 0.0, xMax = 1.0, yMin = 0.0, yMax = 1.0;
+        boolean xLog = false, yLog = false;
+        if (calibration != null) {
+            xMin = calibration.getDataXMin();
+            xMax = calibration.getDataXMax();
+            yMin = calibration.getDataYMin();
+            yMax = calibration.getDataYMax();
+            xLog = calibration.isXLog();
+            yLog = calibration.isYLog();
         }
 
         ProjectJson project = new ProjectJson(
                 title,
                 xlabel,
                 ylabel,
-                calibration.getDataXMin(),
-                calibration.getDataXMax(),
-                calibration.getDataYMin(),
-                calibration.getDataYMax(),
-                calibration.isXLog(),
-                calibration.isYLog(),
+                xMin,
+                xMax,
+                yMin,
+                yMax,
+                xLog,
+                yLog,
                 datasetJsonList
         );
 
@@ -135,6 +152,10 @@ public class JsonExporter {
         if (project.datasets != null) {
             for (DatasetJson dsJson : project.datasets) {
                 Dataset dataset = new Dataset(dsJson.name, dsJson.color);
+                // restore visibility if present
+                try {
+                    dataset.setVisible(dsJson.visible);
+                } catch (Exception ignore) { }
                 
                 if (dsJson.points != null) {
                     for (List<Double> pointPair : dsJson.points) {

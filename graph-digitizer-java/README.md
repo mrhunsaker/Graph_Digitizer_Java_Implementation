@@ -1,17 +1,52 @@
-# Graph Digitizer (Java 21 Edition)
+﻿# Graph Digitizer (Java 21 Edition)
 
 A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extracting numeric data points from raster images of graphs.
 
 ## Version
 
-**1.2.0** (Java Edition)
+**1.0-beta** (Java Edition)
+
+## 📚 Documentation
+
+**1.0** (Java Edition)
+
+- **[Quick Reference Guide](QUICK_REFERENCE.md)** - Commands, shortcuts, and common tasks
+- **[Developer Guide](DEVELOPER.md)** - Architecture, patterns, and extension guide
+- **[Project Summary](PROJECT_SUMMARY.md)** - Complete project overview
+- **[Index](INDEX.md)** - Comprehensive documentation index
+java -jar target/graph_digitizer_1.0.jar
+
+### Accessibility Documentation
+
+- **[Accessibility Overview](ACCESSIBILITY.md)** - Complete accessibility features guide
+- **[Quick Start](ACCESSIBILITY_QUICK_START.md)** - Get started with screen readers
+- **[Implementation Guide](ACCESSIBILITY_IMPLEMENTATION.md)** - Technical implementation details
+- **[Implementation Complete](ACCESSIBILITY_IMPLEMENTATION_COMPLETE.md)** - ✅ All audit fixes applied
+- **[Low Vision Audit](ACCESSIBILITY_AUDIT_LOW_VISION.md)** - Comprehensive accessibility audit results
+- **[Summary](ACCESSIBILITY_SUMMARY.md)** - Features and capabilities overview
+- **[Checklist](ACCESSIBILITY_CHECKLIST.md)** - Verification and testing checklist
+
+### Themes Documentation
+
+java -jar target/graph_digitizer_1.0.jar
+- **[Quick Reference](THEMES_QUICK_REFERENCE.md)** - Theme selection guide
+- **[Implementation](THEMES_IMPLEMENTATION_SUMMARY.md)** - Technical details
+
+### Packaging & Distribution
+
+- **[Packaging Guide](packaging/README.md)** - AppImage, DEB, RPM, and native installers
 
 ## Quick Start
 
 ### Prerequisites
 
 - Java 21 or later
-- Maven 3.8.0 or later
+jpackage --type dmg --name GraphDigitizer --main-jar graph_digitizer_1.0.jar \
+
+Note: This project uses JavaFX 21 and therefore either the user's JDK should
+contain JavaFX modules (e.g., a Liberica Full JDK) or the build will need
+to download platform-specific JavaFX artifacts (handled by Maven profiles in
+the `pom.xml`).
 
 ### Installation
 
@@ -21,7 +56,8 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 ```bash
 mvn clean package
-```
+
+```text
 
 ### Running the Application
 
@@ -29,13 +65,18 @@ Using Maven:
 
 ```bash
 mvn javafx:run
-```
+
+```text
 
 Or run the JAR directly:
 
 ```bash
-java -jar target/graph-digitizer-1.2.0.jar
-```
+java -jar target/graph_digitizer_1.0-beta.jar
+
+```text
+
+If you want to distribute a "clickable" application that does not require the
+end user to install Java, see "Packaging & Distribution" below.
 
 ## Features
 
@@ -51,11 +92,9 @@ java -jar target/graph-digitizer-1.2.0.jar
 
 ## Project Structure
 
-```
-graph-digitizer-java/
+```text
 ├── pom.xml                           # Maven configuration
 ├── src/
-│   ├── main/
 │   │   ├── java/com/digitizer/
 │   │   │   ├── core/                 # Core business logic (no GUI dependencies)
 │   │   │   │   ├── Point.java
@@ -86,7 +125,8 @@ graph-digitizer-java/
 │           ├── core/
 │           └── io/
 └── target/                           # Build output
-```
+
+```text
 
 ## Architecture
 
@@ -109,8 +149,6 @@ Image loading and automatic curve extraction:
 - **AutoTracer**: Column-by-column color matching for curve extraction
 
 ### IO Package (`com.digitizer.io`)
-
-File import/export with support for multiple formats:
 
 - **ProjectJson** / **DatasetJson**: POJO models for JSON serialization
 - **JsonExporter**: Full-fidelity JSON format with metadata and log flags
@@ -136,9 +174,6 @@ Click "Load Image" button and select a PNG or JPEG file containing the graph.
 
 1. Click "Calibrate" button
 2. Click four points on the image in order:
-   - X-left: leftmost known x-axis position
-   - X-right: rightmost known x-axis position
-   - Y-bottom: bottom known y-axis position
    - Y-top: top known y-axis position
 3. Enter numeric axis ranges (X min/max, Y min/max)
 4. Toggle "X Log" / "Y Log" if axes are logarithmic
@@ -165,9 +200,6 @@ Select a dataset and click "Auto Trace". The algorithm scans columns and selects
 
 ```json
 {
-  "title": "My Plot",
-  "xlabel": "Time (s)",
-  "ylabel": "Amplitude",
   "x_min": 0.0,
   "x_max": 100.0,
   "y_min": -1.0,
@@ -182,36 +214,253 @@ Select a dataset and click "Auto Trace". The algorithm scans columns and selects
     }
   ]
 }
-```
+
+```text
 
 ### CSV Format
 
 Wide-format with x values in the first column:
 
-```
+```csv
 x,Dataset_1,Dataset_2
 0.0,0.1,-0.05
 1.0,0.15,
 2.5,,0.2
-```
+
+```text
 
 ## Building and Extending
 
 ### Building with Maven
 
 ```bash
+
 # Clean and package
+
 mvn clean package
 
 # Create executable JAR with dependencies
+
 mvn package
 
 # Run tests
+
 mvn test
 
 # Run the application
+
 mvn javafx:run
-```
+
+```text
+
+### Generating HTML API docs (Javadoc)
+
+Use Maven's javadoc plugin to generate API documentation based on the
+Javadoc comments added throughout the codebase. This creates an "apidocs"
+folder with HTML files under `target/site`.
+
+```bash
+mvn javadoc:javadoc
+
+# Open the docs in your browser
+
+start target/site/apidocs/index.html # Windows
+open target/site/apidocs/index.html # macOS
+xdg-open target/site/apidocs/index.html # Linux
+
+```text
+
+## Packaging & Distribution (Click-able apps and Fat JARs)
+
+This project is a JavaFX desktop application and shipping a cross-platform
+installer or a single binary is commonly done using `jlink` + `jpackage`.
+Below are recommended options for creating a clickable, distributable
+application on macOS, Linux, and Windows.
+
+### Option A: Fat JAR (Quick 1-file package; Java must be installed)
+
+1. Add the Maven Shade plugin to your `pom.xml` to build a "fat" JAR bundling
+   all libraries (not native JavaFX OS libs). Example in `pom.xml`:
+
+```xml
+<!-- snippet: put inside <build><plugins> -->
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-shade-plugin</artifactId>
+  <version>3.4.1</version>
+  <executions>
+    <execution>
+      <phase>package</phase>
+      <goals>
+        <goal>shade</goal>
+      </goals>
+      <configuration>
+        <transformers>
+          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+            <mainClass>com.digitizer.ui.GraphDigitizerApp</mainClass>
+          </transformer>
+        </transformers>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+
+```text
+
+1. Then build the artifact:
+
+```bash
+mvn clean package
+
+# Resulting file in target/ will be a shaded jar, try:
+
+java -jar target/graph_digitizer_1.0-beta.jar
+
+```text
+
+Notes:
+
+- A standard fat JAR will still require the end user to have a compatible
+  Java runtime installed. For JavaFX, you still need the JavaFX runtime
+  for the target OS if not bundled.
+- For a fully self-contained native app (recommended), use Option B.
+
+### Option B: Self-contained native binaries (recommended for end-users)
+
+This approach uses `jlink` to create a custom runtime image and `jpackage`
+to generate an OS-specific package (DMG, PKG, DEB, RPM, EXE, MSI).
+Maven can call both of these tools via plugin configuration or use the
+`jlink` and `jpackage` CLIs directly with a JDK that supports them.
+
+You will need a JDK 21 distribution (for example Azul, Adoptium or Liberica)
+installed that contains `jlink` and `jpackage` tools.
+
+Basic flow (CLI approach):
+
+1. Create runtime image with required modules (JavaFX modules and your app):
+
+```bash
+
+# Example for macOS/Linux/Windows - adjust module list and paths
+
+jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,java.logging,javafx.controls,javafx.graphics --output custom-runtime
+
+```text
+
+1. Build an app image with jpackage (Windows example creating an exe):
+
+```bash
+jpackage --type exe \
+  --input target/ \
+  --name GraphDigitizer \
+  --main-jar graph_digitizer_1.0-beta.jar \
+  --main-class com.digitizer.ui.GraphDigitizerApp \
+  --runtime-image custom-runtime \
+  --icon build/icons/graphdigitizer.ico
+
+```text
+
+1. For macOS, use `--type dmg` or `--type pkg` and `--icon` as .icns.
+1. For Linux, use `--type deb` or `--type rpm`, or create an AppImage.
+
+Tip: Use `maven-jlink-plugin` and the `jpackage` Maven plugin to integrate
+this into your Maven lifecycle so OS-specific packages are reproducible.
+
+The repository includes a Maven profile named `native` that automates
+runtime image creation and packaging using `maven-jlink-plugin` and
+`org.panteleyev:jpackage-maven-plugin`. Example usages:
+
+```bash
+
+# On Windows (EXE installer)
+
+mvn -Pnative -Djpackage.type=exe package
+
+# On macOS (DMG)
+
+mvn -Pnative -Djpackage.type=dmg package
+
+# On Linux (DEB)
+
+mvn -Pnative -Djpackage.type=deb package
+
+```text
+
+Notes:
+
+- Set `-Dicon=path/to/icon` to provide a custom icon for the installer.
+- Run packaging on the target OS (Windows packages on Windows, macOS on macOS) for best results.
+
+### Advanced Packaging & Signing Resources
+
+For AppImage, DEB/RPM maintainer scripts, desktop integration, icon auto-selection, and cross-platform signing/notarization:
+
+- See `packaging/README.md` for: AppImage recipe (`appimage-builder.yml`), `.zsync` delta update steps, Debian `postinst`/`prerm`, RPM spec template, verification checklist, CI integration notes.
+- Windows code signing: `scripts/sign-windows.ps1` (SecureString support; integrate with CI secrets).
+- macOS signing & notarization: `scripts/sign-macos.sh` (codesign, submit, staple).
+- Icon selection / generation: `scripts/select-icon.ps1` (Windows) and `scripts/create-mac-iconset.sh` (macOS) produce `selected-icon.properties` / `.icns`.
+
+Quick examples:
+
+```bash
+
+# Linux AppImage build (after jpackage app-image)
+
+appimage-builder --recipe packaging/appimage-builder.yml
+appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta updates
+
+```text
+
+```pwsh
+
+# Windows signing (example)
+
+pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
+
+```text
+
+```bash
+
+# macOS signing & notarization (example)
+
+./scripts/sign-macos.sh GraphDigitizer.app "Developer ID Application: Your Company" TEAMID GraphDigitizer.dmg
+
+```text
+
+### JavaFX & platform-native libraries
+
+JavaFX requires native libraries for each target OS. When packaging with
+`jlink`/`jpackage`, include the JavaFX modules for the specific OS. When
+building on CI for multiple OSes, build packages on each target OS
+or use cross-compile tooling that provides platform-specific JavaFX
+artifacts.
+
+### Example: Creating a macOS App (brief)
+
+1. Install a JDK 21 with `jpackage` (Adoptium OpenJDK or Liberica Full JDK).
+2. Build the jar and modules:
+
+```bash
+mvn clean package
+jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,javafx.controls,javafx.graphics --output runtime-mac
+
+```text
+
+1. Use `jpackage` to make a `.app` bundle and optionally `.dmg`:
+
+```bash
+jpackage --type dmg --name GraphDigitizer --main-jar graph-digitizer-1.2.0.jar --main-class com.digitizer.ui.GraphDigitizerApp --runtime-image runtime-mac --icon build/icons/graphdigitizer.icns
+
+```text
+
+### Troubleshooting packaging
+
+- Error "No JavaFX runtime found" typically means you haven't included
+  the JavaFX modules for your OS; ensure `--module-path` contains
+  the JavaFX SDK modules.
+- For Windows, use `--type msi` or `--type exe`. For `.msi` you may need
+  `WiX` installed on Windows for full packaging.
+- Use `--verbose` with `jpackage` for extra messages.
 
 ### Project Layout Best Practices
 
@@ -225,7 +474,7 @@ mvn javafx:run
 
 3. **Testing**: Unit tests in `src/test/java` mirror the source structure. Test core logic independently of UI.
 
-4. **Dependencies**: 
+4. **Dependencies**:
    - Core classes import only from Java standard library
    - Image/IO classes import from core and external libraries
    - UI classes import from core, image, and io packages
@@ -252,7 +501,8 @@ The UI is designed to be easily extensible. To add new controls:
 - **JavaFX 21.0.2**: Modern UI framework
 - **GSON 2.10.1**: JSON serialization
 - **Apache Commons CSV 1.10.0**: CSV parsing and writing
-- **SLF4J + Logback**: Logging framework
+- **SLF4J + Log4j2**: Logging (console, rolling file, JSON, async option)
+- **LMAX Disruptor**: Enables Log4j2 asynchronous loggers
 - **JUnit 4 & JUnit 5**: Testing frameworks
 
 ## Testing
@@ -261,13 +511,15 @@ Run all tests:
 
 ```bash
 mvn test
-```
+
+```text
 
 Run specific test:
 
 ```bash
 mvn test -Dtest=FileUtilsTest
-```
+
+```text
 
 ## Development Notes
 
@@ -290,7 +542,110 @@ All core logic (coordinate transforms, color operations, file I/O) is intentiona
 
 ### Logging
 
-The application uses SLF4J with Logback for logging. Configure logging in `logback.xml` if needed.
+The application uses SLF4J with a Log4j2 backend (`log4j2.xml`). The configuration defines:
+
+- Console output with concise pattern
+- Rolling text file (`logs/graph-digitizer.log`) with daily + size rollover (max 14 archives)
+- Structured JSON events (`logs/graph-digitizer.json`) newline-delimited for ingestion
+- Package logger `com.digitizer` at DEBUG and root at INFO
+
+#### Asynchronous Logging (Optional Performance Tuning)
+
+To enable async logging (reduces contention on the JavaFX UI thread), start the JVM with:
+
+```bash
+java -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -jar target/graph_digitizer_1.0-beta.jar
+
+```text
+
+Maven/JavaFX run example:
+
+```bash
+mvn -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector javafx:run
+
+```text
+
+Ensure the LMAX Disruptor dependency is present (already declared in `pom.xml`).
+
+#### JSON Log Consumption
+
+`graph-digitizer.json` is newline-delimited JSON (NDJSON). Example ingestion with `jq`:
+
+```bash
+jq -c '.' logs/graph-digitizer.json
+
+```text
+
+#### JSON Log Ingestion Scripts
+
+Two example helper scripts are provided in `scripts/` to parse and filter the structured JSON log:
+
+- PowerShell: `scripts/ingest-json-log.ps1` (filter by level/logger)
+- Python: `scripts/ingest_json_log.py` (arguments `--level` / `--logger`)
+
+Examples:
+
+```pwsh
+pwsh scripts/ingest-json-log.ps1 -Level ERROR
+pwsh scripts/ingest-json-log.ps1 -Logger com.digitizer.ui
+
+```text
+
+```bash
+python scripts/ingest_json_log.py --level INFO --logger com.digitizer
+
+```text
+
+#### MDC (Mapped Diagnostic Context)
+
+The application initializes a session identifier via `LoggingConfig.initializeMdc(...)`. Each log event includes MDC keys if referenced in patterns (add `%X{session}` to `PatternLayout` in `log4j2.xml` if you want it visible in the rolling text file). Current keys:
+
+- `session`: Unique per application run (epoch milliseconds)
+- `user`: Reserved for future use (currently unset / null for desktop context)
+
+Add a user id example:
+
+```java
+LoggingConfig.initializeMdc(LoggingConfig.generateSessionId(), System.getProperty("user.name"));
+
+```text
+
+Update pattern example:
+
+```xml
+<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %X{session} %logger - %msg%n"/>
+
+```text
+
+#### Environment Checks
+
+At startup `LoggingConfig.runEnvironmentChecks()` logs:
+
+- Java version (`java.version`)
+- Whether async logging property is present
+- Creates `logs/` directory if missing
+
+#### Archiving Old Logs
+
+Use the helper script to compress and prune older logs:
+
+```pwsh
+pwsh scripts/archive-logs.ps1 -Days 14
+pwsh scripts/archive-logs.ps1 -DryRun
+
+```text
+
+Creates `logs/archive-YYYYMMDD-HHMMSS.zip` and removes archived originals.
+
+#### Customization Tips
+
+- Change retention via `<DefaultRolloverStrategy max="X"/>` in `log4j2.xml`.
+- Modify patterns with `<PatternLayout>`; add `%X{key}` for MDC if needed.
+- Remove JSON appender if structured logging not required.
+
+#### Migrated From Logback
+
+Previous `logback.xml` has been removed due to a security review; Log4j2 >= 2.23.1 plus async option provides hardened, flexible logging.
 
 ## Troubleshooting
 
@@ -300,11 +655,13 @@ Ensure Java 21 is installed and JAVA_HOME is set:
 
 ```bash
 java -version
-```
+
+```text
 
 ### Image won't load
 
 Verify the file is:
+
 - A valid PNG or JPEG file
 - Readable by the current user
 - Not too large (tested up to 4K resolution)
@@ -316,7 +673,8 @@ Try:
 ```bash
 mvn clean install
 mvn javafx:run
-```
+
+```text
 
 Ensure Maven has internet access to download dependencies.
 
@@ -347,3 +705,22 @@ Licensed under the Apache License, Version 2.0. See LICENSE file for details.
 ## Contact
 
 For issues, questions, or suggestions, please open an issue on the repository.
+
+---
+
+## Licensing and Javadoc
+
+This project is licensed under the Apache License 2.0; the copyright and
+license headers are present in all source files. The generated Javadocs
+are considered part of developer documentation and can be published as
+project site pages (GitHub Pages, GitHub Actions `mvn site` deployments).
+
+If you want a public API site, run:
+
+```bash
+mvn site
+
+```text
+
+That will build documentation including Javadocs and test reports into
+`target/site` suitable for hosting.

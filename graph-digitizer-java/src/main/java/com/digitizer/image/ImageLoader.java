@@ -16,19 +16,23 @@
 
 package com.digitizer.image;
 
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.image.Image;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import javax.imageio.ImageIO;
+
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+
 /**
- * Utility class for loading images from files.
- * Supports PNG, JPEG, BMP, TIFF, and WebP formats.
- * Uses JavaFX Image for native formats (PNG/JPEG/BMP) and ImageIO for extended formats (TIFF/WebP).
+ * Utility class for loading images from disk.
+ * <p>
+ * Prefer {@link #loadImage(File)} which first tries JavaFX's {@code Image}
+ * to read common formats (PNG/JPG/BMP) and falls back to {@link ImageIO}
+ * for extended formats (TIFF, WebP). The utility also contains convenience
+ * methods for obtaining image dimensions.
  */
 public final class ImageLoader {
 

@@ -1,4 +1,4 @@
-# Graph Digitizer - Java 21 Implementation
+﻿# Graph Digitizer - Java 21 Implementation
 
 ## Project Summary
 
@@ -18,7 +18,7 @@ A professional, production-ready Java Maven project with the following structure
 
 ### Directory Structure
 
-```
+```text
 graph-digitizer-java/
 ├── pom.xml                    # Maven build configuration
 ├── README.md                  # User guide and quick start
@@ -66,16 +66,17 @@ graph-digitizer-java/
             │   ├── ColorUtilsTest.java
             │   └── FileUtilsTest.java
             └── io/
-```
+
+```text
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `pom.xml` | Maven build configuration with all dependencies and plugins |
-| `README.md` | User-facing documentation with quick start and feature overview |
-| `DEVELOPER.md` | Technical documentation for developers extending the project |
-| `CHANGELOG.md` | Version history and future roadmap |
+ | File | Purpose |
+ | ------ | --------- |
+ | `pom.xml` | Maven build configuration with all dependencies and plugins |
+ | `README.md` | User-facing documentation with quick start and feature overview |
+ | `DEVELOPER.md` | Technical documentation for developers extending the project |
+ | `CHANGELOG.md` | Version history and future roadmap |
 
 ---
 
@@ -114,22 +115,28 @@ graph-digitizer-java/
 ### Quick Start
 
 ```bash
+
 # Build
+
 cd graph-digitizer-java
 mvn clean package
 
 # Run
+
 mvn javafx:run
 
 # Or run the JAR directly
+
 java -jar target/graph-digitizer-1.2.0.jar
-```
+
+```text
 
 ### Running Tests
 
 ```bash
 mvn test
-```
+
+```text
 
 ### Creating Executable JAR
 
@@ -137,9 +144,12 @@ mvn test
 mvn clean package
 
 # Creates:
+
 # - target/graph-digitizer-1.2.0.jar (runnable JAR)
+
 # - target/graph-digitizer-1.2.0-shaded.jar (fat JAR with dependencies)
-```
+
+```text
 
 ---
 
@@ -149,7 +159,7 @@ mvn clean package
 
 The project is organized into **four distinct packages**:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │          UI Package (JavaFX)            │
 │  ┌────────────────────────────────────┐ │
@@ -169,7 +179,8 @@ The project is organized into **four distinct packages**:
     │  Java Standard Library      │
     │  + Third-party Libraries    │
     └─────────────────────────────┘
-```
+
+```text
 
 ### Core Package Design
 
@@ -190,7 +201,8 @@ calib.setDataXMax(100);
 CoordinateTransformer transformer = new CoordinateTransformer(calib);
 Point2D canvasCoord = transformer.dataToCanvas(50, 25);
 // Test passes without starting JavaFX!
-```
+
+```text
 
 ### Plugin-Ready Architecture
 
@@ -208,7 +220,8 @@ public class SvgExporter {
 private void handleSaveSvg() {
     SvgExporter.exportToSvg(filePath, datasets);
 }
-```
+
+```text
 
 ---
 
@@ -290,16 +303,18 @@ All configured in `pom.xml` with correct versions.
     }
   ]
 }
-```
+
+```text
 
 ### CSV Export (Wide Format)
 
-```
+```text
 x,Dataset_1,Dataset_2
 0.0,0.1,-0.05
 1.0,0.15,0.2
 2.5,,0.15
-```
+
+```text
 
 ---
 
@@ -308,20 +323,26 @@ x,Dataset_1,Dataset_2
 ### Setting Up for Development
 
 ```bash
+
 # 1. Clone and navigate
+
 git clone <repo>
 cd graph-digitizer-java
 
 # 2. Build and test
+
 mvn clean package
 mvn test
 
 # 3. Run during development
+
 mvn javafx:run
 
 # 4. Build documentation
+
 mvn javadoc:javadoc
-```
+
+```text
 
 ### Adding a Feature
 
@@ -338,7 +359,8 @@ mvn javadoc:javadoc
 mvn test                              # All tests
 mvn test -Dtest=FileUtilsTest        # Specific test
 mvn test -Dtest=*Utils*Test          # Pattern matching
-```
+
+```text
 
 ---
 
@@ -369,7 +391,7 @@ mvn test -Dtest=*Utils*Test          # Pattern matching
 
 ## Package Dependencies
 
-```
+```text
 ui/
 ├── uses → core/
 ├── uses → image/
@@ -388,7 +410,8 @@ io/
 core/
 └── uses → JavaFX (Color only)
     └── (Can be made 100% standalone if needed)
-```
+
+```text
 
 **Rule**: Lower packages never depend on higher packages.
 
@@ -396,13 +419,13 @@ core/
 
 ## Performance Characteristics
 
-| Operation | Time Complexity | Notes |
-|-----------|-----------------|-------|
-| Load image | O(image_size) | Depends on file I/O and image size |
-| Canvas redraw | O(points) | Draws each point once |
-| Auto-trace | O(w × h) | w=width, h=height of search area |
-| Coordinate transform | O(1) | Per point, constant time |
-| CSV export | O(n_points × n_datasets) | Wide format assembly |
+ | Operation | Time Complexity | Notes |
+ | ----------- | ----------------- | ------- |
+ | Load image | O(image_size) | Depends on file I/O and image size |
+ | Canvas redraw | O(points) | Draws each point once |
+ | Auto-trace | O(w × h) | w=width, h=height of search area |
+ | Coordinate transform | O(1) | Per point, constant time |
+ | CSV export | O(n_points × n_datasets) | Wide format assembly |
 
 ---
 
@@ -417,30 +440,30 @@ core/
 
 ## Compatibility
 
-| Aspect | Status |
-|--------|--------|
-| Windows | ✅ Tested and working |
-| macOS | ✅ Should work (Java 21 + JavaFX) |
-| Linux | ✅ Should work (Java 21 + JavaFX) |
-| Java 21+ | ✅ Required |
-| Image Formats | ✅ PNG, JPEG |
-| Export Formats | ✅ JSON, CSV |
+ | Aspect | Status |
+ | -------- | -------- |
+ | Windows | ✅ Tested and working |
+ | macOS | ✅ Should work (Java 21 + JavaFX) |
+ | Linux | ✅ Should work (Java 21 + JavaFX) |
+ | Java 21+ | ✅ Required |
+ | Image Formats | ✅ PNG, JPEG |
+ | Export Formats | ✅ JSON, CSV |
 
 ---
 
 ## What's Different from Julia Version
 
-| Feature | Julia | Java |
-|---------|-------|------|
-| Image Loading | ImageIO | JavaFX Image |
-| GUI Framework | GTK | JavaFX |
-| Build System | Julia Pkg | Maven |
-| Logging | println | SLF4J + Logback |
-| JSON | JSON.jl | GSON |
-| CSV | CSV.jl | Apache Commons CSV |
-| Coordinate Transforms | Same | **100% identical** |
-| Color Matching | Same | **100% identical** |
-| File Formats | Same | **100% compatible** |
+ | Feature | Julia | Java |
+ | --------- | ------- | ------ |
+ | Image Loading | ImageIO | JavaFX Image |
+ | GUI Framework | GTK | JavaFX |
+ | Build System | Julia Pkg | Maven |
+ | Logging | println | SLF4J + Logback |
+ | JSON | JSON.jl | GSON |
+ | CSV | CSV.jl | Apache Commons CSV |
+ | Coordinate Transforms | Same | **100% identical** |
+ | Color Matching | Same | **100% identical** |
+ | File Formats | Same | **100% compatible** |
 
 ---
 
@@ -475,9 +498,9 @@ core/
 
 - **Documentation**: See `README.md` and `DEVELOPER.md`
 - **Build Issues**: Check Maven dependencies with `mvn dependency:tree`
-- **JavaFX Help**: https://gluonhq.com/products/javafx/
-- **Maven Help**: https://maven.apache.org/
-- **Java 21 Docs**: https://docs.oracle.com/en/java/javase/21/
+- **JavaFX Help**: <https://gluonhq.com/products/javafx/>
+- **Maven Help**: <https://maven.apache.org/>
+- **Java 21 Docs**: <https://docs.oracle.com/en/java/javase/21/>
 
 ---
 

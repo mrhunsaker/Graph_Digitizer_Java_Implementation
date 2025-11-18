@@ -19,7 +19,12 @@ package com.digitizer.core;
 import javafx.scene.paint.Color;
 
 /**
- * Utility class for color operations including hex parsing and RGB calculations.
+ * Utility class for color operations including hex parsing, RGB distance,
+ * and blending. This class is used by image processing code such as
+ * {@link com.digitizer.image.AutoTracer} to compare pixel colors to a
+ * dataset color.
+ *
+ * <p>All helper methods are static and the class is not instantiable.
  */
 public final class ColorUtils {
 
@@ -138,5 +143,18 @@ public final class ColorUtils {
         double a = color1.getOpacity() * (1 - t) + color2.getOpacity() * t;
 
         return Color.color(r, g, b, a);
+    }
+
+    /**
+     * Helper to ensure a hex color is normalized and returned as a 6-character
+     * hex string preceded by '#'. If the input is shorthand ("RGB") it will
+     * be expanded. Returns "#000000" on error.
+     *
+     * @param hex input color string, may be null
+     * @return normalized hex string like "#RRGGBB"
+     */
+    public static String normalizeHex(String hex) {
+        Color c = hexToColor(hex);
+        return colorToHex(c);
     }
 }

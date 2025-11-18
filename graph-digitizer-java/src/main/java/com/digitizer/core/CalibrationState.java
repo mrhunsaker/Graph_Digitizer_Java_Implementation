@@ -16,12 +16,18 @@
 
 package com.digitizer.core;
 
-import javafx.geometry.Point2D;
 import java.util.Objects;
+
+import javafx.geometry.Point2D;
 
 /**
  * Represents the calibration state of the graph digitizer.
- * This includes the four calibration anchor points and the numeric axis ranges.
+ * <p>
+ * Calibration consists of four anchor points in pixel/canvas coordinates
+ * (left X, right X, bottom Y, top Y) as well as the numeric axis ranges
+ * (dataXMin, dataXMax, dataYMin, dataYMax). Both linear and
+ * logarithmic axes are supported. The object tracks whether a complete
+ * calibration has been applied using {@link #isCalibrated()}.
  */
 public class CalibrationState {
     

@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to the Graph Digitizer project will be documented in this file.
 
@@ -128,17 +128,20 @@ Complete rewrite of Graph Digitizer from Julia to Java 21 with JavaFX GUI.
 ## Future Roadmap
 
 ### 1.2.1 (Q1 2025)
+
 - [ ] Implement snap X values feature
 - [ ] Add snapping guide lines visualization
 - [ ] Keyboard shortcuts customization UI
 
 ### 1.3.0 (Q2 2025)
+
 - [ ] Precision zoom with circular magnifier
 - [ ] Rectangular magnifier preview
 - [ ] Undo/redo stack
 - [ ] Recent files menu
 
 ### 2.0.0 (TBD)
+
 - [ ] Project file format (.gdz) with embedded images
 - [ ] Plugin system for custom exporters
 - [ ] Batch processing CLI tool

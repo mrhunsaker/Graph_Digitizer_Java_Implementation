@@ -1,4 +1,4 @@
-# 🚀 THEMES FIX - QUICK START
+﻿# 🚀 THEMES FIX - QUICK START
 
 ## The Problem & Solution
 
@@ -10,19 +10,26 @@
 ## Quick Test
 
 ### 1. Compile (30 seconds)
+
 ```bash
 cd d:\GitHubRepos\Graph_Digitizer_java_implementation\graph-digitizer-java
 mvn clean compile
-```
+
+```text
+
 ✅ Expected: `BUILD SUCCESS`
 
 ### 2. Run (10 seconds)
+
 ```bash
 mvn javafx:run
-```
+
+```text
+
 ✅ Expected: Application launches
 
 ### 3. Test Themes (30 seconds)
+
 1. Click **Themes** in menu bar
 2. Select **Dark**
    - ✅ Background turns dark
@@ -39,11 +46,11 @@ mvn javafx:run
 
 ## What Changed
 
-| Component | Change |
-|-----------|--------|
-| ThemeManager.java | Complete rewrite - now uses JavaFX CSS |
-| MainWindow.java | Added scene registration (1 line) |
-| pom.xml | No changes (FlatLaf dependency still there, just unused now) |
+ | Component | Change |
+ | ----------- | -------- |
+ | ThemeManager.java | Complete rewrite - now uses JavaFX CSS |
+ | MainWindow.java | Added scene registration (1 line) |
+ | pom.xml | No changes (FlatLaf dependency still there, just unused now) |
 
 ---
 
@@ -57,15 +64,19 @@ mvn javafx:run
 ## Technical Explanation
 
 **Old (Didn't Work)**:
+
 ```java
 UIManager.setLookAndFeel(new FlatDarkLaf());  // Swing - affects JavaFX? NO
-```
+
+```text
 
 **New (Works!)**:
+
 ```java
 scene.getRoot().setStyle("-fx-base: #2b2b2b; -fx-control-inner-background: #1e1e1e; -fx-text-fill: #ffffff;");
 // JavaFX CSS - directly styles JavaFX nodes = YES
-```
+
+```text
 
 ---
 
@@ -81,18 +92,22 @@ scene.getRoot().setStyle("-fx-base: #2b2b2b; -fx-control-inner-background: #1e1e
 ## What You'll See
 
 ### Before (Broken)
-```
+
+```text
 User clicks: Themes → Dark
 Status bar: "Theme changed to: Dark" ✓
 Colors: No change ✗
-```
+
+```text
 
 ### After (Fixed)
-```
+
+```text
 User clicks: Themes → Dark
 Status bar: "Theme changed to: Dark" ✓
 Colors: Instantly change to dark theme ✓
-```
+
+```text
 
 ---
 

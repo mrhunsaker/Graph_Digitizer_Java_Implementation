@@ -32,7 +32,12 @@ import javafx.scene.Scene;
 
 /**
  * Manages theme selection and application for the Graph Digitizer application.
- * Applies themes using JavaFX CSS stylesheets instead of Swing Look and Feel.
+ * <p>
+ * Themes are represented as inline CSS styles applied to the application's root
+ * node. The {@link #setScene(javafx.scene.Scene)} method must be called to
+ * register the scene so themes can be applied. The manager persists
+ * the currently selected theme to a simple properties file in the user's
+ * home directory so the preference is remembered across restarts.
  */
 public class ThemeManager {
 
@@ -57,6 +62,12 @@ public class ThemeManager {
         THEMES.put("Atom One Light", "-fx-base: #fafafa; -fx-control-inner-background: #ffffff; -fx-text-fill: #383a42;");
         THEMES.put("Atom One Dark", "-fx-base: #282c34; -fx-control-inner-background: #21252b; -fx-text-fill: #abb2bf;");
         THEMES.put("Gruvbox Dark", "-fx-base: #282828; -fx-control-inner-background: #3c3836; -fx-text-fill: #ebdbb2;");
+        
+        // High contrast themes for accessibility (WCAG AAA compliant)
+        THEMES.put("High Contrast Black", "-fx-base: #000000; -fx-control-inner-background: #000000; -fx-text-fill: #ffffff; " +
+                "-fx-accent: #ffff00; -fx-focus-color: #ffff00; -fx-faint-focus-color: #ffff0044;");
+        THEMES.put("High Contrast White", "-fx-base: #ffffff; -fx-control-inner-background: #ffffff; -fx-text-fill: #000000; " +
+                "-fx-accent: #0000ff; -fx-focus-color: #0000ff; -fx-faint-focus-color: #0000ff44;");
     }
 
     /**
@@ -88,7 +99,7 @@ public class ThemeManager {
      * Applies a theme by name using CSS styling.
      *
      * @param themeName the name of the theme to apply
-     * @return true if theme was successfully applied, false otherwise
+     * @return {@code true} if theme was successfully applied, {@code false} otherwise
      */
     public static boolean applyTheme(String themeName) {
         if (currentScene == null) {

@@ -19,8 +19,14 @@ package com.digitizer.core;
 import javafx.geometry.Point2D;
 
 /**
- * Handles coordinate transformations between data space and canvas (pixel) space.
- * Supports both linear and logarithmic (base 10) transformations.
+ * Handles coordinate transformations between data space and canvas (pixel)
+ * space.
+ * <p>
+ * The transformer converts between the application's numeric data units and
+ * pixel positions used by the {@link javafx.scene.canvas.Canvas}. It respects
+ * {@link com.digitizer.core.CalibrationState} (anchor points and log flags) and
+ * provides helper methods used by the {@link com.digitizer.ui.CanvasPanel}
+ * and {@link com.digitizer.image.AutoTracer}.
  */
 public class CoordinateTransformer {
 

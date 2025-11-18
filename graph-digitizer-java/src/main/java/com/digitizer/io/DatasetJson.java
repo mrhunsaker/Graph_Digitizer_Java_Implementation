@@ -33,6 +33,8 @@ public class DatasetJson {
 
     @SerializedName("points")
     public List<List<Double>> points;
+    @SerializedName("visible")
+    public boolean visible = true;
 
     /**
      * Constructs a new DatasetJson with empty points list.
@@ -52,5 +54,13 @@ public class DatasetJson {
         this.name = name;
         this.color = color;
         this.points = points != null ? points : new ArrayList<>();
+        this.visible = true;
+    }
+
+    public DatasetJson(String name, String color, List<List<Double>> points, boolean visible) {
+        this.name = name;
+        this.color = color;
+        this.points = points != null ? points : new ArrayList<>();
+        this.visible = visible;
     }
 }

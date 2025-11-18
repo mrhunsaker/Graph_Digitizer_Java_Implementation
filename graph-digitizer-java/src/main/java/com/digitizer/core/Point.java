@@ -18,7 +18,10 @@ package com.digitizer.core;
 
 /**
  * Represents a single data point with x and y coordinates.
- * Points are immutable to ensure thread safety and consistency.
+ * <p>
+ * Points are modeled as an immutable {@code record} to simplify threading and
+ * ensure value semantics for equality and hashing. Use {@link #distanceTo(Point)}
+ * when comparing proximity between points.
  */
 public record Point(double x, double y) {
 

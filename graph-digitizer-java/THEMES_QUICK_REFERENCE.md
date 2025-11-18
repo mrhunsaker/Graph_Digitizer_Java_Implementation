@@ -1,4 +1,4 @@
-# Themes Menu Quick Reference
+﻿# Themes Menu Quick Reference
 
 ## What's New?
 
@@ -13,12 +13,14 @@ Your Graph Digitizer now has a **Themes menu** in the menu bar with 14 professio
 ## Available Themes
 
 ### Light Themes (Good for daytime use)
+
 - **FlatLaf Light** - Clean, bright white background
 - **FlatLaf IntelliJ** - Professional light gray background
 - **Atom One Light** - Subtle light theme
 - **Solarized Light** - Warm, easy-on-eyes light theme
 
 ### Dark Themes (Good for low-light environments)
+
 - **FlatLaf Dark** - Modern dark with neutral colors
 - **FlatLaf Darcula** - IntelliJ's famous Darcula dark theme
 - **Atom One Dark** - Warm dark theme
@@ -29,6 +31,7 @@ Your Graph Digitizer now has a **Themes menu** in the menu bar with 14 professio
 - **Solarized Dark** - Warm, balanced dark theme
 
 ### Colorful Themes
+
 - **Arc** - Modern flat design with blue accents
 - **Arc Orange** - Warm variant with orange accents
 
@@ -54,6 +57,7 @@ Your Graph Digitizer now has a **Themes menu** in the menu bar with 14 professio
 ## Implementation
 
 **Added in Version 1.2.0**:
+
 - New `ThemeManager.java` utility class
 - Updated menu bar in `MainWindow.java`
 - FlatLaf 3.4.1 dependency + IntelliJ Themes 3.4.1

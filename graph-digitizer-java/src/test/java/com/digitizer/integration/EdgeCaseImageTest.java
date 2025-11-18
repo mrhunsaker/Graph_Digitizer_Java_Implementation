@@ -17,11 +17,9 @@
 package com.digitizer.integration;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,7 +28,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.digitizer.test.util.TestImageGenerator;
 
-import javafx.scene.image.Image;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 /**
  * Integration tests for edge-case image scenarios.
@@ -67,72 +66,67 @@ class EdgeCaseImageTest {
         TestImageGenerator.generateSinglePixelImage(singlePixelImage);
     }
 
+    private BufferedImage loadBuffered(File f) throws Exception {
+        return ImageIO.read(f);
+    }
+
     @Test
     void testSmallImageLoading() throws Exception {
-        Image image = new Image(new FileInputStream(smallImage));
+        BufferedImage image = loadBuffered(smallImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(50, image.getWidth(), "Small image width");
         assertEquals(50, image.getHeight(), "Small image height");
     }
 
     @Test
     void testLargeImageLoading() throws Exception {
-        Image image = new Image(new FileInputStream(largeImage));
+        BufferedImage image = loadBuffered(largeImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(4000, image.getWidth(), "Large image width");
         assertEquals(3000, image.getHeight(), "Large image height");
     }
 
     @Test
     void testTallNarrowAspectRatio() throws Exception {
-        Image image = new Image(new FileInputStream(tallNarrowImage));
+        BufferedImage image = loadBuffered(tallNarrowImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(100, image.getWidth());
         assertEquals(2000, image.getHeight());
-        
-        double aspectRatio = image.getHeight() / image.getWidth();
+        double aspectRatio = (double) image.getHeight() / (double) image.getWidth();
         assertTrue(aspectRatio > 10, "Should be very tall and narrow");
     }
 
     @Test
     void testWideShortAspectRatio() throws Exception {
-        Image image = new Image(new FileInputStream(wideShortImage));
+        BufferedImage image = loadBuffered(wideShortImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(3000, image.getWidth());
         assertEquals(150, image.getHeight());
-        
-        double aspectRatio = image.getWidth() / image.getHeight();
+        double aspectRatio = (double) image.getWidth() / (double) image.getHeight();
         assertTrue(aspectRatio > 10, "Should be very wide and short");
     }
 
     @Test
     void testHighDPIImageLoading() throws Exception {
-        Image image = new Image(new FileInputStream(highDPIImage));
+        BufferedImage image = loadBuffered(highDPIImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(1000, image.getWidth());
         assertEquals(1000, image.getHeight());
     }
 
     @Test
     void testSquareImageLoading() throws Exception {
-        Image image = new Image(new FileInputStream(squareImage));
+        BufferedImage image = loadBuffered(squareImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(800, image.getWidth());
         assertEquals(800, image.getHeight());
-        assertEquals(1.0, image.getWidth() / image.getHeight(), 0.01, "Should be perfectly square");
+        assertEquals(1.0, (double) image.getWidth() / (double) image.getHeight(), 0.01, "Should be perfectly square");
     }
 
     @Test
     void testSinglePixelImage() throws Exception {
-        Image image = new Image(new FileInputStream(singlePixelImage));
+        BufferedImage image = loadBuffered(singlePixelImage);
         assertNotNull(image);
-        assertFalse(image.isError());
         assertEquals(1, image.getWidth(), "Single pixel width");
         assertEquals(1, image.getHeight(), "Single pixel height");
     }

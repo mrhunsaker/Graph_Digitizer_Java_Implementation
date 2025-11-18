@@ -16,20 +16,29 @@
 
 package com.digitizer.core;
 
-import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javafx.scene.paint.Color;
+
 /**
- * Represents a dataset with a name, color, and collection of data points.
- * Datasets are mutable to allow modification of their point collections.
+ * Represents a dataset with a name, color and a mutable collection of
+ * {@link com.digitizer.core.Point}s.
+ * <p>
+ * Each dataset contains a user-visible name and a CSS hex color string.
+ * The color is cached as a {@link javafx.scene.paint.Color} for efficient
+ * rendering on the {@link com.digitizer.ui.CanvasPanel}.  While datasets
+ * may be modified at runtime, callers should generally avoid changing
+ * internal lists directly unless intentionally editing the dataset state.
  */
 public class Dataset {
     private String name;
     private String hexColor;
     private Color color;
     private List<Point> points;
+    // Whether this dataset is visible on the canvas (default true)
+    private boolean visible = true;
 
     /**
      * Constructs a new Dataset with the given name and hex color.
@@ -42,6 +51,14 @@ public class Dataset {
         this.hexColor = Objects.requireNonNull(hexColor, "Hex color cannot be null");
         this.color = ColorUtils.hexToColor(hexColor);
         this.points = new ArrayList<>();
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     /**

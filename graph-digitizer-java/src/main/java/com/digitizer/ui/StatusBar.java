@@ -22,8 +22,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 
 /**
- * Status bar for displaying messages and application status.
- * Provides accessible status announcements via a live region for screen readers.
+ * Status bar for displaying short descriptive messages and application status.
+ * <p>
+ * The {@link StatusBar} component exposes a simple API: {@link #setStatus(String)}
+ * is used to update the visible text and to trigger an accessibility announcement
+ * through {@link AccessibilityHelper#announceStatus(String)} for screen reader
+ * users. Use {@link #getStatus()} to read the current label text.
  */
 public class StatusBar extends BorderPane {
 

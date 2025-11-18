@@ -16,21 +16,36 @@
 
 package com.digitizer.image;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.digitizer.core.ColorUtils;
 import com.digitizer.core.CoordinateTransformer;
 import com.digitizer.core.Dataset;
 import com.digitizer.core.Point;
+
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Performs auto-trace of curves in images using color matching.
- * Scans columns pixel-by-pixel to find the best match to a target color.
+ * <p>
+ * This class performs a per-column scan and selects the pixel whose color
+ * has the smallest RGB distance to the target dataset color. The resulting
+ * pixels are converted into {@link com.digitizer.core.Point} coordinates
+ * using a provided {@link com.digitizer.core.CoordinateTransformer}.
+ *
+ * <p>The algorithm is intentionally simple and robust; it is not a full
+ * image processing pipeline — for most cases it returns a plausible
+ * one-point-per-column representation of the curve that can then be
+ * post-processed or smoothed by callers.
+ *
+ * <p><strong>Complexity:</strong> For an image of width W (scanned columns) and height H
+ * the trace performs O(W * H) color distance computations and uses O(W) additional
+ * memory for the output point list. This is acceptable for typical plot images; large
+ * images can be sub-sampled (adjust start/end pixel X) if needed.
  */
 public class AutoTracer {
 

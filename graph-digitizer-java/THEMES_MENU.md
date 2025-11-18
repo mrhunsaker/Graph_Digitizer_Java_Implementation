@@ -1,4 +1,4 @@
-# Themes Menu - Graph Digitizer
+﻿# Themes Menu - Graph Digitizer
 
 ## Overview
 
@@ -11,12 +11,14 @@ The Graph Digitizer application now features a **Themes menu** in the menu bar t
 The application includes **14 professionally-designed themes** organized into two categories:
 
 #### FlatLaf Core Themes
+
 - **FlatLaf Darcula** - Dark theme inspired by IntelliJ Darcula
 - **FlatLaf Dark** - Modern dark theme with neutral colors
 - **FlatLaf IntelliJ** - Light theme matching IntelliJ Light
 - **FlatLaf Light** - Clean, bright light theme
 
 #### FlatLaf IntelliJ Themes (Premium)
+
 - **Arc** - Modern flat Arc theme
 - **Arc Orange** - Warm variant of Arc with orange accents
 - **Atom One Dark** - Dark theme inspired by Atom editor
@@ -47,6 +49,7 @@ The application includes **14 professionally-designed themes** organized into tw
 ### New Classes
 
 **`ThemeManager.java`** (src/main/java/com/digitizer/ui/)
+
 - Manages theme loading and application
 - Contains mapping of theme names to FlatLaf class names
 - Uses reflection to dynamically load themes
@@ -55,6 +58,7 @@ The application includes **14 professionally-designed themes** organized into tw
 ### Modified Classes
 
 **`MainWindow.java`**
+
 - Added `createMenuBar()` method to generate menu bar with Themes menu
 - Updated `initialize()` to include menu bar in top container
 - Added theme change event handlers with status feedback and announcements
@@ -62,15 +66,18 @@ The application includes **14 professionally-designed themes** organized into tw
 ### Dependencies Added
 
 **pom.xml**
+
 - `com.formdev:flatlaf:3.4.1` - Core FlatLaf library
 - `com.formdev:flatlaf-intellij-themes:3.4.1` - Additional IntelliJ themes
 
 ## Demo Workflow
 
 1. **Start the application**
-   ```
+
+```bash
    mvn javafx:run
-   ```
+
+```text
 
 2. **Click Themes in menu bar**
    - Menu expands showing all 14 available themes
@@ -93,7 +100,8 @@ The `ThemeManager` uses a static initializer to map theme names to their FlatLaf
 
 ```java
 THEME_CLASSES.put("Dracula", "com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme");
-```
+
+```text
 
 When a user selects a theme:
 
@@ -116,7 +124,8 @@ for (String themeName : ThemeManager.getAvailableThemes()) {
     themeItem.setOnAction(e -> ThemeManager.applyTheme(themeName));
     themesMenu.getItems().add(themeItem);
 }
-```
+
+```text
 
 Each menu item is created dynamically from the available themes list, ensuring the menu always stays in sync with available themes.
 

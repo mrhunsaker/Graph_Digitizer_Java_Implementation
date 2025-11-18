@@ -7,7 +7,7 @@
 
     <groupId>com.digitizer</groupId>
     <artifactId>graph-digitizer</artifactId>
-    <version>1.2.0</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>Graph Digitizer</name>
@@ -38,6 +38,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <javafx.version>21.0.2</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+        <log4j2.version>2.23.1</log4j2.version>
     </properties>
 
     <dependencies>
@@ -112,10 +113,27 @@
             <artifactId>slf4j-api</artifactId>
             <version>2.0.9</version>
         </dependency>
+        <!-- Log4j2 backend replacing logback -->
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.4.11</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <!-- LMAX Disruptor for Async Loggers -->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.4</version>
         </dependency>
 
         <!-- Testing -->
@@ -147,6 +165,53 @@
 
     <build>
         <plugins>
+            <!-- Load selected-icon.properties if present to override icon.win/icon.mac/icon.linux -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.1.0</version>
+                <executions>
+                    <execution>
+                        <id>load-selected-icon-properties</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>${project.basedir}/selected-icon.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Copy root-level icons into build/icons before packaging -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-icons</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/build/icons</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../icons</directory>
+                                    <includes>
+                                        <include>**/*.png</include>
+                                        <include>**/*.ico</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -168,34 +233,8 @@
                 </configuration>
             </plugin>
 
-            <!-- Assembly Plugin for creating executable JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.6.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.digitizer.ui.GraphDigitizerApp</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <finalName>graph-digitizer-${project.version}</finalName>
-                    <appendAssemblyId>true</appendAssemblyId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
 
-            <!-- Shade Plugin for creating a fat JAR -->
+            <!-- Shade Plugin for creating the single distributable fat JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -212,7 +251,7 @@
                                     <mainClass>com.digitizer.ui.GraphDigitizerApp</mainClass>
                                 </transformer>
                             </transformers>
-                            <finalName>graph-digitizer-${project.version}-shaded</finalName>
+                            <finalName>graph_digitizer_${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -238,6 +277,79 @@
                     </archive>
                 </configuration>
             </plugin>
+            
+            <!-- Profile-friendly native packaging with jlink/jpackage. Use with -Pnative -->
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <!-- Configure the jpackage installer type; override via -Djpackage.type=exe|msi|dmg|deb|rpm -->
+                <jpackage.type>app-image</jpackage.type>
+                <!-- Icon properties (override with -Dicon.win=... etc.) -->
+                <icon.win>${project.basedir}/build/icons/scatter-plot-256.ico</icon.win>
+                <icon.mac>${project.basedir}/build/icons/scatter-plot-256.png</icon.mac> <!-- supply .icns if available -->
+                <icon.linux>${project.basedir}/build/icons/scatter-plot-256.png</icon.linux>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Create a minimized runtime image for distribution -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jlink-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>jlink</id>
+                                <goals>
+                                    <goal>jlink</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jlink</outputDirectory>
+                            <launcher>graph-digitizer</launcher>
+                            <!-- Modules to include in the runtime. Add or remove as needed -->
+                            <addModules>java.base,java.desktop,java.logging,javafx.controls,javafx.graphics</addModules>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Use jpackage (CLI wrapper) to create a native installer/image -->
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <goals>
+                                    <goal>jpackage</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- Type can be exe, msi, dmg, pkg, deb, rpm, app-image, etc. -->
+                            <type>${jpackage.type}</type>
+                            <!-- Use shaded fat jar as entry point -->
+                            <mainJar>graph_digitizer_${project.version}.jar</mainJar>
+                            <mainClass>com.digitizer.ui.GraphDigitizerApp</mainClass>
+                            <runtimeImage>${project.build.directory}/jlink</runtimeImage>
+                            <name>GraphDigitizer</name>
+                            <appVersion>${project.version}</appVersion>
+                            <!-- Icon selection: allow OS-specific override; fallback to Windows icon -->
+                            <icon>${icon.win}</icon>
+                            <verbose>false</verbose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

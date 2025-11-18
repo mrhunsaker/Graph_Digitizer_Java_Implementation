@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="60">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <RollingFile name="FileLog" fileName="logs/graph-digitizer.log"
+                 filePattern="logs/graph-digitizer-%d{yyyy-MM-dd}-%i.log.gz">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger - %msg%n"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1"/>
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="14"/>
+    </RollingFile>
+    <File name="JsonFileLog" fileName="logs/graph-digitizer.json" append="true">
+      <JsonLayout complete="false" eventEol="true" stacktraceAsString="true"/>
+    </File>
+  </Appenders>
+  <Loggers>
+    <!-- Package specific logger -->
+    <Logger name="com.digitizer" level="DEBUG" additivity="false">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="FileLog"/>
+      <AppenderRef ref="JsonFileLog"/>
+    </Logger>
+    <!-- Async root logger (requires -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector) -->
+    <AsyncRoot level="INFO">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="FileLog"/>
+      <AppenderRef ref="JsonFileLog"/>
+    </AsyncRoot>
+  </Loggers>
+</Configuration>

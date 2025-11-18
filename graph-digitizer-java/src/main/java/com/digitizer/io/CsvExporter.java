@@ -16,11 +16,6 @@
 
 package com.digitizer.io;
 
-import com.digitizer.core.Dataset;
-import com.digitizer.core.Point;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,9 +25,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
+import com.digitizer.core.Dataset;
+import com.digitizer.core.Point;
+
 /**
  * Handles CSV export of graph digitizer datasets.
- * Exports data in wide format with x values in the first column and dataset values in subsequent columns.
+ * <p>
+ * The CSV is written in "wide" format where the first column contains
+ * distinct X values (sorted) and each following column contains the
+ * corresponding Y value for a given dataset. The exporter collates values
+ * from multiple series and leaves empty cells when a dataset lacks a value
+ * for a particular X.
  */
 public class CsvExporter {
 

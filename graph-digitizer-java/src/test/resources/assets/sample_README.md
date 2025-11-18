@@ -1,19 +1,22 @@
-GraphDigitizer
+﻿GraphDigitizer
 ==============
 
 GraphDigitizer is a small interactive GUI tool (Julia + Gtk) for extracting numeric data points from raster images of graphs (PNG/JPEG). It supports non-blocking calibration, manual point picking and editing, a color-based auto-trace routine, a precision circular zoom for pixel-level placement, and export to JSON and CSV. The application is defensive about platform differences in Gtk.jl and provides fallbacks when native dialogs are unavailable.
 
 Version
 -------
+
 See `Project.toml` for the packaged version (1.0.0). The runtime binary identifies itself via constants in `src/graph_digitizer.jl`.
 
 Quick links
 -----------
+
 - Source: src/graph_digitizer.jl
 - Docs: docs/*.md
 
 Table of contents
 -----------------
+
 - Features
 - Requirements
 - Installation
@@ -28,6 +31,7 @@ Table of contents
 
 Features
 --------
+
 - Load PNG/JPEG images and display in a scalable canvas.
 - Non-blocking calibration: record four clicks (X-left, X-right, Y-bottom, Y-top) then apply numeric axis ranges (linear or log10).
 - Manual point picking: left-click to add, drag to move, right-click or Delete to remove.
@@ -41,39 +45,46 @@ Features
 
 Requirements
 ------------
+
 - Julia 1.6 or newer is recommended.
 - Gtk runtime (GTK 3/4) present on the system (Gtk.jl may require a system-provided GTK on some platforms).
 - Project dependencies are pinned in `Project.toml` / `Manifest.toml` and installed with the Julia package system.
 
 Installation
 ------------
+
 1. Clone the repository and change into it:
 
 ```Graph_Digitizer/README.md#L1-4
 git clone <repo-url>
 cd Graph_Digitizer
-```
 
-2. Use Julia to instantiate the pinned environment (this will install packages listed in `Project.toml` / `Manifest.toml`):
+```text
+
+1. Use Julia to instantiate the pinned environment (this will install packages listed in `Project.toml` / `Manifest.toml`):
 
 ```Graph_Digitizer/README.md#L6-8
 julia --project=@. -e 'using Pkg; Pkg.instantiate()'
-```
+
+```text
 
 Note: If Gtk.jl prints warnings about native dependencies while installing, follow the Gtk.jl instructions for your OS (Linux distributions typically need system GTK packages; Windows typically uses prebuilt binaries).
 
 Running
 -------
+
 Start the GUI from the project root:
 
 ```Graph_Digitizer/README.md#L10-12
 julia --project=@. src/graph_digitizer.jl
-```
+
+```text
 
 Keep the launching terminal open to view diagnostic messages, warnings, or crash traces — the app prints helpful startup and error information to stdout/stderr.
 
 Quickstart / How to use
 -----------------------
+
 A minimal workflow to digitize a plot:
 
 1. Load an image
@@ -117,7 +128,9 @@ A minimal workflow to digitize a plot:
 
 File formats
 ------------
+
 JSON export
+
 - Contains metadata and datasets. Example structure:
 
 ```Graph_Digitizer/README.md#L30-46
@@ -139,18 +152,22 @@ JSON export
     }
   ]
 }
-```
+
+```text
 
 CSV export
+
 - Simple tabular export with columns: `dataset`, `x`, `y`. Each row represents one point.
 
 Default filename and fallback behavior
 --------------------------------------
+
 - Default filename base: the `Title` field is used (sanitized — non-alphanumeric characters replaced with underscores and repeated underscores collapsed). If empty, a timestamped name is used.
 - Fallback save path: when a native save dialog is unavailable, the app chooses your `Downloads` folder (if present) or the system temporary directory and writes the file there. The status label shows the chosen path so you can retrieve the file.
 
 Keyboard shortcuts and UI notes
 -------------------------------
+
 - Save JSON: Primary+S (Ctrl+S on Windows and Linux)
 - Save CSV: Primary+Shift+S
 - Exit: Primary+Q (Ctrl+Q on Windows and Linux)
@@ -160,6 +177,7 @@ Keyboard shortcuts and UI notes
 
 Troubleshooting
 ---------------
+
 - App window does not appear / Save dialogs do not open:
   - Inspect the terminal where you launched the app for error messages. Gtk.jl prints helpful diagnostic information.
   - If the Save dialog is unavailable the app will still try to save into `~/Downloads` (or temp) and will show the path used in the status label.
@@ -172,6 +190,7 @@ Troubleshooting
 
 Development notes
 -----------------
+
 - Main source: `src/graph_digitizer.jl`. Core utilities and helpers are documented in `docs/*.md`.
 - Coordinate transforms:
   - `data_to_canvas(state, x, y)` maps data coordinates to canvas pixels (respects log flags).
@@ -184,26 +203,34 @@ Development notes
 
 Contributing
 ------------
+
 Helpful contributions:
+
 - Bug reports with a minimal reproduction, OS, Julia version, and Gtk.jl version.
 - Patches for compatibility across Gtk.jl/Gtk versions.
 - Unit tests for coordinate transforms (`data_to_canvas` / `canvas_to_data`) and `_sanitize_filename`.
 - Documentation improvements and example images for manual testing.
 
 To develop:
+
 1. Open the repository and start a Julia REPL using the project environment:
+
 ```Graph_Digitizer/README.md#L48-50
 julia --project=@.
-```
-2. Run scripts or directly evaluate portions of `src/graph_digitizer.jl` from the REPL, or run the app to interactively test.
+
+```text
+1. Run scripts or directly evaluate portions of `src/graph_digitizer.jl` from the REPL, or run the app to interactively test.
 
 License
 -------
+
 This project is licensed under the Apache License, Version 2.0. See the `LICENSE` file for details.
 
 Contact / Issues
 ----------------
+
 If you encounter problems or have enhancement ideas, please open an issue on the repository with:
+
 - Repro steps
 - Platform (OS), Julia version, Gtk.jl version
 - Terminal output (errors/tracebacks)

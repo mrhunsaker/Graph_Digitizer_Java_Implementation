@@ -16,24 +16,26 @@
 
 package com.digitizer.ui;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javafx.util.Duration;
 
 /**
  * Accessibility utility helper class for configuring JavaFX controls with
  * screen reader support, keyboard shortcuts, and ARIA-like descriptions.
  *
- * This class provides methods to:
- * - Set accessibility labels for controls
- * - Add keyboard shortcuts and tooltips
- * - Manage focus order
- * - Log accessibility announcements for screen readers
+ * <p>The helper contains convenience methods to configure controls with
+ * {@link javafx.scene.control.Tooltip}s, accessible labels and role
+ * descriptions so screen reader users can discover UI semantics and
+ * keyboard alternatives. The helper also logs "announcements" which can be
+ * picked up by platform-specific accessibility tools.
  */
 public class AccessibilityHelper {
 
@@ -56,7 +58,9 @@ public class AccessibilityHelper {
             fullTooltip = tooltip + " (" + keyboardHint + ")";
         }
         
-        button.setTooltip(new Tooltip(fullTooltip));
+        Tooltip tip = new Tooltip(fullTooltip);
+        configureTooltip(tip);
+        button.setTooltip(tip);
         button.setAccessibleText(text);
         button.setAccessibleRoleDescription("Button: " + text);
         button.setAccessibleHelp("Click to " + tooltip.toLowerCase());
@@ -78,7 +82,9 @@ public class AccessibilityHelper {
         field.setAccessibleText(label);
         field.setAccessibleRoleDescription("Text Input: " + label);
         field.setAccessibleHelp(help);
-        field.setTooltip(new Tooltip(label + " - " + help));
+        Tooltip tip = new Tooltip(label + " - " + help);
+        configureTooltip(tip);
+        field.setTooltip(tip);
         
         logger.debug("Configured accessible text field: {}", label);
     }
@@ -96,7 +102,9 @@ public class AccessibilityHelper {
         checkBox.setAccessibleText(label);
         checkBox.setAccessibleRoleDescription("Checkbox: " + label);
         checkBox.setAccessibleHelp(help);
-        checkBox.setTooltip(new Tooltip(label + " - " + help));
+        Tooltip tip = new Tooltip(label + " - " + help);
+        configureTooltip(tip);
+        checkBox.setTooltip(tip);
         
         logger.debug("Configured accessible checkbox: {}", label);
     }
@@ -115,6 +123,23 @@ public class AccessibilityHelper {
         label.setAccessibleRoleDescription(role + ": " + text);
         
         logger.debug("Configured accessible label: {}", text);
+    }
+
+    /**
+     * Sets accessibility metadata for a Text node. Useful when using
+     * {@link javafx.scene.text.Text} for richer styling (e.g., strikethrough).
+     *
+     * @param textNode the Text node to configure
+     * @param text the textual content
+     * @param role semantic role description
+     */
+    public static void setTextAccessibility(javafx.scene.text.Text textNode, String text, String role) {
+        if (textNode == null) return;
+        textNode.setText(text);
+        textNode.setAccessibleText(text);
+        // There's no direct setAccessibleRoleDescription on Text, use accessible help
+        textNode.setAccessibleHelp(role + ": " + text);
+        logger.debug("Configured accessible text node: {}", text);
     }
 
     /**
@@ -245,5 +270,35 @@ public class AccessibilityHelper {
     public static void announceColor(String datasetName, String colorHex, String colorName) {
         String message = "Dataset: " + datasetName + " uses color " + colorName + " (" + colorHex + ")";
         logger.info("COLOR: {}", message);
+    }
+
+    /**
+     * Configures a tooltip with accessibility-friendly settings.
+     * Longer delays and display times help users who need more time to read.
+     *
+     * @param tooltip the tooltip to configure
+     */
+    private static void configureTooltip(Tooltip tooltip) {
+        tooltip.setShowDelay(Duration.millis(500));    // Show faster (500ms instead of 1000ms)
+        tooltip.setHideDelay(Duration.seconds(15));     // Stay visible longer
+        tooltip.setShowDuration(Duration.seconds(60));  // Allow extended reading time
+        tooltip.setStyle("-fx-font-size: 14px;");      // Larger font for readability
+    }
+
+    /**
+     * Gets the OS text scaling factor (Windows DPI scaling).
+     * Returns 1.0 for 100% scaling, 1.25 for 125%, 1.5 for 150%, etc.
+     *
+     * @return the text scaling factor
+     */
+    public static double getOSTextScaling() {
+        try {
+            java.awt.Toolkit toolkit = java.awt.Toolkit.getDefaultToolkit();
+            int dpi = toolkit.getScreenResolution();
+            return dpi / 96.0; // 96 DPI = 100% scaling
+        } catch (Exception e) {
+            logger.debug("Could not detect OS text scaling: {}", e.getMessage());
+            return 1.0;
+        }
     }
 }

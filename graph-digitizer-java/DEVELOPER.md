@@ -1,4 +1,4 @@
-# Developer Guide
+﻿# Developer Guide
 
 This guide helps developers understand, extend, and maintain the Graph Digitizer Java 21 implementation.
 
@@ -67,22 +67,29 @@ JavaFX-based user interface.
 ### Setting Up for Development
 
 ```bash
+
 # Clone the repository
+
 git clone <repo-url>
 cd graph-digitizer-java
 
 # Install dependencies
+
 mvn clean install
 
 # Run the application
+
 mvn javafx:run
 
 # Run tests
+
 mvn test
 
 # Build JAR
+
 mvn package
-```
+
+```text
 
 ### Project Configuration
 
@@ -124,15 +131,20 @@ mvn package
 **Philosophy**: Test core logic independent of GUI.
 
 ```bash
+
 # Run all tests
+
 mvn test
 
 # Run specific test class
+
 mvn test -Dtest=FileUtilsTest
 
 # Run with coverage (requires plugin)
+
 mvn test jacoco:report
-```
+
+```text
 
 **Test Location**: Mirror the source structure
 
@@ -157,18 +169,20 @@ public class SvgExporter {
         // Implementation
     }
 }
-```
 
-2. **Add unit tests** in `src/test/java/com/digitizer/io/`:
+```text
+
+1. **Add unit tests** in `src/test/java/com/digitizer/io/`:
 
 ```java
 public class SvgExporterTest {
     @Test
     public void testExportToSvg() { ... }
 }
-```
 
-3. **Wire up the UI** in `MainWindow.java`:
+```text
+
+1. **Wire up the UI** in `MainWindow.java`:
 
 ```java
 private void handleSaveSvg() {
@@ -176,9 +190,10 @@ private void handleSaveSvg() {
     // Call SvgExporter.exportToSvg()
     // Update status bar
 }
-```
 
-4. **Add button to toolbar** in `createToolbar()`.
+```text
+
+1. **Add button to toolbar** in `createToolbar()`.
 
 ### Extending the UI
 
@@ -191,18 +206,20 @@ ComboBox<String> datasetSelector = new ComboBox<>();
 for (Dataset ds : datasets) {
     datasetSelector.getItems().add(ds.getName());
 }
-```
 
-2. Listen for changes:
+```text
+
+1. Listen for changes:
 
 ```java
 datasetSelector.setOnAction(e -> {
     int selectedIndex = datasetSelector.getSelectionModel().getSelectedIndex();
     canvasPanel.setActiveDataset(selectedIndex);
 });
-```
 
-3. Update `CanvasPanel` to track active dataset:
+```text
+
+1. Update `CanvasPanel` to track active dataset:
 
 ```java
 private int activeDatasetIndex = 0;
@@ -211,7 +228,8 @@ public void setActiveDataset(int index) {
     this.activeDatasetIndex = index;
     redraw();
 }
-```
+
+```text
 
 ## Key Design Decisions
 
@@ -223,9 +241,11 @@ Java Records (Java 16+) provide immutable, value-like semantics:
 public record Point(double x, double y) {
     // Thread-safe, automatically generates equals/hashCode/toString
 }
-```
+
+```text
 
 Benefits:
+
 - Immutability prevents accidental modifications
 - Concise syntax
 - Built-in equals/hashCode implementations
@@ -233,6 +253,7 @@ Benefits:
 ### Why Separate Core from UI?
 
 Enables:
+
 - **Unit testing** without GUI startup overhead
 - **Batch processing** in CLI or server applications
 - **Library reuse** by other projects
@@ -253,6 +274,7 @@ The `CoordinateTransformer` class handles a critical function: converting betwee
 - **Logarithmic axes**: Base-10 log transformation
 
 Why separate this? Allows:
+
 - Testing without GUI
 - Reuse in headless tools
 - Easy extension to polar, custom transformations
@@ -271,19 +293,24 @@ private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
 logger.info("Application started");
 logger.warn("Warning message");
 logger.error("Error occurred", exception);
-```
+
+```text
 
 Logging output is configured in `src/main/resources/logback.xml`.
 
 ### Packaging for Distribution
 
 ```bash
+
 # Create fat JAR with all dependencies
+
 mvn clean package
 
 # The JAR will be in target/
+
 java -jar target/graph-digitizer-1.2.0-shaded.jar
-```
+
+```text
 
 ### Cross-Platform Considerations
 
@@ -300,7 +327,8 @@ This is a VS Code linting issue, not a real compile error. Run:
 
 ```bash
 mvn clean compile
-```
+
+```text
 
 If it compiles, the linting is just out of sync.
 
@@ -311,17 +339,20 @@ Ensure `pom.xml` has the JavaFX dependency and Maven has downloaded it:
 ```bash
 rm -rf ~/.m2/repository/org/openjfx/
 mvn clean install
-```
+
+```text
 
 ### Tests fail with "cannot find symbol"
 
 Ensure test classes are in the correct package structure:
+
 - Source: `src/main/java/com/digitizer/core/`
 - Tests: `src/test/java/com/digitizer/core/`
 
 ### Application slow on large images
 
 Consider:
+
 - Resizing large images before loading
 - Optimizing auto-trace algorithm for large images
 - Using progressive image loading
@@ -363,11 +394,11 @@ Consider:
 
 ## Resources
 
-- **Java 21**: https://docs.oracle.com/en/java/javase/21/
-- **JavaFX**: https://gluonhq.com/products/javafx/
-- **Maven**: https://maven.apache.org/
-- **GSON**: https://github.com/google/gson
-- **Apache Commons CSV**: https://commons.apache.org/proper/commons-csv/
+- **Java 21**: <https://docs.oracle.com/en/java/javase/21/>
+- **JavaFX**: <https://gluonhq.com/products/javafx/>
+- **Maven**: <https://maven.apache.org/>
+- **GSON**: <https://github.com/google/gson>
+- **Apache Commons CSV**: <https://commons.apache.org/proper/commons-csv/>
 
 ## Getting Help
 

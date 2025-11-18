@@ -1,4 +1,5 @@
-# Graph Digitizer - Java 21 Implementation
+﻿# Graph Digitizer - Java 21 Implementation
+
 ## Complete Project Index
 
 **Version**: 1.2.0  
@@ -14,6 +15,7 @@
 ### Core Application Files (26 Java Classes)
 
 #### Core Package - Pure Business Logic
+
 - `Point.java` - Immutable record for (x, y) coordinates
 - `Dataset.java` - Dataset with points, name, and color
 - `CalibrationState.java` - Manages calibration anchors and ranges
@@ -22,16 +24,19 @@
 - `FileUtils.java` - File utilities (sanitization, defaults, paths)
 
 #### Image Package - Image I/O and Processing
+
 - `ImageLoader.java` - Load PNG/JPEG images
 - `AutoTracer.java` - Automatic curve extraction via color matching
 
 #### IO Package - File Import/Export
+
 - `ProjectJson.java` - JSON project root model
 - `DatasetJson.java` - JSON dataset model
 - `JsonExporter.java` - JSON import/export
 - `CsvExporter.java` - CSV export in wide format
 
 #### UI Package - JavaFX User Interface
+
 - `GraphDigitizerApp.java` - Application entry point
 - `MainWindow.java` - Main window orchestration
 - `CanvasPanel.java` - Image canvas and drawing
@@ -39,15 +44,18 @@
 - `StatusBar.java` - Status message display
 
 #### Test Package - Unit Tests
+
 - `ColorUtilsTest.java` - Color utility tests
 - `FileUtilsTest.java` - File utility tests
 
 ### Configuration Files
+
 - `pom.xml` - Maven build configuration (21 plugins/dependencies configured)
 - `.gitignore` - Git exclusion rules
 - `src/main/resources/logback.xml` - Logging configuration
 
 ### Documentation (5 comprehensive guides)
+
 - `README.md` - User guide with quick start and features
 - `DEVELOPER.md` - Developer guide with architecture and patterns
 - `PROJECT_SUMMARY.md` - Complete project overview
@@ -60,6 +68,7 @@
 ## 🎯 Key Features Implemented
 
 ### ✅ Core Features
+
 - [x] Load PNG/JPEG images
 - [x] Four-point calibration system
 - [x] Manual point editing (add/move/delete)
@@ -73,6 +82,7 @@
 - [x] Unit tests
 
 ### 📋 Planned Features
+
 - [ ] Snap X values and guide lines
 - [ ] Precision zoom with magnifier
 - [ ] Undo/redo stack
@@ -85,31 +95,38 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Java 21+
 - Maven 3.8.0+
 
 ### Build & Run
+
 ```bash
 cd graph-digitizer-java
 mvn clean package
 mvn javafx:run
-```
+
+```text
 
 ### Or run the JAR
+
 ```bash
 java -jar target/graph-digitizer-1.2.0.jar
-```
+
+```text
 
 ### Run Tests
+
 ```bash
 mvn test
-```
+
+```text
 
 ---
 
 ## 📦 Project Structure
 
-```
+```text
 graph-digitizer-java/
 │
 ├── pom.xml                          (Maven configuration)
@@ -160,14 +177,16 @@ graph-digitizer-java/
             │   ├── ColorUtilsTest.java
             │   └── FileUtilsTest.java
             └── io/                  (extensible for more tests)
-```
+
+```text
 
 ---
 
 ## 🏗️ Architecture Overview
 
 ### Layer Diagram
-```
+
+```text
 ┌────────────────────────────────────────┐
 │      UI Layer (JavaFX)                 │
 │  GraphDigitizerApp, MainWindow, etc    │
@@ -187,7 +206,8 @@ graph-digitizer-java/
         │ Java Standard Lib   │
         │ + Third-party Libs  │
         └─────────────────────┘
-```
+
+```text
 
 **Key Principle**: Core never imports from UI, image, or IO packages.
 
@@ -195,20 +215,21 @@ graph-digitizer-java/
 
 ## 📚 Documentation Map
 
-| Document | Audience | Purpose |
-|----------|----------|---------|
-| `README.md` | End Users | How to use the application |
-| `DEVELOPER.md` | Developers | Architecture and coding patterns |
-| `PROJECT_SUMMARY.md` | All | Complete project overview |
-| `CHANGELOG.md` | All | Version history and roadmap |
-| `QUICK_REFERENCE.md` | Developers | Commands and class locations |
-| Javadoc comments | Developers | API documentation in code |
+ | Document | Audience | Purpose |
+ | ---------- | ---------- | --------- |
+ | `README.md` | End Users | How to use the application |
+ | `DEVELOPER.md` | Developers | Architecture and coding patterns |
+ | `PROJECT_SUMMARY.md` | All | Complete project overview |
+ | `CHANGELOG.md` | All | Version history and roadmap |
+ | `QUICK_REFERENCE.md` | Developers | Commands and class locations |
+ | Javadoc comments | Developers | API documentation in code |
 
 ---
 
 ## 🔧 Build Configuration
 
 ### Maven Plugins
+
 - `javafx-maven-plugin` - Run JavaFX applications
 - `maven-compiler-plugin` - Java 21 compilation
 - `maven-surefire-plugin` - Run tests
@@ -217,6 +238,7 @@ graph-digitizer-java/
 - `maven-javadoc-plugin` - Generate API docs
 
 ### Dependencies
+
 - **JavaFX 21.0.2** - GUI framework
 - **GSON 2.10.1** - JSON serialization
 - **Apache Commons CSV 1.10.0** - CSV I/O
@@ -229,22 +251,26 @@ graph-digitizer-java/
 ## 💡 Design Highlights
 
 ### Separation of Concerns
+
 - **Core**: Pure algorithms, testable without GUI
 - **Image**: Image I/O and processing
 - **IO**: File format handlers
 - **UI**: JavaFX user interface only
 
 ### Type Safety
+
 - Java 21 `record` type for immutable `Point`
 - Proper use of generics and type parameters
 - No raw types or unchecked casts
 
 ### Extensibility
+
 - Add new export formats easily
 - Core utilities reusable in other projects
 - Plugin-ready architecture for future enhancement
 
 ### Testing
+
 - Core classes tested independently
 - Test structure mirrors source structure
 - Framework-agnostic unit tests
@@ -254,7 +280,9 @@ graph-digitizer-java/
 ## 📋 File Formats
 
 ### JSON Format
+
 Complete project with metadata and calibration:
+
 ```json
 {
   "title": "My Plot",
@@ -265,89 +293,111 @@ Complete project with metadata and calibration:
   "x_log": false, "y_log": false,
   "datasets": [{"name": "Data1", "color": "#0072B2", "points": [[x, y], ...]}]
 }
-```
+
+```text
 
 ### CSV Format
+
 Wide-format for spreadsheets:
-```
+
+```text
 x,Dataset_1,Dataset_2
 0.0,0.1,-0.05
 1.0,0.15,0.2
-```
+
+```text
 
 ---
 
 ## 🎯 Common Tasks
 
 ### Build for Development
+
 ```bash
 mvn clean package
-```
+
+```text
 
 ### Run During Development
+
 ```bash
 mvn javafx:run
-```
+
+```text
 
 ### Run All Tests
+
 ```bash
 mvn test
-```
+
+```text
 
 ### Generate Javadoc
+
 ```bash
 mvn javadoc:javadoc
+
 # Output: target/site/apidocs/
-```
+
+```text
 
 ### Create Executable JAR
+
 ```bash
 mvn clean package
+
 # Creates: target/graph-digitizer-1.2.0.jar
-```
+
+```text
 
 ### View Dependency Tree
+
 ```bash
 mvn dependency:tree
-```
+
+```text
 
 ---
 
 ## 📊 Statistics
 
-| Metric | Count |
-|--------|-------|
-| Java Classes | 26 |
-| Test Classes | 2 |
-| Lines of Code | ~3,500+ |
-| Packages | 4 (core, image, io, ui) |
-| Documentation Pages | 5 |
-| Maven Dependencies | 11 |
-| Maven Plugins | 8 |
+ | Metric | Count |
+ | -------- | ------- |
+ | Java Classes | 26 |
+ | Test Classes | 2 |
+ | Lines of Code | ~3,500+ |
+ | Packages | 4 (core, image, io, ui) |
+ | Documentation Pages | 5 |
+ | Maven Dependencies | 11 |
+ | Maven Plugins | 8 |
 
 ---
 
 ## 🔐 Quality Assurance
 
 ### Code Organization
+
 - ✅ Clear package structure
 - ✅ Separation of concerns
 - ✅ No circular dependencies
 - ✅ Comprehensive Javadoc
 
 ### Testing
+
 - ✅ Unit tests for core utilities
 - ✅ Test structure mirrors source
 - ✅ Tests are GUI-independent
 - ✅ Easy to add more tests
 
 ### Documentation
+
 - ✅ README with quick start
 - ✅ Developer guide with examples
 - ✅ API documented with Javadoc
 - ✅ Usage examples in code
 
 ### Build
+
 - ✅ Maven POM properly configured
 - ✅ All dependencies managed
 - ✅ Plugins configured correctly
@@ -358,17 +408,20 @@ mvn dependency:tree
 ## 🚦 Getting Started
 
 ### For Users
+
 1. Build: `mvn clean package`
 2. Run: `java -jar target/graph-digitizer-1.2.0.jar`
 3. Read: `README.md`
 
 ### For Developers
+
 1. Read: `DEVELOPER.md`
 2. Explore: `src/main/java/com/digitizer/core/`
 3. Check: Unit tests in `src/test/java/`
 4. Contribute!
 
 ### For Contributors
+
 1. Fork the repository
 2. Create feature branch
 3. Write tests
@@ -395,6 +448,7 @@ See `LICENSE` file for full text.
 ---
 
 **This project is complete, documented, and ready for**:
+
 - ✅ Compilation with Maven
 - ✅ Execution on Java 21+
 - ✅ Extension with new features

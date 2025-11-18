@@ -24,7 +24,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Utility class for file operations including filename sanitization and defaults.
+ * Utility class for file operations including filename sanitization and
+ * default save location discovery.
+ * <p>
+ * This class provides helper methods used by the UI export logic to build
+ * safe filenames for saving and to determine the preferred location for
+ * exported files. Use {@link #sanitizeFilename(String)} when creating
+ * user-generated filenames to avoid platform-specific issues.
  */
 public final class FileUtils {
 
@@ -132,5 +138,16 @@ public final class FileUtils {
             return filename.substring(lastDot + 1);
         }
         return "";
+    }
+
+    /**
+     * Convenience method that returns the current system timestamp formatted
+     * for use as a filename suffix. This can be used when generating
+     * default filenames for exports.
+     *
+     * @return formatted timestamp like "2025-11-18_143020"
+     */
+    public static String getTimestampForFilename() {
+        return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
     }
 }
