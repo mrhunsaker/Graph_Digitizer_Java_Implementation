@@ -34,7 +34,6 @@ import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -44,6 +43,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -791,6 +791,22 @@ public class MainWindow {
             Bounds vp = this.scrollPane.getViewportBounds();
             canvasPanel.fitToViewport(vp.getWidth(), vp.getHeight());
             this.zoomSlider.setValue(canvasPanel.getZoom());
+            // After canvasPanel resizes to the new zoom, center horizontally
+            Platform.runLater(() -> {
+                try {
+                    double contentWidth = canvasPanel.getBoundsInParent().getWidth();
+                    double viewportWidth = this.scrollPane.getViewportBounds().getWidth();
+                    double maxW = Math.max(0.0, contentWidth - viewportWidth);
+                    if (maxW <= 0) this.scrollPane.setHvalue(0);
+                    else this.scrollPane.setHvalue(0.5); // center horizontally
+                    // Center vertically as well
+                    double contentHeight = canvasPanel.getBoundsInParent().getHeight();
+                    double viewportHeight = this.scrollPane.getViewportBounds().getHeight();
+                    double maxH = Math.max(0.0, contentHeight - viewportHeight);
+                    if (maxH <= 0) this.scrollPane.setVvalue(0);
+                    else this.scrollPane.setVvalue(0.5); // center vertically
+                } catch (Exception ignore) { }
+            });
         });
         oneBtn.setOnAction(e -> {
             canvasPanel.setZoom(1.0);
@@ -833,6 +849,22 @@ public class MainWindow {
                 statusBar.setStatus(message);
                 AccessibilityHelper.announceAction(message);
                 logger.info("Loaded image: {}", file.getAbsolutePath());
+                // Center horizontally after load so the image appears centered
+                Platform.runLater(() -> {
+                    try {
+                        double contentWidth = canvasPanel.getBoundsInParent().getWidth();
+                        double viewportWidth = this.scrollPane.getViewportBounds().getWidth();
+                        double maxW = Math.max(0.0, contentWidth - viewportWidth);
+                        if (maxW <= 0) this.scrollPane.setHvalue(0);
+                        else this.scrollPane.setHvalue(0.5);
+                        // Also center vertically after load
+                        double contentHeight = canvasPanel.getBoundsInParent().getHeight();
+                        double viewportHeight = this.scrollPane.getViewportBounds().getHeight();
+                        double maxH = Math.max(0.0, contentHeight - viewportHeight);
+                        if (maxH <= 0) this.scrollPane.setVvalue(0);
+                        else this.scrollPane.setVvalue(0.5);
+                    } catch (Exception ignore) { }
+                });
             } catch (Exception e) {
                 String message = "Error loading image: " + e.getMessage();
                 statusBar.setStatus(message);

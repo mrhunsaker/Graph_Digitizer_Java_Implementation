@@ -90,6 +90,53 @@ end user to install Java, see "Packaging & Distribution" below.
 - **Export Formats**: Save to JSON (full metadata) or CSV (tabular data)
 - **Responsive UI**: Modern JavaFX interface with intuitive controls
 
+## Example Session & Assets
+
+The `docs/README_Assets` folder contains a screenshot from a sample digitization session and the raw data files produced during that session. The assets were moved into the documentation directory so they are versioned with the project.
+
+- **Screenshot (inline):**
+
+  ![Session Screenshot](docs/README_Assets/Screenshot 2025-11-19 073537.png)
+
+- **Session data (raw files):**
+
+  - CSV: [Sample_Graph_20251119-073453.csv](docs/README_Assets/Sample_Graph_20251119-073453.csv)
+  - JSON: [Sample_Graph_20251119-073453.json](docs/README_Assets/Sample_Graph_20251119-073453.json)
+
+Inline examples (small excerpts):
+
+CSV excerpt:
+
+```csv
+x,Linear,InverseLinear,zigzag,nil,Mountain,Dataset 6
+1,0.13245033112582782,-0.033112582781456956,-0.033112582781456956,0,0.16556291390728478,
+2,0.9602649006622516,15.132450331125828,0.8940397350993378,0.9271523178807948,1.0596026490066226,
+3,1.9867549668874174,14.072847682119205,2.185430463576159,0.9271523178807948,1.0264900662251657,
+```
+
+JSON excerpt:
+
+```json
+{
+  "title": "Sample Graph",
+  "xlabel": "X values (0-15)",
+  "ylabel": "Y values (0-15)",
+  "x_min": 0.0,
+  "x_max": 15.0
+}
+```
+
+Additional example files demonstrating common cases:
+
+- Log-scaled X axis example (CSV/JSON):
+  - [graph_digitizer_example_log.csv](docs/README_Assets/graph_digitizer_example_log.csv)
+  - [graph_digitizer_example_log.json](docs/README_Assets/graph_digitizer_example_log.json)
+
+- Missing values example (CSV/JSON):
+  - [graph_digitizer_example_missing.csv](docs/README_Assets/graph_digitizer_example_missing.csv)
+  - [graph_digitizer_example_missing.json](docs/README_Assets/graph_digitizer_example_missing.json)
+
+
 ## Project Structure
 
 ```text
