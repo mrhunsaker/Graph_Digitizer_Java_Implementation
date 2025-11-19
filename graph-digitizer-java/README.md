@@ -236,6 +236,8 @@ Click "Load Image" button and select a PNG or JPEG file containing the graph.
 
 Select a dataset and click "Auto Trace". The algorithm scans columns and selects pixels matching the dataset color.
 
+Note: Auto Trace is guarded by a runtime feature flag. If the Auto Trace controls are disabled, enable them via the menu: **Actions -> Enable Auto Trace**. The toggle updates the toolbar button and menu item immediately without restarting the app. This allows you to safely keep the unfinished Auto Trace implementation hidden until you're ready to use it.
+
 ### 5. Save Your Work
 
 - **Save JSON**: Full project with metadata and all datasets

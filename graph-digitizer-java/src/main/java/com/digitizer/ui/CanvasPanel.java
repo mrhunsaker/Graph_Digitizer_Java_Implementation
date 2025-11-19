@@ -32,8 +32,15 @@ import com.digitizer.image.AutoTracer;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
@@ -98,6 +105,15 @@ public class CanvasPanel extends StackPane {
     /** Whether the panel is in calibration mode (recording anchor points). */
     private boolean calibrationMode = false;
     private List<Point2D> calibrationPoints = new ArrayList<>();
+
+    // Auto-trace seed capture mode
+    private boolean autoTraceSeedMode = false;
+    private int autoTraceExpectedSeeds = 0;
+    private List<Point2D> autoTraceSeeds = new ArrayList<>();
+    // Default seed-based trace parameters
+    private int seedWindowHalfHeight = 8;
+    private double seedTolerance = 0.25; // RGB euclidean distance threshold
+    private int seedMaxGap = 3;
 
     /** Display scale applied to image rendering (pixel multiplier). */
     private double displayScale = 1.0;
@@ -386,26 +402,60 @@ public class CanvasPanel extends StackPane {
             throw new IllegalStateException("Calibration must be applied first");
         }
 
-        CoordinateTransformer transformer = new CoordinateTransformer(calibration);
-        int startX = (int) Math.min(
-                calibration.getPixelXMin().getX(),
-                calibration.getPixelXMax().getX()
-        );
-        int endX = (int) Math.max(
-                calibration.getPixelXMin().getX(),
-                calibration.getPixelXMax().getX()
-        );
+        // Present a simple dialog to collect seed-based tracing options and number of seeds
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Auto Trace Options");
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
 
-        AutoTracer tracer = new AutoTracer(currentImage, transformer, startX, endX);
-        int safeIdx = Math.max(0, Math.min(activeDatasetIndex, datasets.size() - 1));
-        Dataset activeDataset = datasets.get(safeIdx);
-        List<Point> tracedPoints = tracer.traceDataset(activeDataset);
+        Label lblCount = new Label("Number of lines to trace:");
+        Spinner<Integer> spCount = new Spinner<>();
+        spCount.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Math.max(1, datasets.size()), 1));
 
-        activeDataset.clearPoints();
-        activeDataset.getPoints().addAll(tracedPoints);
+        Label lblWindow = new Label("Vertical window half-height (px):");
+        Spinner<Integer> spWindow = new Spinner<>();
+        spWindow.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, seedWindowHalfHeight));
 
-        logger.info("Auto-traced {} points", tracedPoints.size());
-        redraw();
+        Label lblTol = new Label("Color tolerance (0.05..1.5):");
+        TextField tfTol = new TextField(String.valueOf(seedTolerance));
+
+        Label lblGap = new Label("Max gap (columns):");
+        Spinner<Integer> spGap = new Spinner<>();
+        spGap.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 50, seedMaxGap));
+
+        grid.add(lblCount, 0, 0);
+        grid.add(spCount, 1, 0);
+        grid.add(lblWindow, 0, 1);
+        grid.add(spWindow, 1, 1);
+        grid.add(lblTol, 0, 2);
+        grid.add(tfTol, 1, 2);
+        grid.add(lblGap, 0, 3);
+        grid.add(spGap, 1, 3);
+
+        dlg.getDialogPane().setContent(grid);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                try {
+                    int count = spCount.getValue();
+                    int window = spWindow.getValue();
+                    double tol = Double.parseDouble(tfTol.getText());
+                    int gap = spGap.getValue();
+                    // Enter seed-capture mode
+                    this.autoTraceSeedMode = true;
+                    this.autoTraceExpectedSeeds = Math.max(1, count);
+                    this.autoTraceSeeds.clear();
+                    this.seedWindowHalfHeight = Math.max(1, window);
+                    this.seedTolerance = Math.max(0.0, tol);
+                    this.seedMaxGap = Math.max(0, gap);
+                    AccessibilityHelper.announceAction("Auto-trace: click " + this.autoTraceExpectedSeeds + " seed points on the image");
+                } catch (Exception e) {
+                    AccessibilityHelper.announceAction("Invalid auto-trace options");
+                }
+            }
+        });
     }
 
     /**
@@ -447,6 +497,28 @@ public class CanvasPanel extends StackPane {
                 gc.strokeOval(pt.getX() - halfCalibSize, pt.getY() - halfCalibSize, 
                              effectiveCalibSize, effectiveCalibSize);
             }
+        }
+
+        // Draw auto-trace seeds (if any) - show captured seeds or live capture markers
+        if (!autoTraceSeeds.isEmpty() || autoTraceSeedMode) {
+            double seedSize = 8.0 / zoom;
+            double half = seedSize / 2.0;
+            gc.save();
+            gc.setLineWidth(2.0);
+            gc.setStroke(Color.BLUE);
+            gc.setFill(Color.color(0.2, 0.4, 1.0, 0.6));
+            for (int i = 0; i < autoTraceSeeds.size(); i++) {
+                Point2D img = autoTraceSeeds.get(i);
+                Point2D canvasPt = imageToCanvas(img);
+                double cx = canvasPt.getX();
+                double cy = canvasPt.getY();
+                gc.fillOval(cx - half, cy - half, seedSize, seedSize);
+                gc.strokeOval(cx - half, cy - half, seedSize, seedSize);
+                gc.setFill(Color.WHITE);
+                gc.fillText(String.valueOf(i + 1), cx - 3, cy + 4);
+                gc.setFill(Color.color(0.2, 0.4, 1.0, 0.6));
+            }
+            gc.restore();
         }
 
         // Draw vertical snap lines for each configured snap X value (if calibrated and visible)
@@ -791,6 +863,97 @@ public class CanvasPanel extends StackPane {
             redraw();
         }
         else {
+            // If we are in auto-trace seed-capture mode, collect seed(s) and return
+            if (autoTraceSeedMode) {
+                Point2D imgCoords = canvasToImage(x, y);
+                autoTraceSeeds.add(imgCoords);
+                AccessibilityHelper.announceAction("Seed " + autoTraceSeeds.size() + " captured");
+                redraw();
+
+                if (autoTraceSeeds.size() >= autoTraceExpectedSeeds) {
+                    // Exit seed capture mode and perform tracing on a background thread
+                    List<Point2D> seedsCopy = new ArrayList<>(autoTraceSeeds);
+                    int startX = (int) Math.min(
+                            calibration.getPixelXMin().getX(),
+                            calibration.getPixelXMax().getX()
+                    );
+                    int endX = (int) Math.max(
+                            calibration.getPixelXMin().getX(),
+                            calibration.getPixelXMax().getX()
+                    );
+                    this.autoTraceSeedMode = false;
+                    this.autoTraceSeeds.clear();
+
+                    // Run tracing off the FX thread
+                    new Thread(() -> {
+                        try {
+                            CoordinateTransformer transformer = new CoordinateTransformer(calibration);
+                            AutoTracer tracer = new AutoTracer(currentImage, transformer, startX, endX);
+                            // After seeds captured, ask the user to confirm mapping seed -> dataset
+                            javafx.application.Platform.runLater(() -> {
+                                Dialog<ButtonType> mapDlg = new Dialog<>();
+                                mapDlg.setTitle("Map Seeds to Datasets");
+                                GridPane mapGrid = new GridPane();
+                                mapGrid.setHgap(10);
+                                mapGrid.setVgap(8);
+
+                                List<javafx.scene.control.ComboBox<String>> boxes = new ArrayList<>();
+                                for (int si = 0; si < seedsCopy.size(); si++) {
+                                    mapGrid.add(new Label("Seed " + (si + 1) + ":"), 0, si);
+                                    javafx.scene.control.ComboBox<String> cb = new javafx.scene.control.ComboBox<>();
+                                    for (Dataset d : datasets) cb.getItems().add(d.getName());
+                                    int def = Math.min(datasets.size() - 1, Math.max(0, activeDatasetIndex + si));
+                                    cb.getSelectionModel().select(def);
+                                    boxes.add(cb);
+                                    mapGrid.add(cb, 1, si);
+                                }
+
+                                mapDlg.getDialogPane().setContent(mapGrid);
+                                mapDlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+                                mapDlg.showAndWait().ifPresent(mapBt -> {
+                                    if (mapBt == ButtonType.OK) {
+                                        // Run tracing for each mapping on a background thread
+                                        new Thread(() -> {
+                                            try {
+                                                for (int si = 0; si < seedsCopy.size(); si++) {
+                                                    Point2D seed = seedsCopy.get(si);
+                                                    javafx.scene.control.ComboBox<String> cb = boxes.get(si);
+                                                    int dsIdx = Math.max(0, Math.min(datasets.size() - 1, cb.getSelectionModel().getSelectedIndex()));
+                                                    Dataset ds = datasets.get(dsIdx);
+                                                    // Sample seed color at the seed pixel
+                                                    Color seedColor = currentImage.getPixelReader().getColor((int)Math.round(seed.getX()), (int)Math.round(seed.getY()));
+                                                    // Trace using seed color with a small lookahead to bridge dashes
+                                                    List<com.digitizer.core.Point> traced = tracer.traceFromSeedColor(seedColor, ds.isUseSecondaryYAxis(), (int)Math.round(seed.getX()), (int)Math.round(seed.getY()), seedWindowHalfHeight, seedTolerance, seedMaxGap, 3);
+                                                    // Post-process: median smoothing (window 3) and outlier removal (10% Y-range)
+                                                    List<com.digitizer.core.Point> post = postProcessTracedPoints(traced, true, 3, 0.10, ds.isUseSecondaryYAxis());
+                                                    final int assignIdx = dsIdx;
+                                                    javafx.application.Platform.runLater(() -> {
+                                                        Dataset target = datasets.get(assignIdx);
+                                                        target.clearPoints();
+                                                        target.getPoints().addAll(post);
+                                                        redraw();
+                                                    });
+                                                }
+                                                javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace complete"));
+                                            } catch (Exception ex) {
+                                                logger.error("Error during seed-based auto-trace", ex);
+                                                javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace failed: " + ex.getMessage()));
+                                            }
+                                        }).start();
+                                    } else {
+                                        AccessibilityHelper.announceAction("Auto-trace cancelled");
+                                    }
+                                });
+                            });
+                        } catch (Exception ex) {
+                            logger.error("Error during seed-based auto-trace", ex);
+                            javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace failed: " + ex.getMessage()));
+                        }
+                    }).start();
+                }
+                return;
+            }
             CoordinateTransformer transformer = new CoordinateTransformer(calibration);
             boolean useSecondary = false;
             if (datasets != null && !datasets.isEmpty()) {
@@ -886,6 +1049,66 @@ public class CanvasPanel extends StackPane {
         redraw();
         AccessibilityHelper.announceAction("Calibration applied");
         return true;
+    }
+    
+    /**
+     * Post-process traced points: optional median smoothing and outlier removal.
+     * @param pts raw traced points (in data coordinates)
+     * @param smooth whether to apply median smoothing
+     * @param medianWindow odd window size (3..11)
+     * @param outlierFraction remove jumps larger than this fraction of Y-range (0 disables)
+     * @param useSecondary whether Y uses the secondary axis (for range calculation)
+     * @return processed points
+     */
+    private List<com.digitizer.core.Point> postProcessTracedPoints(List<com.digitizer.core.Point> pts, boolean smooth, int medianWindow, double outlierFraction, boolean useSecondary) {
+        List<com.digitizer.core.Point> result = new ArrayList<>();
+        if (pts == null || pts.isEmpty()) return result;
+
+        int n = pts.size();
+        double[] xs = new double[n];
+        double[] ys = new double[n];
+        for (int i = 0; i < n; i++) {
+            xs[i] = pts.get(i).x();
+            ys[i] = pts.get(i).y();
+        }
+
+        double[] ys2 = ys.clone();
+        if (smooth) {
+            int half = Math.max(1, medianWindow / 2);
+            for (int i = 0; i < n; i++) {
+                int a = Math.max(0, i - half);
+                int b = Math.min(n - 1, i + half);
+                double[] window = new double[b - a + 1];
+                for (int j = a; j <= b; j++) window[j - a] = ys[j];
+                java.util.Arrays.sort(window);
+                ys2[i] = window[window.length / 2];
+            }
+        }
+
+        // Outlier removal based on Y-range fraction of chosen axis
+        double yMin, yMax;
+        if (useSecondary && calibration.getDataY2Min() != null && calibration.getDataY2Max() != null) {
+            yMin = calibration.getDataY2Min();
+            yMax = calibration.getDataY2Max();
+        } else {
+            yMin = calibration.getDataYMin();
+            yMax = calibration.getDataYMax();
+        }
+        double yRange = Math.abs(yMax - yMin);
+        double maxJump = (outlierFraction > 0 && yRange > 0) ? outlierFraction * yRange : Double.POSITIVE_INFINITY;
+
+        // Build filtered result by removing points with large jumps compared to previous accepted point
+        result.add(new com.digitizer.core.Point(xs[0], ys2[0]));
+        for (int i = 1; i < n; i++) {
+            double jump = Math.abs(ys2[i] - ys2[i - 1]);
+            if (jump <= maxJump) {
+                result.add(new com.digitizer.core.Point(xs[i], ys2[i]));
+            } else {
+                // skip this point as outlier
+            }
+        }
+
+        return result;
     }
     
 }

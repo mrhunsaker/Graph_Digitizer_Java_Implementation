@@ -61,6 +61,11 @@ import javafx.stage.Stage;
  * interactions (file open, calibration flow, export) to core functionality
  * and coordinates cross-component communication (e.g., updating the
  * {@link StatusBar}).
+ *
+ * Note: The availability of the Auto Trace feature is controlled by a runtime
+ * feature flag. Use the Actions -> "Enable Auto Trace" menu toggle to enable
+ * or disable the Auto Trace button and menu item while the feature is being
+ * refined.
  */
 public class MainWindow {
 
@@ -89,6 +94,12 @@ public class MainWindow {
     private javafx.scene.control.ScrollBar leftScroll;
     private Slider zoomSlider;
     private AccessibilityPreferences accessibilityPrefs;
+    /** Runtime feature flag controlling Auto Trace availability. */
+    private boolean autoTraceEnabled = false;
+    /** Toolbar button for Auto Trace (held as a field so it can be toggled). */
+    private Button autoTraceBtn;
+    /** Menu item for Auto Trace (held as a field so it can be toggled). */
+    private MenuItem autoTraceItem;
 
     /**
      * Constructs a new MainWindow.
@@ -151,7 +162,7 @@ public class MainWindow {
         // Increase control panel width to avoid wrapping of dataset row controls
         // Allow the panel to expand with the window by removing a small fixed max
         controlPanel.setPrefWidth(700);
-        controlPanel.setMinWidth(500);
+        controlPanel.setMinWidth(700);
         controlPanel.setMaxWidth(Double.MAX_VALUE);
         statusBar = new StatusBar();
         
@@ -406,15 +417,18 @@ public class MainWindow {
 
         MenuItem saveCsvItem = new MenuItem("Save CSV");
         saveCsvItem.setOnAction(e -> handleSaveCsv());
-        saveCsvItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
+        // Match toolbar hint: Ctrl+E for export CSV
+        saveCsvItem.setAccelerator(new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN));
 
         MenuItem openJsonItem = new MenuItem("Open JSON");
         openJsonItem.setOnAction(e -> handleOpenJson());
-        openJsonItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
+        // Use Ctrl+Shift+O for opening project JSON to avoid clashing with Load Image
+        openJsonItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
 
         MenuItem saveJsonItem = new MenuItem("Save JSON");
         saveJsonItem.setOnAction(e -> handleSaveJson());
-        saveJsonItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
+        // Match toolbar hint: Ctrl+S for saving project JSON
+        saveJsonItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
 
         MenuItem aboutItem = new MenuItem("About");
         aboutItem.setOnAction(e -> showAboutDialog());
@@ -442,7 +456,63 @@ public class MainWindow {
         // Accessibility menu (contains color-blind palette choices)
         Menu accessibilityMenu = createAccessibilityMenu();
 
-        menuBar.getMenus().addAll(fileMenu, themesMenu, accessibilityMenu);
+        // Actions menu mirrors toolbar buttons and provides accelerators
+        Menu actionsMenu = new Menu("Actions");
+
+        MenuItem loadImageItem = new MenuItem("Load Image");
+        loadImageItem.setOnAction(e -> handleLoadImage());
+        loadImageItem.setAccelerator(new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN));
+
+        MenuItem calibrateItem = new MenuItem("Calibrate");
+        calibrateItem.setOnAction(e -> handleCalibrate());
+        calibrateItem.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.CONTROL_DOWN));
+
+        // Auto Trace menu item (enabled/disabled by runtime feature flag)
+        this.autoTraceItem = new MenuItem("Auto Trace");
+        this.autoTraceItem.setOnAction(e -> handleAutoTrace());
+        this.autoTraceItem.setAccelerator(new KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN));
+        this.autoTraceItem.setDisable(!autoTraceEnabled);
+
+        // Toggle to enable/disable Auto Trace at runtime
+        javafx.scene.control.CheckMenuItem enableAutoTraceToggle = new javafx.scene.control.CheckMenuItem("Enable Auto Trace");
+        enableAutoTraceToggle.setSelected(this.autoTraceEnabled);
+        enableAutoTraceToggle.setOnAction(ev -> toggleAutoTrace(enableAutoTraceToggle.isSelected()));
+
+        MenuItem fitItem = new MenuItem("Fit to Viewport");
+        fitItem.setOnAction(ev -> {
+            try {
+                Bounds vp = this.scrollPane.getViewportBounds();
+                canvasPanel.fitToViewport(vp.getWidth(), vp.getHeight());
+                this.zoomSlider.setValue(canvasPanel.getZoom());
+                Platform.runLater(() -> {
+                    try {
+                        double contentWidth = canvasPanel.getBoundsInParent().getWidth();
+                        double viewportWidth = this.scrollPane.getViewportBounds().getWidth();
+                        double maxW = Math.max(0.0, contentWidth - viewportWidth);
+                        if (maxW <= 0) this.scrollPane.setHvalue(0);
+                        else this.scrollPane.setHvalue(0.5);
+                        double contentHeight = canvasPanel.getBoundsInParent().getHeight();
+                        double viewportHeight = this.scrollPane.getViewportBounds().getHeight();
+                        double maxH = Math.max(0.0, contentHeight - viewportHeight);
+                        if (maxH <= 0) this.scrollPane.setVvalue(0);
+                        else this.scrollPane.setVvalue(0.5);
+                    } catch (Exception ignore) { }
+                });
+            } catch (Exception ignore) { }
+        });
+        // No standard accelerator for Fit; allow Ctrl+Shift+F
+        fitItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
+
+        MenuItem oneToOneItem = new MenuItem("100% Zoom");
+        oneToOneItem.setOnAction(ev -> {
+            canvasPanel.setZoom(1.0);
+            this.zoomSlider.setValue(1.0);
+        });
+        oneToOneItem.setAccelerator(new KeyCodeCombination(KeyCode.DIGIT0, KeyCombination.CONTROL_DOWN));
+
+        actionsMenu.getItems().addAll(loadImageItem, calibrateItem, enableAutoTraceToggle, this.autoTraceItem, new SeparatorMenuItem(), fitItem, oneToOneItem);
+
+        menuBar.getMenus().addAll(fileMenu, actionsMenu, themesMenu, accessibilityMenu);
 
         // Edit menu (Undo/Redo)
         Menu editMenu = new Menu("Edit");
@@ -730,9 +800,8 @@ public class MainWindow {
         alert.initOwner(primaryStage);
         alert.setTitle("About Graph Digitizer");
         alert.setHeaderText("Graph Digitizer");
-        String content = "Graph Digitizer\nVersion " + GraphDigitizerApp.APP_VERSION + "\n\n" +
-                "A Java port of the Graph Digitizer application.\n" +
-                "Author: Michael Ryan Hunsaker\n" +
+        String content = "Version " + GraphDigitizerApp.APP_VERSION + "\n\n" +
+                "Author: Michael Ryan Hunsaker, M.Ed., Ph.D.\n" +
                 "Licensed under the Apache 2.0 License.";
         alert.setContentText(content);
         alert.showAndWait();
@@ -761,11 +830,12 @@ public class MainWindow {
             "Enter calibration mode to set axis reference points by clicking 4 locations", "Ctrl+L");
         calibrateBtn.setOnAction(e -> handleCalibrate());
 
-        // Auto Trace button
-        Button autoTraceBtn = new Button("Auto Trace");
-        AccessibilityHelper.setButtonAccessibility(autoTraceBtn, "Auto Trace", 
+        // Auto Trace button (enabled/disabled by runtime feature flag)
+        this.autoTraceBtn = new Button("Auto Trace");
+        AccessibilityHelper.setButtonAccessibility(this.autoTraceBtn, "Auto Trace", 
             "Automatically detect and trace the data curve using color matching", "Ctrl+T");
-        autoTraceBtn.setOnAction(e -> handleAutoTrace());
+        this.autoTraceBtn.setOnAction(e -> handleAutoTrace());
+        this.autoTraceBtn.setDisable(!autoTraceEnabled);
 
         // Save JSON button
         Button saveJsonBtn = new Button("Save JSON");
@@ -779,7 +849,7 @@ public class MainWindow {
             "Export data points to a CSV file for use in spreadsheets and other tools", "Ctrl+E");
         saveCsvBtn.setOnAction(e -> handleSaveCsv());
 
-        toolbar.getChildren().addAll(loadImageBtn, calibrateBtn, autoTraceBtn, saveJsonBtn, saveCsvBtn);
+        toolbar.getChildren().addAll(loadImageBtn, calibrateBtn, this.autoTraceBtn, saveJsonBtn, saveCsvBtn);
 
         // --- Zoom controls ---
         Label zoomLabel = new Label("Zoom:");
@@ -1084,6 +1154,25 @@ public class MainWindow {
                 else this.leftScroll.setValue(v * max);
             } catch (Exception ignore) { }
         });
+    }
+
+    /**
+     * Toggle Auto Trace availability at runtime. Enables or disables the toolbar
+     * button and the corresponding menu item to prevent users from invoking
+     * Auto Trace while the feature is disabled.
+     *
+     * @param enabled true to enable Auto Trace, false to disable
+     */
+    private void toggleAutoTrace(boolean enabled) {
+        this.autoTraceEnabled = enabled;
+        try {
+            if (this.autoTraceBtn != null) this.autoTraceBtn.setDisable(!enabled);
+            if (this.autoTraceItem != null) this.autoTraceItem.setDisable(!enabled);
+            String msg = "Auto Trace " + (enabled ? "enabled" : "disabled");
+            if (this.statusBar != null) this.statusBar.setStatus(msg);
+            AccessibilityHelper.announceAction(msg);
+            logger.info("Auto Trace toggled: {}", enabled);
+        } catch (Exception ignore) { }
     }
 
     /**

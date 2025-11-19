@@ -529,7 +529,7 @@ public class ControlPanel extends VBox {
             });
             line.getChildren().add(visibleBox);
             // Axis assignment: Primary / Secondary (secondary maps to right-hand axis)
-            javafx.scene.control.CheckBox axisCheck = new javafx.scene.control.CheckBox("Use secondary Y");
+            javafx.scene.control.CheckBox axisCheck = new javafx.scene.control.CheckBox("Secondary Y");
             axisCheck.setSelected(dataset.isUseSecondaryYAxis());
             axisCheck.setTooltip(new javafx.scene.control.Tooltip("When checked, this dataset is plotted against the secondary (right-hand) Y axis"));
             axisCheck.setOnAction(evt -> {
