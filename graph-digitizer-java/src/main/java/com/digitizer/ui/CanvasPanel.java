@@ -102,9 +102,33 @@ public class CanvasPanel extends StackPane {
     public void setZoom(double z) {
         if (z <= 0) return;
         this.zoom = z;
+        // Resize the canvas to reflect the requested zoom so parent ScrollPane
+        // sees the correct content size and can provide scrolling to all pixels.
         javafx.application.Platform.runLater(() -> {
-            canvas.setScaleX(z);
-            canvas.setScaleY(z);
+            try {
+                if (currentImage != null) {
+                    double w = currentImage.getWidth() * this.zoom;
+                    double h = currentImage.getHeight() * this.zoom;
+                    canvas.setWidth(Math.max(1.0, w));
+                    canvas.setHeight(Math.max(1.0, h));
+                    // Report preferred size so parent ScrollPane shows full content
+                    this.setPrefWidth(canvas.getWidth());
+                    this.setPrefHeight(canvas.getHeight());
+                    // Update drawing scale used in redraw
+                    this.displayScale = this.zoom;
+                } else {
+                    // No image loaded yet; just set node transforms to identity
+                    canvas.setWidth(canvas.getWidth() * this.zoom);
+                    canvas.setHeight(canvas.getHeight() * this.zoom);
+                    this.setPrefWidth(canvas.getWidth());
+                    this.setPrefHeight(canvas.getHeight());
+                    this.displayScale = this.zoom;
+                }
+                // Ensure node-level scaling is not used (avoid double-scaling)
+                canvas.setScaleX(1.0);
+                canvas.setScaleY(1.0);
+                redraw();
+            } catch (Exception ignore) { }
         });
     }
 
@@ -136,11 +160,25 @@ public class CanvasPanel extends StackPane {
         double cw = canvas.getWidth();
         double ch = canvas.getHeight();
         if (cw <= 0 || ch <= 0) return;
-        double sx = viewportWidth / cw;
-        double sy = viewportHeight / ch;
-        double s = Math.min(sx, sy);
-        if (s <= 0) s = 1.0;
-        setZoom(s);
+        // Compute zoom such that the image (natural resolution) fits into the
+        // provided viewport. Use the image's natural size (currentImage) if available
+        // so that we compute scale relative to the image pixels.
+        if (currentImage != null) {
+            double iw = currentImage.getWidth();
+            double ih = currentImage.getHeight();
+            if (iw <= 0 || ih <= 0) return;
+            double sx = viewportWidth / iw;
+            double sy = viewportHeight / ih;
+            double s = Math.min(sx, sy);
+            if (s <= 0) s = 1.0;
+            setZoom(s);
+        } else {
+            double sx = viewportWidth / cw;
+            double sy = viewportHeight / ch;
+            double s = Math.min(sx, sy);
+            if (s <= 0) s = 1.0;
+            setZoom(s);
+        }
     }
 
     /**
@@ -267,13 +305,17 @@ public class CanvasPanel extends StackPane {
         double w = currentImage.getWidth();
         double h = currentImage.getHeight();
         if (w > 0 && h > 0) {
+            // Set canvas to image natural size. setZoom will later resize the
+            // canvas when a zoom is applied.
             canvas.setWidth(w);
             canvas.setHeight(h);
-            // Also ensure this pane reports preferred size so parent ScrollPane can show full image
             this.setPrefWidth(w);
             this.setPrefHeight(h);
             displayScale = 1.0;
-            // reset node scale to 100% when loading a new image
+            // Ensure node-level scaling is cleared
+            canvas.setScaleX(1.0);
+            canvas.setScaleY(1.0);
+            // Default zoom to 1.0 (100%) and resize canvas accordingly
             setZoom(1.0);
         }
 
@@ -334,9 +376,12 @@ public class CanvasPanel extends StackPane {
 
         // Draw image
         if (currentImage != null) {
-            gc.drawImage(currentImage, offsetX, offsetY, 
-                    currentImage.getWidth() * displayScale, 
-                    currentImage.getHeight() * displayScale);
+            // Draw the image scaled by displayScale which reflects the current zoom.
+            gc.drawImage(currentImage, 0, 0,
+                currentImage.getWidth(), currentImage.getHeight(),
+                offsetX, offsetY,
+                currentImage.getWidth() * displayScale,
+                currentImage.getHeight() * displayScale);
         }
 
         // Draw calibration points with zoom compensation
