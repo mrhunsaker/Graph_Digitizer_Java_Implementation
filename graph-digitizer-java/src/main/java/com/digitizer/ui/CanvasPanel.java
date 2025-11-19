@@ -76,6 +76,8 @@ public class CanvasPanel extends StackPane {
     // Selected dataset/point for keyboard-based editing when not in calibration mode
     private int selectedDatasetIndex = -1;
     private int selectedPointIndex = -1;
+    // Active dataset index for new points / auto-trace (driven by ControlPanel selector)
+    private int activeDatasetIndex = 0;
 
     private Image currentImage;
     /** Whether the panel is in calibration mode (recording anchor points). */
@@ -104,6 +106,18 @@ public class CanvasPanel extends StackPane {
             canvas.setScaleX(z);
             canvas.setScaleY(z);
         });
+    }
+
+    /**
+     * Sets which dataset index is considered "active" for point additions and auto-trace.
+     * This is intended to be driven by the dataset selector in {@link ControlPanel}.
+     * @param idx 0-based dataset index
+     */
+    public void setActiveDatasetIndex(int idx) {
+        if (idx < 0) idx = 0;
+        if (datasets != null && idx >= datasets.size()) idx = Math.max(0, datasets.size() - 1);
+        this.activeDatasetIndex = idx;
+        javafx.application.Platform.runLater(this::redraw);
     }
 
     /**
@@ -299,7 +313,8 @@ public class CanvasPanel extends StackPane {
         );
 
         AutoTracer tracer = new AutoTracer(currentImage, transformer, startX, endX);
-        Dataset activeDataset = datasets.get(0);
+        int safeIdx = Math.max(0, Math.min(activeDatasetIndex, datasets.size() - 1));
+        Dataset activeDataset = datasets.get(safeIdx);
         List<Point> tracedPoints = tracer.traceDataset(activeDataset);
 
         activeDataset.clearPoints();
@@ -384,7 +399,7 @@ public class CanvasPanel extends StackPane {
                 gc.setStroke(dataset.getColor());
                 gc.setLineWidth(2.0);
                 
-                for (Point point : dataset.getPoints()) {
+                    for (Point point : dataset.getPoints()) {
                     Point2D canvasPoint = new CoordinateTransformer(calibration)
                             .dataToCanvas(point.x(), point.y());
                     double x = canvasPoint.getX();
@@ -398,12 +413,12 @@ public class CanvasPanel extends StackPane {
                         int shapeIndex = i % 4;
                         switch (shapeIndex) {
                             case 0: // Circle
-                                gc.fillOval(x - halfSize, y - halfSize, pointSize, pointSize);
-                                gc.strokeOval(x - halfSize, y - halfSize, pointSize, pointSize);
+                                gc.fillOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                                gc.strokeOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
                                 break;
                             case 1: // Square
-                                gc.fillRect(x - halfSize, y - halfSize, pointSize, pointSize);
-                                gc.strokeRect(x - halfSize, y - halfSize, pointSize, pointSize);
+                                gc.fillRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                                gc.strokeRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
                                 break;
                             case 2: // Triangle
                                 gc.fillPolygon(
@@ -651,7 +666,8 @@ public class CanvasPanel extends StackPane {
                 }
             }
 
-            Dataset active = datasets.get(0);
+            int safeIdx = Math.max(0, Math.min(activeDatasetIndex, datasets.size() - 1));
+            Dataset active = datasets.get(safeIdx);
             // Use undo manager for point addition
             if (undoManager != null) {
                 UndoManager.AddPointAction action = new UndoManager.AddPointAction(active, newPoint);

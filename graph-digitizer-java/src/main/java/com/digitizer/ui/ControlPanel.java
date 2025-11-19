@@ -122,6 +122,8 @@ public class ControlPanel extends VBox {
             } else {
                 seriesTitleField.setText("Dataset " + (idx + 1));
             }
+            // Inform canvas which dataset is active so new points/auto-trace apply there
+            if (this.canvasPanel != null) this.canvasPanel.setActiveDatasetIndex(idx);
         });
 
         setTitleBtn.setOnAction(evt -> {

@@ -126,7 +126,7 @@ end user to install Java, see "Packaging & Distribution" below.
 │           └── io/
 └── target/                           # Build output
 
-```text
+```
 
 ## Architecture
 
@@ -215,7 +215,7 @@ Select a dataset and click "Auto Trace". The algorithm scans columns and selects
   ]
 }
 
-```text
+```
 
 ### CSV Format
 
@@ -227,7 +227,7 @@ x,Dataset_1,Dataset_2
 1.0,0.15,
 2.5,,0.2
 
-```text
+```
 
 ## Building and Extending
 
@@ -251,7 +251,7 @@ mvn test
 
 mvn javafx:run
 
-```text
+```
 
 ### Generating HTML API docs (Javadoc)
 
@@ -268,7 +268,7 @@ start target/site/apidocs/index.html # Windows
 open target/site/apidocs/index.html # macOS
 xdg-open target/site/apidocs/index.html # Linux
 
-```text
+```
 
 ## Packaging & Distribution (Click-able apps and Fat JARs)
 
@@ -305,7 +305,7 @@ application on macOS, Linux, and Windows.
   </executions>
 </plugin>
 
-```text
+```
 
 1. Then build the artifact:
 
@@ -316,7 +316,7 @@ mvn clean package
 
 java -jar target/graph_digitizer_1.0-beta.jar
 
-```text
+```
 
 Notes:
 
@@ -345,7 +345,7 @@ Basic flow (CLI approach):
 
 jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,java.logging,javafx.controls,javafx.graphics --output custom-runtime
 
-```text
+```
 
 1. Build an app image with jpackage (Windows example creating an exe):
 
@@ -358,7 +358,7 @@ jpackage --type exe \
   --runtime-image custom-runtime \
   --icon build/icons/graphdigitizer.ico
 
-```text
+```
 
 1. For macOS, use `--type dmg` or `--type pkg` and `--icon` as .icns.
 1. For Linux, use `--type deb` or `--type rpm`, or create an AppImage.
@@ -384,7 +384,7 @@ mvn -Pnative -Djpackage.type=dmg package
 
 mvn -Pnative -Djpackage.type=deb package
 
-```text
+```
 
 Notes:
 
@@ -409,7 +409,7 @@ Quick examples:
 appimage-builder --recipe packaging/appimage-builder.yml
 appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta updates
 
-```text
+```
 
 ```pwsh
 
@@ -417,7 +417,7 @@ appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta upd
 
 pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
 
-```text
+```
 
 ```bash
 
@@ -425,7 +425,7 @@ pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WI
 
 ./scripts/sign-macos.sh GraphDigitizer.app "Developer ID Application: Your Company" TEAMID GraphDigitizer.dmg
 
-```text
+```
 
 ### JavaFX & platform-native libraries
 
@@ -444,14 +444,14 @@ artifacts.
 mvn clean package
 jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,javafx.controls,javafx.graphics --output runtime-mac
 
-```text
+```
 
 1. Use `jpackage` to make a `.app` bundle and optionally `.dmg`:
 
 ```bash
 jpackage --type dmg --name GraphDigitizer --main-jar graph-digitizer-1.2.0.jar --main-class com.digitizer.ui.GraphDigitizerApp --runtime-image runtime-mac --icon build/icons/graphdigitizer.icns
 
-```text
+```
 
 ### Troubleshooting packaging
 
@@ -511,15 +511,14 @@ Run all tests:
 
 ```bash
 mvn test
-
-```text
+```
 
 Run specific test:
 
 ```bash
 mvn test -Dtest=FileUtilsTest
 
-```text
+```
 
 ## Development Notes
 
@@ -556,14 +555,14 @@ To enable async logging (reduces contention on the JavaFX UI thread), start the 
 ```bash
 java -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -jar target/graph_digitizer_1.0-beta.jar
 
-```text
+```
 
 Maven/JavaFX run example:
 
 ```bash
 mvn -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector javafx:run
 
-```text
+```
 
 Ensure the LMAX Disruptor dependency is present (already declared in `pom.xml`).
 
@@ -574,7 +573,7 @@ Ensure the LMAX Disruptor dependency is present (already declared in `pom.xml`).
 ```bash
 jq -c '.' logs/graph-digitizer.json
 
-```text
+```
 
 #### JSON Log Ingestion Scripts
 
@@ -589,12 +588,12 @@ Examples:
 pwsh scripts/ingest-json-log.ps1 -Level ERROR
 pwsh scripts/ingest-json-log.ps1 -Logger com.digitizer.ui
 
-```text
+```
 
 ```bash
 python scripts/ingest_json_log.py --level INFO --logger com.digitizer
 
-```text
+```
 
 #### MDC (Mapped Diagnostic Context)
 
@@ -608,14 +607,14 @@ Add a user id example:
 ```java
 LoggingConfig.initializeMdc(LoggingConfig.generateSessionId(), System.getProperty("user.name"));
 
-```text
+```
 
 Update pattern example:
 
 ```xml
 <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %X{session} %logger - %msg%n"/>
 
-```text
+```
 
 #### Environment Checks
 
@@ -633,7 +632,7 @@ Use the helper script to compress and prune older logs:
 pwsh scripts/archive-logs.ps1 -Days 14
 pwsh scripts/archive-logs.ps1 -DryRun
 
-```text
+```
 
 Creates `logs/archive-YYYYMMDD-HHMMSS.zip` and removes archived originals.
 
@@ -656,7 +655,7 @@ Ensure Java 21 is installed and JAVA_HOME is set:
 ```bash
 java -version
 
-```text
+```
 
 ### Image won't load
 
@@ -674,7 +673,7 @@ Try:
 mvn clean install
 mvn javafx:run
 
-```text
+```
 
 Ensure Maven has internet access to download dependencies.
 
@@ -720,7 +719,7 @@ If you want a public API site, run:
 ```bash
 mvn site
 
-```text
+```
 
 That will build documentation including Javadocs and test reports into
 `target/site` suitable for hosting.
