@@ -148,6 +148,11 @@ public class MainWindow {
         canvasPanel = new CanvasPanel(calibration, datasets, this.undoManager);
         this.undoManager.setCanvasPanel(canvasPanel);
         controlPanel = new ControlPanel(calibration, datasets, canvasPanel, accessibilityPrefs, this.undoManager);
+        // Increase control panel width to avoid wrapping of dataset row controls
+        // Allow the panel to expand with the window by removing a small fixed max
+        controlPanel.setPrefWidth(700);
+        controlPanel.setMinWidth(500);
+        controlPanel.setMaxWidth(Double.MAX_VALUE);
         statusBar = new StatusBar();
         
         // Detect OS text scaling

@@ -16,9 +16,10 @@
 
 package com.digitizer.io;
 
-import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Data model for JSON serialization of datasets.
@@ -35,6 +36,8 @@ public class DatasetJson {
     public List<List<Double>> points;
     @SerializedName("visible")
     public boolean visible = true;
+    @SerializedName("use_secondary_y")
+    public boolean useSecondaryY = false;
 
     /**
      * Constructs a new DatasetJson with empty points list.
@@ -62,5 +65,13 @@ public class DatasetJson {
         this.color = color;
         this.points = points != null ? points : new ArrayList<>();
         this.visible = visible;
+    }
+
+    public DatasetJson(String name, String color, List<List<Double>> points, boolean visible, boolean useSecondaryY) {
+        this.name = name;
+        this.color = color;
+        this.points = points != null ? points : new ArrayList<>();
+        this.visible = visible;
+        this.useSecondaryY = useSecondaryY;
     }
 }

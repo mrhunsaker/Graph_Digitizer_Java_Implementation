@@ -570,13 +570,25 @@ mvn test -Dtest=FileUtilsTest
 ## Development Notes
 
 ### Coordinate Systems
+### Coordinate Systems
 
-The application manages two coordinate systems:
+The application manages three related coordinate systems and clarifies how they interact:
 
-1. **Canvas Coordinates**: Pixel positions in the JavaFX Canvas
-2. **Data Coordinates**: Actual numeric values from the graph axes
+1. **Image Pixel Coordinates**: The image's natural pixel coordinate space (0..width-1, 0..height-1). The
+  {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
+  coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
+  {@link com.digitizer.core.CalibrationState}).
 
-The `CoordinateTransformer` class handles conversion between these systems, including support for logarithmic scales.
+2. **Canvas Coordinates**: Pixel positions in the JavaFX Canvas where the image is rendered. The canvas may
+  render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
+  (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
+
+3. **Data Coordinates**: Actual numeric values from the graph axes (e.g., 0.0..100.0). The transformer supports
+  linear and logarithmic mappings between data coordinates and image pixels.
+
+Note: Because the UI supports zooming (which changes `displayScale`) and fitting, the conversion helpers
+in the UI layer perform image<->canvas conversions. This ensures points and tick marks remain visually in the
+same place on the plotted graph when zoom/fitting changes are applied.
 
 ### Headless Core
 

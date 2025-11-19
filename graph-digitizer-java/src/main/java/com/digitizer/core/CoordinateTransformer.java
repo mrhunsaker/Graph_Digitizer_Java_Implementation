@@ -23,9 +23,14 @@ import javafx.geometry.Point2D;
  * space.
  * <p>
  * The transformer converts between the application's numeric data units and
- * pixel positions used by the {@link javafx.scene.canvas.Canvas}. It respects
- * {@link com.digitizer.core.CalibrationState} (anchor points and log flags) and
- * provides helper methods used by the {@link com.digitizer.ui.CanvasPanel}
+ * image pixel positions (the image's natural pixel coordinate system).
+ * Note: the {@link CanvasPanel} renders the image into the JavaFX Canvas
+ * at a scaled size and with offsets; therefore the {@code CoordinateTransformer}
+ * works in image (natural) pixel coordinates, and callers in the UI layer
+ * should convert between image pixels and canvas coordinates when drawing
+ * or handling mouse events. The transformer respects
+ * {@link com.digitizer.core.CalibrationState} (anchor points and log flags)
+ * and provides helper methods used by the {@link com.digitizer.ui.CanvasPanel}
  * and {@link com.digitizer.image.AutoTracer}.
  */
 public class CoordinateTransformer {
@@ -42,13 +47,25 @@ public class CoordinateTransformer {
     }
 
     /**
-     * Transforms data coordinates to canvas (pixel) coordinates.
+    * Transforms data coordinates to image-pixel coordinates.
      *
      * @param dataX the x value in data space
      * @param dataY the y value in data space
      * @return a Point2D in canvas space, or (0, 0) if not calibrated
      */
     public Point2D dataToCanvas(double dataX, double dataY) {
+        return dataToCanvas(dataX, dataY, false);
+    }
+
+    /**
+    * Transforms data coordinates to image-pixel coordinates selecting primary or secondary Y axis.
+     *
+     * @param dataX the x value in data space
+     * @param dataY the y value in data space
+     * @param useSecondaryY whether to use the secondary Y axis ranges/log flag
+     * @return a Point2D in canvas space, or (0, 0) if not calibrated
+     */
+    public Point2D dataToCanvas(double dataX, double dataY, boolean useSecondaryY) {
         if (!calibration.isCalibrated()) {
             return new Point2D(0, 0);
         }
@@ -60,24 +77,44 @@ public class CoordinateTransformer {
                                     calibration.isXLog());
         double canvasX = xPixel1 + t * (xPixel2 - xPixel1);
 
-        // Y transformation
+        // Y transformation (primary or secondary numeric range)
         double yPixel1 = calibration.getPixelYMin().getY();
         double yPixel2 = calibration.getPixelYMax().getY();
-        double u = calculateFraction(dataY, calibration.getDataYMin(), calibration.getDataYMax(),
-                                    calibration.isYLog());
+        double minY = calibration.getDataYMin();
+        double maxY = calibration.getDataYMax();
+        boolean yLog = calibration.isYLog();
+        if (useSecondaryY && calibration.getDataY2Min() != null && calibration.getDataY2Max() != null) {
+            minY = calibration.getDataY2Min();
+            maxY = calibration.getDataY2Max();
+            if (calibration.isY2Log() != null) yLog = calibration.isY2Log();
+        }
+
+        double u = calculateFraction(dataY, minY, maxY, yLog);
         double canvasY = yPixel1 + u * (yPixel2 - yPixel1);
 
         return new Point2D(canvasX, canvasY);
     }
 
     /**
-     * Transforms canvas (pixel) coordinates to data coordinates.
+    * Transforms image-pixel coordinates to data coordinates.
      *
      * @param canvasX the x value in canvas space
      * @param canvasY the y value in canvas space
      * @return a Point2D in data space, or (0, 0) if not calibrated
      */
     public Point2D canvasToData(double canvasX, double canvasY) {
+        return canvasToData(canvasX, canvasY, false);
+    }
+
+    /**
+    * Transforms image-pixel coordinates to data coordinates selecting primary or secondary Y axis.
+     *
+     * @param canvasX the x value in canvas space
+     * @param canvasY the y value in canvas space
+     * @param useSecondaryY whether to interpret the Y value against the secondary Y axis
+     * @return a Point2D in data space, or (0, 0) if not calibrated
+     */
+    public Point2D canvasToData(double canvasX, double canvasY, boolean useSecondaryY) {
         if (!calibration.isCalibrated()) {
             return new Point2D(0, 0);
         }
@@ -90,13 +127,21 @@ public class CoordinateTransformer {
         double dataX = invertFraction(t, calibration.getDataXMin(), calibration.getDataXMax(),
                                      calibration.isXLog());
 
-        // Y inverse transformation
+        // Y inverse transformation (select primary or secondary ranges)
         double yPixel1 = calibration.getPixelYMin().getY();
         double yPixel2 = calibration.getPixelYMax().getY();
         double denomY = yPixel2 - yPixel1;
         double u = (denomY == 0) ? 0 : (canvasY - yPixel1) / denomY;
-        double dataY = invertFraction(u, calibration.getDataYMin(), calibration.getDataYMax(),
-                                     calibration.isYLog());
+
+        double minY = calibration.getDataYMin();
+        double maxY = calibration.getDataYMax();
+        boolean yLog = calibration.isYLog();
+        if (useSecondaryY && calibration.getDataY2Min() != null && calibration.getDataY2Max() != null) {
+            minY = calibration.getDataY2Min();
+            maxY = calibration.getDataY2Max();
+            if (calibration.isY2Log() != null) yLog = calibration.isY2Log();
+        }
+        double dataY = invertFraction(u, minY, maxY, yLog);
 
         return new Point2D(dataX, dataY);
     }

@@ -42,6 +42,10 @@ public class CalibrationState {
     private double dataXMax;
     private double dataYMin;
     private double dataYMax;
+    // Optional secondary Y axis numeric range and log flag
+    private Double dataY2Min = null;
+    private Double dataY2Max = null;
+    private Boolean y2Log = null;
 
     // Log scale flags
     private boolean xLog;
@@ -129,6 +133,22 @@ public class CalibrationState {
         this.dataYMax = dataYMax;
     }
 
+    public Double getDataY2Min() {
+        return dataY2Min;
+    }
+
+    public void setDataY2Min(Double dataY2Min) {
+        this.dataY2Min = dataY2Min;
+    }
+
+    public Double getDataY2Max() {
+        return dataY2Max;
+    }
+
+    public void setDataY2Max(Double dataY2Max) {
+        this.dataY2Max = dataY2Max;
+    }
+
     public boolean isXLog() {
         return xLog;
     }
@@ -143,6 +163,14 @@ public class CalibrationState {
 
     public void setYLog(boolean yLog) {
         this.yLog = yLog;
+    }
+
+    public Boolean isY2Log() {
+        return y2Log;
+    }
+
+    public void setY2Log(Boolean y2Log) {
+        this.y2Log = y2Log;
     }
 
     /**

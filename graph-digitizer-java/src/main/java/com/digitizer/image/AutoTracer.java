@@ -105,7 +105,7 @@ public class AutoTracer {
 
             // Convert the best pixel to data coordinates
             if (bestPixelY != -1) {
-                Point2D dataCoords = transformer.canvasToData(pixelX, bestPixelY);
+                Point2D dataCoords = transformer.canvasToData(pixelX, bestPixelY, targetDataset.isUseSecondaryYAxis());
                 tracedPoints.add(new Point(dataCoords.getX(), dataCoords.getY()));
             }
         }

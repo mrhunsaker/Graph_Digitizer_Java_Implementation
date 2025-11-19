@@ -39,6 +39,8 @@ public class Dataset {
     private List<Point> points;
     // Whether this dataset is visible on the canvas (default true)
     private boolean visible = true;
+    // Whether this dataset should be mapped to the secondary Y axis (default false)
+    private boolean useSecondaryYAxis = false;
 
     /**
      * Constructs a new Dataset with the given name and hex color.
@@ -94,6 +96,14 @@ public class Dataset {
 
     public Color getColor() {
         return color;
+    }
+
+    public boolean isUseSecondaryYAxis() {
+        return useSecondaryYAxis;
+    }
+
+    public void setUseSecondaryYAxis(boolean useSecondaryYAxis) {
+        this.useSecondaryYAxis = useSecondaryYAxis;
     }
 
     public List<Point> getPoints() {
