@@ -440,6 +440,79 @@ Notes:
 - Set `-Dicon=path/to/icon` to provide a custom icon for the installer.
 - Run packaging on the target OS (Windows packages on Windows, macOS on macOS) for best results.
 
+#### Automated MSI via Maven
+
+The `native` profile now automates `jpackage` as part of `mvn -Pnative package`. On Windows, if
+you want an MSI installer the steps are:
+
+1. Install the WiX Toolset (v3.11 or v4+) and ensure `candle.exe`/`light.exe` (or equivalent WiX binaries) are on your `PATH`.
+
+2. Recommended quick command (PowerShell) — full automated flow using the `native` Maven profile:
+
+```powershell
+# Ensure JAVA_HOME is set and points to a JDK that includes `jpackage` (Java 21+ or Semeru/Adoptium with tools)
+echo $Env:JAVA_HOME
+& "$Env:JAVA_HOME\bin\java" -version
+
+# Optional: remove any previous app-image to avoid conflicts
+if (Test-Path 'target\jpackage\GraphDigitizer') { Remove-Item -Recurse -Force 'target\jpackage\GraphDigitizer' }
+
+# Build MSI with the native profile (runs jpackage via the POM)
+mvn -Pnative -DskipTests -Djpackage.type=msi -Dicon.win=build/icons/scatter-plot-256.ico package
+```
+
+3. Manual two-step `jpackage` (if you need to debug or run `jpackage` yourself):
+
+```powershell
+# Create the app-image (bundles the runtime libs and application)
+& "$Env:JAVA_HOME\bin\jpackage.exe" --type app-image \
+  --input target/jpackage-input \
+  --main-jar graph-digitizer.jar \
+  --main-class com.digitizer.ui.GraphDigitizerApp \
+  --name GraphDigitizer \
+  --dest target/jpackage \
+  --icon build/icons/scatter-plot-256.ico \
+  --app-version 1.1 \
+  --java-options "--module-path $APPDIR\\lib" \
+  --java-options "--add-modules=javafx.controls,javafx.fxml,javafx.swing"
+
+# Build the MSI from the app-image
+& "$Env:JAVA_HOME\bin\jpackage.exe" --type msi \
+  --app-image target/jpackage/GraphDigitizer \
+  --dest target/jpackage-msi \
+  --name GraphDigitizer \
+  --icon build/icons/scatter-plot-256.ico \
+  --app-version 1.1 \
+  --win-dir-chooser --win-menu --win-shortcut
+```
+
+4. Verify the produced MSI (automated smoke test):
+
+```powershell
+# Run the included verification script (extracts the MSI, runs the bundled EXE briefly, and performs a silent install)
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-msi.ps1 -TimeoutSeconds 30 -DoInstall
+
+# Logs are written to: target/jpackage-msi/verify-msi.log, exe-run.log, exe-err.log, install.log
+```
+
+Where to find the artifacts:
+
+- App image: `target/jpackage/GraphDigitizer`
+- MSI installer: `target/jpackage-msi/GraphDigitizer-${project.version}.msi` (example: `target/jpackage-msi/GraphDigitizer-1.1.msi`)
+
+Notes & troubleshooting
+- If you see an error about WiX missing, install the WiX Toolset and add its `bin` to your `PATH`.
+- If `jpackage` fails with an "application destination directory already exists" error, the `native` profile includes a cleanup exec that removes `target/jpackage/GraphDigitizer` before packaging — run `mvn -Pnative -DskipTests package` again.
+- The `pom.xml` copies the shaded JAR to `target/jpackage-input/graph-digitizer.jar` and platform JavaFX jars into `target/jpackage-input/lib` automatically when using the `native` profile.
+- If you want to run packaging on CI, run the packaging job on Windows-hosted runners for MSI outputs, and ensure WiX and a matching JDK are installed on the runner.
+
+Advanced notes
+- You can override the installer type and icon via Maven properties: `-Djpackage.type=exe|msi|dmg|deb|rpm` and `-Dicon.win=path\to\icon.ico`.
+- To debug `jpackage` arguments, run the manual two-step commands above and append `--verbose` to see detailed output.
+- For signing the final EXE/MSI in CI, see `scripts/sign-windows.ps1` which accepts a PFX and password (integrate with secure CI secrets).
+
+If you'd like, I can add a small CI job example (GitHub Actions) to build and archive the MSI per-release.
+
 ### Advanced Packaging & Signing Resources
 
 For AppImage, DEB/RPM maintainer scripts, desktop integration, icon auto-selection, and cross-platform signing/notarization:

@@ -297,7 +297,7 @@
             </activation>
             <properties>
                 <!-- Configure the jpackage installer type; override via -Djpackage.type=exe|msi|dmg|deb|rpm -->
-                <jpackage.type>app-image</jpackage.type>
+                <jpackage.type>EXE</jpackage.type>
                 <!-- Icon properties (override with -Dicon.win=... etc.) -->
                 <icon.win>${project.basedir}/build/icons/scatter-plot-256.ico</icon.win>
                 <icon.mac>${project.basedir}/build/icons/scatter-plot-256.png</icon.mac> <!-- supply .icns if available -->
@@ -305,56 +305,176 @@
             </properties>
             <build>
                 <plugins>
-                    <!-- Create a minimized runtime image for distribution -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-jlink-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <executions>
-                            <execution>
-                                <id>jlink</id>
-                                <goals>
-                                    <goal>jlink</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/jlink</outputDirectory>
-                            <launcher>graph-digitizer</launcher>
-                            <!-- Modules to include in the runtime. Add or remove as needed -->
-                            <addModules>java.base,java.desktop,java.logging,javafx.controls,javafx.graphics</addModules>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Use jpackage (CLI wrapper) to create a native installer/image -->
-                    <plugin>
-                        <groupId>org.panteleyev</groupId>
-                        <artifactId>jpackage-maven-plugin</artifactId>
-                        <version>1.6.0</version>
-                        <executions>
-                            <execution>
-                                <id>jpackage</id>
-                                <goals>
-                                    <goal>jpackage</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Type can be exe, msi, dmg, pkg, deb, rpm, app-image, etc. -->
-                            <type>${jpackage.type}</type>
-                            <!-- Use shaded fat jar as entry point -->
-                            <mainJar>graph_digitizer_${project.version}.jar</mainJar>
-                            <mainClass>com.digitizer.ui.GraphDigitizerApp</mainClass>
-                            <runtimeImage>${project.build.directory}/jlink</runtimeImage>
-                            <name>GraphDigitizer</name>
-                            <appVersion>${project.version}</appVersion>
-                            <!-- Icon selection: allow OS-specific override; fallback to Windows icon -->
-                            <icon>${icon.win}</icon>
-                            <verbose>false</verbose>
-                        </configuration>
-                    </plugin>
+                    <!-- Note: jpackage-maven-plugin removed in favor of exec-maven-plugin to call the jpackage CLI directly. -->
+                            <!-- Copy the shaded jar into a jpackage input directory so jpackage picks a stable file name -->
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-dependency-plugin</artifactId>
+                                <version>3.5.0</version>
+                                <executions>
+                                    <execution>
+                                                <id>copy-shaded-to-jpackage-input</id>
+                                                <phase>prepare-package</phase>
+                                        <goals>
+                                            <goal>copy</goal>
+                                        </goals>
+                                        <configuration>
+                                            <artifactItems>
+                                                <artifactItem>
+                                                    <groupId>${project.groupId}</groupId>
+                                                    <artifactId>${project.artifactId}</artifactId>
+                                                    <version>${project.version}</version>
+                                                    <classifier>shaded</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+                                                    <destFileName>graph-digitizer.jar</destFileName>
+                                                </artifactItem>
+                                            </artifactItems>
+                                        </configuration>
+                                    </execution>
+                                </executions>
+                            </plugin>
+                            <!-- Exec plugin to run jpackage CLI directly (app-image then msi). -->
+                            <plugin>
+                                <groupId>org.codehaus.mojo</groupId>
+                                <artifactId>exec-maven-plugin</artifactId>
+                                <version>3.1.0</version>
+                                <executions>
+                                    <execution>
+                                        <id>cleanup-app-image</id>
+                                        <phase>package</phase>
+                                        <goals>
+                                            <goal>exec</goal>
+                                        </goals>
+                                        <configuration>
+                                            <executable>${env.SYSTEMROOT}\System32\WindowsPowerShell\v1.0\powershell.exe</executable>
+                                            <arguments>
+                                                <argument>-NoProfile</argument>
+                                                <argument>-Command</argument>
+                                                <argument>if (Test-Path '${project.build.directory}\\jpackage\\GraphDigitizer') { Remove-Item -Recurse -Force '${project.build.directory}\\jpackage\\GraphDigitizer' }</argument>
+                                            </arguments>
+                                        </configuration>
+                                    </execution>
+                                    <execution>
+                                        <id>jpackage-app-image</id>
+                                        <phase>package</phase>
+                                        <goals>
+                                            <goal>exec</goal>
+                                        </goals>
+                                        <configuration>
+                                            <executable>${env.JAVA_HOME}\bin\jpackage.exe</executable>
+                                            <arguments>
+                                                <argument>--type</argument>
+                                                <argument>app-image</argument>
+                                                <argument>--input</argument>
+                                                <argument>${project.build.directory}/jpackage-input</argument>
+                                                <argument>--main-jar</argument>
+                                                <argument>graph-digitizer.jar</argument>
+                                                <argument>--main-class</argument>
+                                                <argument>com.digitizer.ui.GraphDigitizerApp</argument>
+                                                <argument>--name</argument>
+                                                <argument>GraphDigitizer</argument>
+                                                <argument>--dest</argument>
+                                                <argument>${project.build.directory}/jpackage</argument>
+                                                <argument>--icon</argument>
+                                                <argument>${icon.win}</argument>
+                                                <argument>--app-version</argument>
+                                                <argument>${project.version}</argument>
+                                                <argument>--java-options</argument>
+                                                <argument>--module-path $APPDIR\\lib</argument>
+                                                <argument>--java-options</argument>
+                                                <argument>--add-modules=javafx.controls,javafx.fxml,javafx.swing</argument>
+                                            </arguments>
+                                        </configuration>
+                                    </execution>
+                                    <execution>
+                                        <id>jpackage-msi</id>
+                                        <phase>package</phase>
+                                        <goals>
+                                            <goal>exec</goal>
+                                        </goals>
+                                        <configuration>
+                                            <executable>${env.JAVA_HOME}\bin\jpackage.exe</executable>
+                                            <arguments>
+                                                <argument>--type</argument>
+                                                <argument>msi</argument>
+                                                <argument>--app-image</argument>
+                                                <argument>${project.build.directory}/jpackage/GraphDigitizer</argument>
+                                                <argument>--dest</argument>
+                                                <argument>${project.build.directory}/jpackage-msi</argument>
+                                                <argument>--name</argument>
+                                                <argument>GraphDigitizer</argument>
+                                                <argument>--icon</argument>
+                                                <argument>${icon.win}</argument>
+                                                <argument>--app-version</argument>
+                                                <argument>${project.version}</argument>
+                                                <argument>--win-dir-chooser</argument>
+                                                <argument>--win-menu</argument>
+                                                <argument>--win-shortcut</argument>
+                                            </arguments>
+                                        </configuration>
+                                    </execution>
+                                </executions>
+                            </plugin>
+                            <!-- Copy platform-specific JavaFX jars (Windows) into the jpackage input so the app-image contains JavaFX runtime libs -->
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-dependency-plugin</artifactId>
+                                <version>3.5.0</version>
+                                <executions>
+                                    <execution>
+                                                <id>copy-javafx-windows</id>
+                                                <phase>prepare-package</phase>
+                                        <goals>
+                                            <goal>copy</goal>
+                                        </goals>
+                                        <configuration>
+                                            <artifactItems>
+                                                <artifactItem>
+                                                    <groupId>org.openjfx</groupId>
+                                                    <artifactId>javafx-base</artifactId>
+                                                    <version>${javafx.version}</version>
+                                                    <classifier>win</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input/lib</outputDirectory>
+                                                </artifactItem>
+                                                <artifactItem>
+                                                    <groupId>org.openjfx</groupId>
+                                                    <artifactId>javafx-graphics</artifactId>
+                                                    <version>${javafx.version}</version>
+                                                    <classifier>win</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input/lib</outputDirectory>
+                                                </artifactItem>
+                                                <artifactItem>
+                                                    <groupId>org.openjfx</groupId>
+                                                    <artifactId>javafx-controls</artifactId>
+                                                    <version>${javafx.version}</version>
+                                                    <classifier>win</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input/lib</outputDirectory>
+                                                </artifactItem>
+                                                <artifactItem>
+                                                    <groupId>org.openjfx</groupId>
+                                                    <artifactId>javafx-fxml</artifactId>
+                                                    <version>${javafx.version}</version>
+                                                    <classifier>win</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input/lib</outputDirectory>
+                                                </artifactItem>
+                                                <artifactItem>
+                                                    <groupId>org.openjfx</groupId>
+                                                    <artifactId>javafx-swing</artifactId>
+                                                    <version>${javafx.version}</version>
+                                                    <classifier>win</classifier>
+                                                    <type>jar</type>
+                                                    <outputDirectory>${project.build.directory}/jpackage-input/lib</outputDirectory>
+                                                </artifactItem>
+                                            </artifactItems>
+                                        </configuration>
+                                    </execution>
+                                </executions>
+                            </plugin>
                 </plugins>
             </build>
         </profile>
