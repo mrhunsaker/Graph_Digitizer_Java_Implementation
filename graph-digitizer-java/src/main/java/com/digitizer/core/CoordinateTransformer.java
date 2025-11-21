@@ -24,7 +24,7 @@ import javafx.geometry.Point2D;
  * <p>
  * The transformer converts between the application's numeric data units and
  * image pixel positions (the image's natural pixel coordinate system).
- * Note: the {@link CanvasPanel} renders the image into the JavaFX Canvas
+ * Note: the {@link com.digitizer.ui.CanvasPanel} renders the image into the JavaFX Canvas
  * at a scaled size and with offsets; therefore the {@code CoordinateTransformer}
  * works in image (natural) pixel coordinates, and callers in the UI layer
  * should convert between image pixels and canvas coordinates when drawing

@@ -34,6 +34,7 @@ import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -52,6 +53,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.scene.layout.Region;
+import java.awt.Desktop;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
 
 /**
  * Main window for the Graph Digitizer application.
@@ -400,6 +406,13 @@ public class MainWindow {
     primaryStage.show();
     primaryStage.setMaximized(true);
 
+        // Show startup help dialog if the user has it enabled in preferences
+        try {
+            if (this.accessibilityPrefs != null && this.accessibilityPrefs.isShowStartupHelp()) {
+                Platform.runLater(() -> showStartupHelpDialog(false));
+            }
+        } catch (Exception ignore) { }
+
         logger.info("Main window initialized and shown");
     }
 
@@ -455,6 +468,40 @@ public class MainWindow {
 
         // Accessibility menu (contains color-blind palette choices)
         Menu accessibilityMenu = createAccessibilityMenu();
+
+        // Help menu: build items now but add to menubar at the end so it appears far-right
+        Menu helpMenu = new Menu("Help");
+        MenuItem usageItem = new MenuItem("Usage Instructions");
+        usageItem.setOnAction(e -> showStartupHelpDialog(true));
+
+        MenuItem reportGithub = new MenuItem("Report a Bug - GitHub");
+        reportGithub.setOnAction(e -> {
+            try {
+                openUrl("https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation/issues");
+            } catch (Exception ex) {
+                logger.warn("Could not open browser: {}", ex.getMessage());
+            }
+        });
+
+        MenuItem reportEmail = new MenuItem("Report a Bug - Email");
+        reportEmail.setOnAction(e -> {
+            try {
+                String subject = "Graph Digitizer - Bug Report
+                
+                ";
+                openEmail("hunsakerconsulting@gmail.com", subject);
+            } catch (Exception ex) {
+                logger.warn("Could not open email client: {}", ex.getMessage());
+            }
+        });
+
+        MenuItem featureGithub = new MenuItem("Feature Request - GitHub");
+        featureGithub.setOnAction(e -> openUrl("https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation/discussions"));
+
+        MenuItem featureEmail = new MenuItem("Feature Request - Email");
+        featureEmail.setOnAction(e -> openEmail("hunsakerconsulting@gmail.com", "Graph Digitizer - Feature Request"));
+
+        helpMenu.getItems().addAll(usageItem, new SeparatorMenuItem(), reportGithub, reportEmail, new SeparatorMenuItem(), featureGithub, featureEmail);
 
         // Actions menu mirrors toolbar buttons and provides accelerators
         Menu actionsMenu = new Menu("Actions");
@@ -623,6 +670,8 @@ public class MainWindow {
             }
         } catch (Exception ignore) {}
         menuBar.getMenus().add(editMenu);
+        // Add Help last so it appears at the far right of the menu bar
+        menuBar.getMenus().add(helpMenu);
 
         return menuBar;
     }
@@ -849,7 +898,26 @@ public class MainWindow {
             "Export data points to a CSV file for use in spreadsheets and other tools", "Ctrl+E");
         saveCsvBtn.setOnAction(e -> handleSaveCsv());
 
-        toolbar.getChildren().addAll(loadImageBtn, calibrateBtn, this.autoTraceBtn, saveJsonBtn, saveCsvBtn);
+        Button clearDataBtn = new Button("Clear Data");
+        AccessibilityHelper.setButtonAccessibility(clearDataBtn, "Clear Data",
+            "Clear all datasets, calibration and X-axis snap values (start fresh)", "Ctrl+K");
+        clearDataBtn.setOnAction(e -> {
+            // Confirm with the user before clearing data to avoid accidental loss
+            javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+            confirm.initOwner(primaryStage);
+            confirm.setTitle("Confirm Clear Data");
+            confirm.setHeaderText("Clear all data and reset datasets?");
+            confirm.setContentText("This will remove all data points, calibration, snap X values, and reset dataset names/colors. This action cannot be undone.");
+            confirm.showAndWait().ifPresent(bt -> {
+                if (bt == javafx.scene.control.ButtonType.OK) {
+                    clearAllData();
+                } else {
+                    AccessibilityHelper.announceAction("Clear data cancelled");
+                }
+            });
+        });
+
+        toolbar.getChildren().addAll(loadImageBtn, calibrateBtn, this.autoTraceBtn, saveJsonBtn, saveCsvBtn, clearDataBtn);
 
         // --- Zoom controls ---
         Label zoomLabel = new Label("Zoom:");
@@ -920,6 +988,8 @@ public class MainWindow {
         if (file != null) {
             try {
                 canvasPanel.loadImage(file);
+                // When a new image is loaded, clear any previous data and calibration
+                clearAllData();
                 String message = "Loaded image: " + file.getName();
                 statusBar.setStatus(message);
                 AccessibilityHelper.announceAction(message);
@@ -946,6 +1016,83 @@ public class MainWindow {
                 AccessibilityHelper.announceAction("Error - " + message);
                 logger.error("Error loading image", e);
             }
+        }
+    }
+
+    /**
+     * Clears all datasets (points), resets calibration and snap X values,
+     * and clears plot metadata (title and axis labels). Leaves dataset
+     * names and colors intact so the user can continue reusing the series.
+     */
+    private void clearAllData() {
+        try {
+            // Clear points from each dataset and reset visibility/axis assignment
+            for (int i = 0; i < this.datasets.size(); i++) {
+                Dataset d = this.datasets.get(i);
+                d.clearPoints();
+                d.setVisible(true);
+                d.setUseSecondaryYAxis(false);
+                // Reset name to default (Dataset 1..N)
+                try { d.setName("Dataset " + (i + 1)); } catch (Exception ignore) {}
+                // Reset color to default palette if available
+                if (this.defaultColors != null && this.defaultColors.length > 0) {
+                    String hex = this.defaultColors[i % this.defaultColors.length];
+                    try { d.setHexColor(hex); } catch (Exception ignore) {}
+                }
+            }
+
+            // Reset calibration anchors and numeric ranges to defaults
+            if (this.calibration != null) {
+                this.calibration.reset();
+                this.calibration.setDataXMin(0.0);
+                this.calibration.setDataXMax(1.0);
+                this.calibration.setDataYMin(0.0);
+                this.calibration.setDataYMax(1.0);
+                this.calibration.setDataY2Min(null);
+                this.calibration.setDataY2Max(null);
+                this.calibration.setY2Log(null);
+                this.calibration.setXLog(false);
+                this.calibration.setYLog(false);
+            }
+
+            // Clear snap X values
+            if (this.canvasPanel != null && this.canvasPanel.getSnapper() != null) {
+                this.canvasPanel.getSnapper().clearSnapXValues();
+                this.canvasPanel.setSnapLinesVisible(false);
+            }
+
+            // Clear titles/labels in control panel
+            if (this.controlPanel != null) {
+                this.controlPanel.setTitle("");
+                this.controlPanel.setXLabel("");
+                this.controlPanel.setYLabel("");
+                this.controlPanel.refreshDatasetInfoDisplay();
+            }
+
+            // Persist reset dataset colors and visibilities to accessibility prefs
+            if (this.accessibilityPrefs != null) {
+                String[] hexes = new String[this.datasets.size()];
+                String[] visArr = new String[this.datasets.size()];
+                for (int i = 0; i < this.datasets.size(); i++) {
+                    hexes[i] = this.datasets.get(i).getHexColor();
+                    visArr[i] = String.valueOf(this.datasets.get(i).isVisible());
+                }
+                this.accessibilityPrefs.setDatasetColors(hexes);
+                this.accessibilityPrefs.setDatasetVisibilities(visArr);
+            }
+
+            // Clear undo history
+            if (this.undoManager != null) this.undoManager.clear();
+
+            // Redraw canvas to reflect cleared state
+            if (this.canvasPanel != null) this.canvasPanel.redraw();
+
+            String msg = "Cleared all datasets, calibration and X-axis items";
+            if (this.statusBar != null) this.statusBar.setStatus(msg);
+            AccessibilityHelper.announceAction(msg);
+            logger.info(msg);
+        } catch (Exception e) {
+            logger.error("Error clearing data", e);
         }
     }
 
@@ -1200,5 +1347,98 @@ public class MainWindow {
             accessibilityPrefs.setDatasetColors(hexes);
         }
         logger.info("Applied color palette: {}", name);
+    }
+
+    /**
+     * Show the startup/help dialog. If invokedFromMenu is true, the dialog
+     * was requested via the Help menu; otherwise it may be shown automatically
+     * at application startup. The checkbox controls the persisted preference
+     * to show the dialog on startup.
+     */
+    private void showStartupHelpDialog(boolean invokedFromMenu) {
+        try {
+            String instructions =
+                "Supported image formats: PNG, JPG, JPEG\n\n" +
+                "1) Load an image:\n" +
+                "   - Menu: File -> Load Image (or press Ctrl+O)\n" +
+                "   - Choose a supported PNG or JPEG file from disk.\n\n" +
+                "2) Calibrate the image:\n" +
+                "   - Click 'Calibrate' (Ctrl+L).\n" +
+                "   - Click exactly four points in this order: \n" +
+                "       a) Left X reference (enter its numeric X value)\n" +
+                "       b) Right X reference (enter its numeric X value)\n" +
+                "       c) Bottom Y reference (enter its numeric Y value)\n" +
+                "       d) Top Y reference (enter its numeric Y value)\n\n" +
+                "3) (Optional) Set Snap X values:\n" +
+                "   - In the Control panel enter comma-separated values (e.g. 1.0,2.5,3.5)\n" +
+                "     or a range using start:step:end (e.g. 0:0.5:5). Click Apply.\n\n" +
+                "4) Digitize points:\n" +
+                "   - Select a dataset on the right and click points on the canvas to add them.\n" +
+                "   - Use Auto Trace (if enabled) after calibration for automated extraction.\n\n" +
+                "5) Save results:\n" +
+                "   - Save JSON (Ctrl+S) to keep calibration and datasets.\n" +
+                "   - Save CSV (Ctrl+E) to export numeric point data for spreadsheets.\n\n" +
+                "6) Start over if needed:\n" +
+                "   - Use Clear Data (toolbar or Ctrl+K) to reset datasets, calibration and snaps.\n\n" +
+                "Tip: If you do not want to see this dialog at startup, check 'Do not show this message again'.";
+
+            javafx.scene.control.TextArea ta = new javafx.scene.control.TextArea(instructions);
+            ta.setWrapText(true);
+            ta.setEditable(false);
+            ta.setPrefRowCount(14);
+            ta.setPrefColumnCount(60);
+
+            CheckBox dontShow = new CheckBox("Do not show this message again");
+            // Checkbox selected means 'do not show', so reflect current preference
+            dontShow.setSelected(!accessibilityPrefs.isShowStartupHelp());
+
+            javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(10, ta, dontShow);
+            box.setPadding(new Insets(10));
+
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.initOwner(primaryStage);
+            alert.setTitle("Getting Started - Graph Digitizer");
+            alert.setHeaderText("Quick Start: Exact order to use this app");
+            // Use dialog pane content to include checkbox and wrapped text
+            alert.getDialogPane().setContent(box);
+            alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+            alert.showAndWait();
+
+            // Persist the inverted checkbox value into the preference
+            boolean doNotShow = dontShow.isSelected();
+            accessibilityPrefs.setShowStartupHelp(!doNotShow);
+        } catch (Exception e) {
+            logger.warn("Failed to show startup help dialog: {}", e.getMessage());
+        }
+    }
+
+    private void openUrl(String url) {
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(new URI(url));
+            } else {
+                // Fallback: attempt runtime exec for common platforms
+                Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", url});
+            }
+        } catch (Exception e) {
+            logger.warn("Unable to open URL {}: {}", url, e.getMessage());
+        }
+    }
+
+    private void openEmail(String toAddress, String subject) {
+        try {
+            String encSub = URLEncoder.encode(subject, "UTF-8");
+            String mailto = String.format("mailto:%s?subject=%s", toAddress, encSub);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
+                Desktop.getDesktop().mail(new URI(mailto));
+            } else {
+                Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", mailto});
+            }
+        } catch (UnsupportedEncodingException uee) {
+            logger.warn("Encoding not supported for email subject: {}", uee.getMessage());
+        } catch (Exception e) {
+            logger.warn("Unable to open mail client: {}", e.getMessage());
+        }
     }
 }

@@ -79,13 +79,6 @@ public class ControlPanel extends VBox {
      */
     private final UndoManager undoManager;
 
-    /**
-     * Returns the index of the currently selected dataset in the dataset selector.
-     * This is a convenience for callers (keyboard shortcuts in {@link MainWindow}).
-     *
-     * @return 0-based selected dataset index (returns 0 if the selector is not yet initialized)
-     */
-
     public ControlPanel(CalibrationState calibration, List<Dataset> datasets, CanvasPanel canvasPanel, AccessibilityPreferences accessibilityPrefs, UndoManager undoManager) {
         setSpacing(10);
         setPadding(new Insets(10));
@@ -320,7 +313,14 @@ public class ControlPanel extends VBox {
         Label snapLabel = new Label("Snap X values (comma-separated):");
         AccessibilityHelper.setLabelAccessibility(snapLabel, "Snap X values", "Enter comma-separated X values to snap input points to");
         TextField snapField = new TextField();
-        snapField.setPromptText("e.g. 0.1, 0.2, 0.5");
+        snapField.setPromptText("e.g. 0.1, 0.2, 0.5 or 0:0.2:1.0");
+        snapField.setTooltip(new javafx.scene.control.Tooltip(
+            "Enter comma-separated X values or ranges. Examples:\n" +
+            "- Single values: 0.1,0.5,1.0\n" +
+            "- Colon range: start:step:end (e.g. 0:0.2:1.0)\n" +
+            "- Dot-dot range: start..end:step (e.g. 0..1:0.25)\n" +
+            "- Dash/slash range: start-end/step (e.g. 0-1/0.25)\n" +
+            "Ranges are inclusive and limited to 10000 generated values."));
         snapField.setPrefColumnCount(20);
 
         CheckBox snapExistingCheck = new CheckBox("Also snap existing points");
@@ -358,15 +358,135 @@ public class ControlPanel extends VBox {
 
             String[] parts = text.split(",");
             java.util.List<Double> xs = new java.util.ArrayList<>();
+            final int MAX_GENERATED = 10000;
+
+            java.util.regex.Pattern pColon = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+            java.util.regex.Pattern pDot = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*\\.\\.\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+            java.util.regex.Pattern pDash = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*-\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*/\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+
             for (String p : parts) {
+                String token = p.trim();
+                if (token.isEmpty()) continue;
+
+                java.util.regex.Matcher m;
+                // Colon form: start:step:end
+                m = pColon.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double step = Double.parseDouble(m.group(2));
+                        double end = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Dot-dot form: start..end:step
+                m = pDot.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double end = Double.parseDouble(m.group(2));
+                        double step = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Dash/slash form: start-end/step
+                m = pDash.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double end = Double.parseDouble(m.group(2));
+                        double step = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Fallback: single numeric value
                 try {
-                    String trimmed = p.trim();
-                    if (trimmed.isEmpty()) continue;
-                    double v = Double.parseDouble(trimmed);
+                    double v = Double.parseDouble(token);
                     xs.add(v);
                 } catch (NumberFormatException nfe) {
-                    AccessibilityHelper.announceAction("Invalid number: " + p.trim());
-                    logger.warn("Invalid snap value entered: {}", p, nfe);
+                    AccessibilityHelper.announceAction("Invalid number: " + token);
+                    logger.warn("Invalid snap value entered: {}", token, nfe);
                     return;
                 }
             }

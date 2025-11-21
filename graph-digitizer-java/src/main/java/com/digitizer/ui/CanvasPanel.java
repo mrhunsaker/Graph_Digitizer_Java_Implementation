@@ -664,6 +664,54 @@ public class CanvasPanel extends StackPane {
 
             gc.restore();
         }
+
+        // Draw primary Y axis (left-hand) showing ticks/labels for the primary numeric range
+        if (calibration.isCalibrated()) {
+            CoordinateTransformer transformer = new CoordinateTransformer(calibration);
+            double minY = calibration.getDataYMin();
+            double maxY = calibration.getDataYMax();
+            boolean yLog = calibration.isYLog();
+
+            int ticks = 5;
+            double dataXForAxis = calibration.getDataXMin();
+
+            gc.save();
+            gc.setStroke(Color.BLACK);
+            gc.setFill(Color.BLACK);
+            gc.setLineWidth(1.0);
+            gc.setFont(javafx.scene.text.Font.font(11));
+
+            for (int i = 0; i < ticks; i++) {
+                double frac = (ticks == 1) ? 0.0 : ((double) i / (ticks - 1));
+                double tickValue;
+                if (yLog) {
+                    double logMin = Math.log10(minY);
+                    double logMax = Math.log10(maxY);
+                    double logV = logMin + frac * (logMax - logMin);
+                    tickValue = Math.pow(10, logV);
+                } else {
+                    tickValue = minY + frac * (maxY - minY);
+                }
+
+                Point2D tickImg = transformer.dataToCanvas(dataXForAxis, tickValue, false);
+                Point2D tickPt = imageToCanvas(tickImg);
+                double tickX = tickPt.getX();
+                double tickY = tickPt.getY();
+
+                // Draw small tick to the left of axis anchor
+                double tickStartX = Math.max(2, tickX - 12);
+                double tickEndX = Math.max(2, tickX - 4);
+                gc.strokeLine(tickStartX, tickY, tickEndX, tickY);
+
+                // Draw label left of tick; clamp inside canvas
+                String label = formatNumberForLabel(tickValue);
+                double textX = Math.max(4, tickStartX - 48);
+                double textY = tickY + 4; // baseline adjustment
+                gc.fillText(label, Math.min(textX, canvas.getWidth() - 30), textY);
+            }
+
+            gc.restore();
+        }
     }
 
     private String formatNumberForLabel(double v) {
