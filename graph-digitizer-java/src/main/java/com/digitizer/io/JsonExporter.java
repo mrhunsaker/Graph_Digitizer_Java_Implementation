@@ -84,6 +84,8 @@ public class JsonExporter {
         // Apply defaults if calibration absent (un-calibrated export scenario)
         double xMin = 0.0, xMax = 1.0, yMin = 0.0, yMax = 1.0;
         boolean xLog = false, yLog = false;
+        Double y2Min = null, y2Max = null;
+        Boolean y2Log = null;
         if (calibration != null) {
             xMin = calibration.getDataXMin();
             xMax = calibration.getDataXMax();
@@ -91,6 +93,9 @@ public class JsonExporter {
             yMax = calibration.getDataYMax();
             xLog = calibration.isXLog();
             yLog = calibration.isYLog();
+            y2Min = calibration.getDataY2Min();
+            y2Max = calibration.getDataY2Max();
+            y2Log = calibration.isY2Log();
         }
 
         ProjectJson project = new ProjectJson(
@@ -105,6 +110,12 @@ public class JsonExporter {
                 yLog,
                 datasetJsonList
         );
+        // Populate secondary Y axis if present
+        if (y2Min != null && y2Max != null) {
+            project.y2Min = y2Min;
+            project.y2Max = y2Max;
+            if (y2Log != null) project.y2Log = y2Log;
+        }
 
         // Write to file
         try (FileWriter writer = new FileWriter(filePath)) {
@@ -155,6 +166,10 @@ public class JsonExporter {
                 // restore visibility if present
                 try {
                     dataset.setVisible(dsJson.visible);
+                } catch (Exception ignore) { }
+                // restore secondary axis assignment if present
+                try {
+                    dataset.setUseSecondaryYAxis(dsJson.useSecondaryY);
                 } catch (Exception ignore) { }
                 
                 if (dsJson.points != null) {

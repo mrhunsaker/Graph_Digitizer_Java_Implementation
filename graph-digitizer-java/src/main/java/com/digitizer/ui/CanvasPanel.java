@@ -32,8 +32,15 @@ import com.digitizer.image.AutoTracer;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
@@ -42,12 +49,27 @@ import javafx.scene.paint.Color;
  * pointer-based interactions (calibration, point placement, and auto-trace).
  *
  * <p>The {@link CanvasPanel} owns the JavaFX {@link javafx.scene.canvas.Canvas}
- * that renders images and points, and it exposes operations used by
- * {@link ControlPanel} and {@link MainWindow}:
+ * that renders images and points. Important coordinate-system notes:
+ * <ul>
+ *   <li>The {@link com.digitizer.core.CoordinateTransformer} maps between numeric
+ *   data values and the image's natural pixel coordinates (image pixels).</li>
+ *   <li>The {@code CanvasPanel} renders the image at a scaled size using
+ *   {@code displayScale} and an (optional) {@code offsetX}/{@code offsetY}.
+ *   Therefore the UI must convert between image-pixel coordinates and
+ *   canvas coordinates when drawing or interpreting mouse events. Helper
+ *   methods {@link #imageToCanvas(Point2D)} and {@link #canvasToImage(Point2D)}
+ *   perform that conversion.</li>
+ *   <li>Calibration anchors are stored in image-pixel coordinates in
+ *   {@link com.digitizer.core.CalibrationState}. This makes transforms
+ *   independent of the current zoom or viewport offsets.</li>
+ * </ul>
+ *
+ * <p>This class exposes operations used by {@link ControlPanel} and
+ * {@link MainWindow} including:
  * <ul>
  *   <li>{@link #loadImage(java.io.File)}</li>
  *   <li>{@link #enterCalibrationMode()}</li>
- *   <li>{@link #confirmCalibration(double, double, double, double, boolean, boolean)}</li>
+ *   <li>{@link #confirmCalibration(double, double, double, double, boolean, boolean, Double, Double, Boolean)}</li>
  *   <li>{@link #performAutoTrace()}</li>
  * </ul>
  */
@@ -84,6 +106,15 @@ public class CanvasPanel extends StackPane {
     private boolean calibrationMode = false;
     private List<Point2D> calibrationPoints = new ArrayList<>();
 
+    // Auto-trace seed capture mode
+    private boolean autoTraceSeedMode = false;
+    private int autoTraceExpectedSeeds = 0;
+    private List<Point2D> autoTraceSeeds = new ArrayList<>();
+    // Default seed-based trace parameters
+    private int seedWindowHalfHeight = 8;
+    private double seedTolerance = 0.25; // RGB euclidean distance threshold
+    private int seedMaxGap = 3;
+
     /** Display scale applied to image rendering (pixel multiplier). */
     private double displayScale = 1.0;
     /** Current horizontal offset in pixels for panning/centering. */
@@ -92,6 +123,33 @@ public class CanvasPanel extends StackPane {
     private double offsetY = 0;
     // Node-level zoom (applied as scaleX/scaleY). 1.0 = 100%.
     private double zoom = 1.0;
+
+    /**
+     * Convert a point expressed in image (natural) pixels to canvas coordinates
+     * taking into account current offset and displayScale.
+     */
+    private Point2D imageToCanvas(Point2D img) {
+        double cx = offsetX + img.getX() * displayScale;
+        double cy = offsetY + img.getY() * displayScale;
+        return new Point2D(cx, cy);
+    }
+
+    private Point2D imageToCanvas(double imgX, double imgY) {
+        return imageToCanvas(new Point2D(imgX, imgY));
+    }
+
+    /**
+     * Convert a point expressed in canvas coordinates to image (natural) pixels.
+     */
+    private Point2D canvasToImage(Point2D canvasPt) {
+        double ix = (canvasPt.getX() - offsetX) / displayScale;
+        double iy = (canvasPt.getY() - offsetY) / displayScale;
+        return new Point2D(ix, iy);
+    }
+
+    private Point2D canvasToImage(double canvasX, double canvasY) {
+        return canvasToImage(new Point2D(canvasX, canvasY));
+    }
 
     /**
      * Set the node-level zoom (scale) for the canvas. This uses node scaling so the
@@ -344,26 +402,60 @@ public class CanvasPanel extends StackPane {
             throw new IllegalStateException("Calibration must be applied first");
         }
 
-        CoordinateTransformer transformer = new CoordinateTransformer(calibration);
-        int startX = (int) Math.min(
-                calibration.getPixelXMin().getX(),
-                calibration.getPixelXMax().getX()
-        );
-        int endX = (int) Math.max(
-                calibration.getPixelXMin().getX(),
-                calibration.getPixelXMax().getX()
-        );
+        // Present a simple dialog to collect seed-based tracing options and number of seeds
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Auto Trace Options");
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
 
-        AutoTracer tracer = new AutoTracer(currentImage, transformer, startX, endX);
-        int safeIdx = Math.max(0, Math.min(activeDatasetIndex, datasets.size() - 1));
-        Dataset activeDataset = datasets.get(safeIdx);
-        List<Point> tracedPoints = tracer.traceDataset(activeDataset);
+        Label lblCount = new Label("Number of lines to trace:");
+        Spinner<Integer> spCount = new Spinner<>();
+        spCount.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Math.max(1, datasets.size()), 1));
 
-        activeDataset.clearPoints();
-        activeDataset.getPoints().addAll(tracedPoints);
+        Label lblWindow = new Label("Vertical window half-height (px):");
+        Spinner<Integer> spWindow = new Spinner<>();
+        spWindow.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, seedWindowHalfHeight));
 
-        logger.info("Auto-traced {} points", tracedPoints.size());
-        redraw();
+        Label lblTol = new Label("Color tolerance (0.05..1.5):");
+        TextField tfTol = new TextField(String.valueOf(seedTolerance));
+
+        Label lblGap = new Label("Max gap (columns):");
+        Spinner<Integer> spGap = new Spinner<>();
+        spGap.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 50, seedMaxGap));
+
+        grid.add(lblCount, 0, 0);
+        grid.add(spCount, 1, 0);
+        grid.add(lblWindow, 0, 1);
+        grid.add(spWindow, 1, 1);
+        grid.add(lblTol, 0, 2);
+        grid.add(tfTol, 1, 2);
+        grid.add(lblGap, 0, 3);
+        grid.add(spGap, 1, 3);
+
+        dlg.getDialogPane().setContent(grid);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                try {
+                    int count = spCount.getValue();
+                    int window = spWindow.getValue();
+                    double tol = Double.parseDouble(tfTol.getText());
+                    int gap = spGap.getValue();
+                    // Enter seed-capture mode
+                    this.autoTraceSeedMode = true;
+                    this.autoTraceExpectedSeeds = Math.max(1, count);
+                    this.autoTraceSeeds.clear();
+                    this.seedWindowHalfHeight = Math.max(1, window);
+                    this.seedTolerance = Math.max(0.0, tol);
+                    this.seedMaxGap = Math.max(0, gap);
+                    AccessibilityHelper.announceAction("Auto-trace: click " + this.autoTraceExpectedSeeds + " seed points on the image");
+                } catch (Exception e) {
+                    AccessibilityHelper.announceAction("Invalid auto-trace options");
+                }
+            }
+        });
     }
 
     /**
@@ -407,6 +499,28 @@ public class CanvasPanel extends StackPane {
             }
         }
 
+        // Draw auto-trace seeds (if any) - show captured seeds or live capture markers
+        if (!autoTraceSeeds.isEmpty() || autoTraceSeedMode) {
+            double seedSize = 8.0 / zoom;
+            double half = seedSize / 2.0;
+            gc.save();
+            gc.setLineWidth(2.0);
+            gc.setStroke(Color.BLUE);
+            gc.setFill(Color.color(0.2, 0.4, 1.0, 0.6));
+            for (int i = 0; i < autoTraceSeeds.size(); i++) {
+                Point2D img = autoTraceSeeds.get(i);
+                Point2D canvasPt = imageToCanvas(img);
+                double cx = canvasPt.getX();
+                double cy = canvasPt.getY();
+                gc.fillOval(cx - half, cy - half, seedSize, seedSize);
+                gc.strokeOval(cx - half, cy - half, seedSize, seedSize);
+                gc.setFill(Color.WHITE);
+                gc.fillText(String.valueOf(i + 1), cx - 3, cy + 4);
+                gc.setFill(Color.color(0.2, 0.4, 1.0, 0.6));
+            }
+            gc.restore();
+        }
+
         // Draw vertical snap lines for each configured snap X value (if calibrated and visible)
         if (calibration.isCalibrated() && !snapper.getSnapXValues().isEmpty() && snapLinesVisible) {
             gc.save();
@@ -423,8 +537,11 @@ public class CanvasPanel extends StackPane {
             double dataYMax = calibration.getDataYMax();
             for (Double sx : snapper.getSnapXValues()) {
                 try {
-                    Point2D top = transformer.dataToCanvas(sx, dataYMax);
-                    Point2D bottom = transformer.dataToCanvas(sx, dataYMin);
+                    // transformer returns image-pixel coordinates; convert to canvas coords
+                    Point2D topImg = transformer.dataToCanvas(sx, dataYMax);
+                    Point2D bottomImg = transformer.dataToCanvas(sx, dataYMin);
+                    Point2D top = imageToCanvas(topImg);
+                    Point2D bottom = imageToCanvas(bottomImg);
                     gc.strokeLine(top.getX(), top.getY(), bottom.getX(), bottom.getY());
                 } catch (Exception e) {
                     // If transformation fails for any reason, skip this snap line
@@ -445,50 +562,48 @@ public class CanvasPanel extends StackPane {
                 gc.setLineWidth(2.0);
                 
                     for (Point point : dataset.getPoints()) {
-                    Point2D canvasPoint = new CoordinateTransformer(calibration)
-                            .dataToCanvas(point.x(), point.y());
-                    double x = canvasPoint.getX();
-                    double y = canvasPoint.getY();
+                        // Respect dataset-level axis selection (primary or secondary Y)
+                        boolean useSecondary = dataset.isUseSecondaryYAxis();
+                            Point2D imgPoint = new CoordinateTransformer(calibration)
+                                .dataToCanvas(point.x(), point.y(), useSecondary);
+                            // Convert image-pixel point to canvas (screen) coordinates
+                            Point2D canvasPoint = imageToCanvas(imgPoint);
+                            double x = canvasPoint.getX();
+                            double y = canvasPoint.getY();
                     // Maintain visual point size at all zoom levels by compensating for zoom
                     double effectivePointSize = pointSize / zoom;
                     double halfSize = effectivePointSize / 2.0;
                     
                     if (useShapeVariation) {
-                        // Different shape per dataset
                         int shapeIndex = i % 4;
-                        switch (shapeIndex) {
-                            case 0: // Circle
-                                gc.fillOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
-                                gc.strokeOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
-                                break;
-                            case 1: // Square
-                                gc.fillRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
-                                gc.strokeRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
-                                break;
-                            case 2: // Triangle
-                                gc.fillPolygon(
-                                    new double[]{x, x - halfSize, x + halfSize},
-                                    new double[]{y - halfSize, y + halfSize, y + halfSize},
-                                    3
-                                );
-                                gc.strokePolygon(
-                                    new double[]{x, x - halfSize, x + halfSize},
-                                    new double[]{y - halfSize, y + halfSize, y + halfSize},
-                                    3
-                                );
-                                break;
-                            case 3: // Diamond
-                                gc.fillPolygon(
-                                    new double[]{x, x - halfSize, x, x + halfSize},
-                                    new double[]{y - halfSize, y, y + halfSize, y},
-                                    4
-                                );
-                                gc.strokePolygon(
-                                    new double[]{x, x - halfSize, x, x + halfSize},
-                                    new double[]{y - halfSize, y, y + halfSize, y},
-                                    4
-                                );
-                                break;
+                        if (shapeIndex == 0) {
+                            gc.fillOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                            gc.strokeOval(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                        } else if (shapeIndex == 1) {
+                            gc.fillRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                            gc.strokeRect(x - halfSize, y - halfSize, effectivePointSize, effectivePointSize);
+                        } else if (shapeIndex == 2) {
+                            gc.fillPolygon(
+                                new double[]{x, x - halfSize, x + halfSize},
+                                new double[]{y - halfSize, y + halfSize, y + halfSize},
+                                3
+                            );
+                            gc.strokePolygon(
+                                new double[]{x, x - halfSize, x + halfSize},
+                                new double[]{y - halfSize, y + halfSize, y + halfSize},
+                                3
+                            );
+                        } else {
+                            gc.fillPolygon(
+                                new double[]{x, x - halfSize, x, x + halfSize},
+                                new double[]{y - halfSize, y, y + halfSize, y},
+                                4
+                            );
+                            gc.strokePolygon(
+                                new double[]{x, x - halfSize, x, x + halfSize},
+                                new double[]{y - halfSize, y, y + halfSize, y},
+                                4
+                            );
                         }
                     } else {
                         // Default circles for all datasets
@@ -498,6 +613,112 @@ public class CanvasPanel extends StackPane {
                 }
             }
         }
+
+        // Draw secondary Y axis (right-hand) if secondary numeric range is configured
+        if (calibration.isCalibrated() && calibration.getDataY2Min() != null && calibration.getDataY2Max() != null) {
+            CoordinateTransformer transformer = new CoordinateTransformer(calibration);
+            double minY = calibration.getDataY2Min();
+            double maxY = calibration.getDataY2Max();
+            boolean y2Log = Boolean.TRUE.equals(calibration.isY2Log());
+
+            // Number of ticks to render
+            int ticks = 5;
+            // Use the right pixel anchor X by transforming dataXMax
+            double dataXForAxis = calibration.getDataXMax();
+            // Use stroke and font for axis
+            gc.save();
+            gc.setStroke(Color.BLACK);
+            gc.setFill(Color.BLACK);
+            gc.setLineWidth(1.0);
+            gc.setFont(javafx.scene.text.Font.font(11));
+
+            for (int i = 0; i < ticks; i++) {
+                double frac = (ticks == 1) ? 0.0 : ((double) i / (ticks - 1));
+                double tickValue;
+                if (y2Log) {
+                    double logMin = Math.log10(minY);
+                    double logMax = Math.log10(maxY);
+                    double logV = logMin + frac * (logMax - logMin);
+                    tickValue = Math.pow(10, logV);
+                } else {
+                    tickValue = minY + frac * (maxY - minY);
+                }
+
+                    Point2D tickImg = transformer.dataToCanvas(dataXForAxis, tickValue, true);
+                    Point2D tickPt = imageToCanvas(tickImg);
+                    double tickX = tickPt.getX();
+                    double tickY = tickPt.getY();
+                // Draw small tick to the right of axis anchor
+                double tickStartX = tickX + 4;
+                double tickEndX = tickX + 12;
+                // Clamp within canvas bounds
+                tickStartX = Math.min(tickStartX, canvas.getWidth() - 2);
+                tickEndX = Math.min(tickEndX, canvas.getWidth() - 2);
+                gc.strokeLine(tickStartX, tickY, tickEndX, tickY);
+                // Draw label right of tick
+                String label = formatNumberForLabel(tickValue);
+                double textX = tickEndX + 4;
+                double textY = tickY + 4; // baseline adjustment
+                gc.fillText(label, Math.min(textX, canvas.getWidth() - 30), textY);
+            }
+
+            gc.restore();
+        }
+
+        // Draw primary Y axis (left-hand) showing ticks/labels for the primary numeric range
+        if (calibration.isCalibrated()) {
+            CoordinateTransformer transformer = new CoordinateTransformer(calibration);
+            double minY = calibration.getDataYMin();
+            double maxY = calibration.getDataYMax();
+            boolean yLog = calibration.isYLog();
+
+            int ticks = 5;
+            double dataXForAxis = calibration.getDataXMin();
+
+            gc.save();
+            gc.setStroke(Color.BLACK);
+            gc.setFill(Color.BLACK);
+            gc.setLineWidth(1.0);
+            gc.setFont(javafx.scene.text.Font.font(11));
+
+            for (int i = 0; i < ticks; i++) {
+                double frac = (ticks == 1) ? 0.0 : ((double) i / (ticks - 1));
+                double tickValue;
+                if (yLog) {
+                    double logMin = Math.log10(minY);
+                    double logMax = Math.log10(maxY);
+                    double logV = logMin + frac * (logMax - logMin);
+                    tickValue = Math.pow(10, logV);
+                } else {
+                    tickValue = minY + frac * (maxY - minY);
+                }
+
+                Point2D tickImg = transformer.dataToCanvas(dataXForAxis, tickValue, false);
+                Point2D tickPt = imageToCanvas(tickImg);
+                double tickX = tickPt.getX();
+                double tickY = tickPt.getY();
+
+                // Draw small tick to the left of axis anchor
+                double tickStartX = Math.max(2, tickX - 12);
+                double tickEndX = Math.max(2, tickX - 4);
+                gc.strokeLine(tickStartX, tickY, tickEndX, tickY);
+
+                // Draw label left of tick; clamp inside canvas
+                String label = formatNumberForLabel(tickValue);
+                double textX = Math.max(4, tickStartX - 48);
+                double textY = tickY + 4; // baseline adjustment
+                gc.fillText(label, Math.min(textX, canvas.getWidth() - 30), textY);
+            }
+
+            gc.restore();
+        }
+    }
+
+    private String formatNumberForLabel(double v) {
+        // Choose compact formatting: integer if close to int, else 3 significant digits
+        if (Math.abs(v - Math.round(v)) < 1e-6) return String.format("%.0f", v);
+        if (Math.abs(v) >= 1e4 || Math.abs(v) < 1e-3) return String.format("%.3e", v);
+        return String.format("%.3f", v);
     }
 
     private void setupMouseHandlers() {
@@ -508,13 +729,12 @@ public class CanvasPanel extends StackPane {
         canvas.setFocusTraversable(true);
         canvas.setOnKeyPressed(event -> {
             switch (event.getCode()) {
-                case ENTER:
+                case ENTER -> {
                     if (calibrationMode && !calibrationPoints.isEmpty()) {
-                        // Do not auto-apply on Enter; notify user of progress
                         AccessibilityHelper.announceProgress("Calibration points", calibrationPoints.size(), 4);
                     }
-                    break;
-                case ESCAPE:
+                }
+                case ESCAPE -> {
                     if (calibrationMode) {
                         calibrationMode = false;
                         calibrationPoints.clear();
@@ -522,16 +742,14 @@ public class CanvasPanel extends StackPane {
                         AccessibilityHelper.announceAction("Calibration mode cancelled");
                         redraw();
                     }
-                    break;
-                case DELETE:
-                case BACK_SPACE:
+                }
+                case DELETE, BACK_SPACE -> {
                     if (calibrationMode && !calibrationPoints.isEmpty()) {
                         calibrationPoints.remove(calibrationPoints.size() - 1);
                         if (selectedCalibrationPoint >= calibrationPoints.size()) {
                             selectedCalibrationPoint = calibrationPoints.size() - 1;
                         }
-                        AccessibilityHelper.announceProgress("Calibration points", 
-                            calibrationPoints.size(), 4);
+                        AccessibilityHelper.announceProgress("Calibration points", calibrationPoints.size(), 4);
                         redraw();
                     } else if (!calibrationMode && selectedDatasetIndex >= 0 && selectedPointIndex >= 0) {
                         Dataset ds = datasets.get(selectedDatasetIndex);
@@ -546,10 +764,9 @@ public class CanvasPanel extends StackPane {
                         }
                         redraw();
                     }
-                    break;
-                case TAB:
+                }
+                case TAB -> {
                     if (calibrationMode && !calibrationPoints.isEmpty()) {
-                        // Cycle through calibration points
                         if (event.isShiftDown()) {
                             selectedCalibrationPoint--;
                             if (selectedCalibrationPoint < 0) {
@@ -561,13 +778,11 @@ public class CanvasPanel extends StackPane {
                                 selectedCalibrationPoint = 0;
                             }
                         }
-                        AccessibilityHelper.announceAction("Selected calibration point " + 
-                            (selectedCalibrationPoint + 1) + " of " + calibrationPoints.size());
+                        AccessibilityHelper.announceAction("Selected calibration point " + (selectedCalibrationPoint + 1) + " of " + calibrationPoints.size());
                         redraw();
                         event.consume();
                         return;
                     }
-                    // When not in calibration mode, cycle through dataset points
                     if (!calibrationMode) {
                         if (datasets.isEmpty()) break;
                         int total = 0;
@@ -607,48 +822,48 @@ public class CanvasPanel extends StackPane {
                             redraw();
                         }
                     }
-                    break;
-                case LEFT:
-                case RIGHT:
-                case UP:
-                case DOWN:
-                    // Move selected calibration point if in calibration mode
-                    if (calibrationMode && selectedCalibrationPoint >= 0 && 
-                        selectedCalibrationPoint < calibrationPoints.size()) {
+                }
+                case LEFT, RIGHT, UP, DOWN -> {
+                    if (calibrationMode && selectedCalibrationPoint >= 0 && selectedCalibrationPoint < calibrationPoints.size()) {
                         Point2D current = calibrationPoints.get(selectedCalibrationPoint);
                         double dx = 0, dy = 0;
                         double step = event.isControlDown() ? 10 : 1;
-                        
-                        if (event.getCode() == javafx.scene.input.KeyCode.LEFT) dx = -step;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.RIGHT) dx = step;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.UP) dy = -step;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.DOWN) dy = step;
-                        
+                        switch (event.getCode()) {
+                            case LEFT -> dx = -step;
+                            case RIGHT -> dx = step;
+                            case UP -> dy = -step;
+                            case DOWN -> dy = step;
+                            default -> {}
+                        }
                         Point2D newPoint = new Point2D(current.getX() + dx, current.getY() + dy);
                         calibrationPoints.set(selectedCalibrationPoint, newPoint);
-                        AccessibilityHelper.announceAction("Moved calibration point " + 
-                            (selectedCalibrationPoint + 1) + " to pixel " + 
-                            (int)newPoint.getX() + ", " + (int)newPoint.getY());
+                        AccessibilityHelper.announceAction("Moved calibration point " + (selectedCalibrationPoint + 1) + " to pixel " + (int)newPoint.getX() + ", " + (int)newPoint.getY());
                         redraw();
                         event.consume();
                         return;
                     }
 
-                    // If not in calibration mode, move the selected dataset point
                     if (!calibrationMode && selectedDatasetIndex >= 0 && selectedPointIndex >= 0) {
                         Dataset ds = datasets.get(selectedDatasetIndex);
                         com.digitizer.core.Point old = ds.getPoints().get(selectedPointIndex);
-                        // Convert data point to canvas coordinates, apply pixel step, and convert back
                         CoordinateTransformer transformer = new CoordinateTransformer(calibration);
-                        Point2D canvasPt = transformer.dataToCanvas(old.x(), old.y());
+                        boolean useSecondary = ds.isUseSecondaryYAxis();
+                        // transformer.dataToCanvas returns image-pixel coords; convert to canvas coords
+                        Point2D imgPt = transformer.dataToCanvas(old.x(), old.y(), useSecondary);
+                        Point2D canvasPt = imageToCanvas(imgPt);
                         double stepPx = event.isControlDown() ? 10 : 1;
                         double nx = canvasPt.getX();
                         double ny = canvasPt.getY();
-                        if (event.getCode() == javafx.scene.input.KeyCode.LEFT) nx -= stepPx;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.RIGHT) nx += stepPx;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.UP) ny -= stepPx;
-                        else if (event.getCode() == javafx.scene.input.KeyCode.DOWN) ny += stepPx;
-                        Point2D newData = transformer.canvasToData(nx, ny);
+                        switch (event.getCode()) {
+                            case LEFT -> nx -= stepPx;
+                            case RIGHT -> nx += stepPx;
+                            case UP -> ny -= stepPx;
+                            case DOWN -> ny += stepPx;
+                            default -> {}
+                        }
+                        // Convert back to image-pixel coordinates before asking transformer to invert
+                        Point2D newImg = canvasToImage(nx, ny);
+                        Point2D newData = transformer.canvasToData(newImg.getX(), newImg.getY(), useSecondary);
                         com.digitizer.core.Point newPoint = new com.digitizer.core.Point(newData.getX(), newData.getY());
                         if (undoManager != null) {
                             UndoManager.MovePointAction mpa = new UndoManager.MovePointAction(ds, selectedPointIndex, old, newPoint);
@@ -659,11 +874,10 @@ public class CanvasPanel extends StackPane {
                         }
                         AccessibilityHelper.announceAction("Moved point " + (selectedPointIndex + 1) + " in " + ds.getName() + " to X=" + String.format("%.4f", newPoint.x()) + " Y=" + String.format("%.4f", newPoint.y()));
                     }
-                    break;
-                
-                default:
+                }
+                default -> {
                     // Other keys ignored
-                    break;
+                }
             }
             event.consume();
         });
@@ -697,8 +911,106 @@ public class CanvasPanel extends StackPane {
             redraw();
         }
         else {
+            // If we are in auto-trace seed-capture mode, collect seed(s) and return
+            if (autoTraceSeedMode) {
+                Point2D imgCoords = canvasToImage(x, y);
+                autoTraceSeeds.add(imgCoords);
+                AccessibilityHelper.announceAction("Seed " + autoTraceSeeds.size() + " captured");
+                redraw();
+
+                if (autoTraceSeeds.size() >= autoTraceExpectedSeeds) {
+                    // Exit seed capture mode and perform tracing on a background thread
+                    List<Point2D> seedsCopy = new ArrayList<>(autoTraceSeeds);
+                    int startX = (int) Math.min(
+                            calibration.getPixelXMin().getX(),
+                            calibration.getPixelXMax().getX()
+                    );
+                    int endX = (int) Math.max(
+                            calibration.getPixelXMin().getX(),
+                            calibration.getPixelXMax().getX()
+                    );
+                    this.autoTraceSeedMode = false;
+                    this.autoTraceSeeds.clear();
+
+                    // Run tracing off the FX thread
+                    new Thread(() -> {
+                        try {
+                            CoordinateTransformer transformer = new CoordinateTransformer(calibration);
+                            AutoTracer tracer = new AutoTracer(currentImage, transformer, startX, endX);
+                            // After seeds captured, ask the user to confirm mapping seed -> dataset
+                            javafx.application.Platform.runLater(() -> {
+                                Dialog<ButtonType> mapDlg = new Dialog<>();
+                                mapDlg.setTitle("Map Seeds to Datasets");
+                                GridPane mapGrid = new GridPane();
+                                mapGrid.setHgap(10);
+                                mapGrid.setVgap(8);
+
+                                List<javafx.scene.control.ComboBox<String>> boxes = new ArrayList<>();
+                                for (int si = 0; si < seedsCopy.size(); si++) {
+                                    mapGrid.add(new Label("Seed " + (si + 1) + ":"), 0, si);
+                                    javafx.scene.control.ComboBox<String> cb = new javafx.scene.control.ComboBox<>();
+                                    for (Dataset d : datasets) cb.getItems().add(d.getName());
+                                    int def = Math.min(datasets.size() - 1, Math.max(0, activeDatasetIndex + si));
+                                    cb.getSelectionModel().select(def);
+                                    boxes.add(cb);
+                                    mapGrid.add(cb, 1, si);
+                                }
+
+                                mapDlg.getDialogPane().setContent(mapGrid);
+                                mapDlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+                                mapDlg.showAndWait().ifPresent(mapBt -> {
+                                    if (mapBt == ButtonType.OK) {
+                                        // Run tracing for each mapping on a background thread
+                                        new Thread(() -> {
+                                            try {
+                                                for (int si = 0; si < seedsCopy.size(); si++) {
+                                                    Point2D seed = seedsCopy.get(si);
+                                                    javafx.scene.control.ComboBox<String> cb = boxes.get(si);
+                                                    int dsIdx = Math.max(0, Math.min(datasets.size() - 1, cb.getSelectionModel().getSelectedIndex()));
+                                                    Dataset ds = datasets.get(dsIdx);
+                                                    // Sample seed color at the seed pixel
+                                                    Color seedColor = currentImage.getPixelReader().getColor((int)Math.round(seed.getX()), (int)Math.round(seed.getY()));
+                                                    // Trace using seed color with a small lookahead to bridge dashes
+                                                    List<com.digitizer.core.Point> traced = tracer.traceFromSeedColor(seedColor, ds.isUseSecondaryYAxis(), (int)Math.round(seed.getX()), (int)Math.round(seed.getY()), seedWindowHalfHeight, seedTolerance, seedMaxGap, 3);
+                                                    // Post-process: median smoothing (window 3) and outlier removal (10% Y-range)
+                                                    List<com.digitizer.core.Point> post = postProcessTracedPoints(traced, true, 3, 0.10, ds.isUseSecondaryYAxis());
+                                                    final int assignIdx = dsIdx;
+                                                    javafx.application.Platform.runLater(() -> {
+                                                        Dataset target = datasets.get(assignIdx);
+                                                        target.clearPoints();
+                                                        target.getPoints().addAll(post);
+                                                        redraw();
+                                                    });
+                                                }
+                                                javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace complete"));
+                                            } catch (Exception ex) {
+                                                logger.error("Error during seed-based auto-trace", ex);
+                                                javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace failed: " + ex.getMessage()));
+                                            }
+                                        }).start();
+                                    } else {
+                                        AccessibilityHelper.announceAction("Auto-trace cancelled");
+                                    }
+                                });
+                            });
+                        } catch (Exception ex) {
+                            logger.error("Error during seed-based auto-trace", ex);
+                            javafx.application.Platform.runLater(() -> AccessibilityHelper.announceAction("Auto-trace failed: " + ex.getMessage()));
+                        }
+                    }).start();
+                }
+                return;
+            }
             CoordinateTransformer transformer = new CoordinateTransformer(calibration);
-            javafx.geometry.Point2D dataPt = transformer.canvasToData(x, y);
+            boolean useSecondary = false;
+            if (datasets != null && !datasets.isEmpty()) {
+                int idx = Math.max(0, Math.min(activeDatasetIndex, datasets.size() - 1));
+                useSecondary = datasets.get(idx).isUseSecondaryYAxis();
+            }
+            // Convert mouse canvas coords to image-pixel coordinates then to data
+            Point2D imgCoords = canvasToImage(x, y);
+            javafx.geometry.Point2D dataPt = transformer.canvasToData(imgCoords.getX(), imgCoords.getY(), useSecondary);
             Point newPoint = new Point(dataPt.getX(), dataPt.getY());
 
             boolean snapped = false;
@@ -733,24 +1045,33 @@ public class CanvasPanel extends StackPane {
      *
      * @param dataXMin numeric X minimum provided by the user
      * @param dataXMax numeric X maximum provided by the user
-     * @param dataYMin numeric Y minimum provided by the user
-     * @param dataYMax numeric Y maximum provided by the user
+     * @param dataYMin numeric Y minimum provided by the user (primary)
+     * @param dataYMax numeric Y maximum provided by the user (primary)
      * @param xLog whether X axis should be logarithmic
-     * @param yLog whether Y axis should be logarithmic
+     * @param yLog whether primary Y axis should be logarithmic
+     * @param dataY2Min optional secondary Y minimum (nullable)
+     * @param dataY2Max optional secondary Y maximum (nullable)
+     * @param y2Log optional secondary Y log flag (nullable)
      * @return true if calibration applied, false if insufficient anchor points
      */
     public boolean confirmCalibration(double dataXMin, double dataXMax,
                                       double dataYMin, double dataYMax,
-                                      boolean xLog, boolean yLog) {
+                                      boolean xLog, boolean yLog,
+                                      Double dataY2Min, Double dataY2Max, Boolean y2Log) {
         if (calibrationPoints.size() < 4) {
             AccessibilityHelper.announceAction("Insufficient calibration points. Please set 4 anchor points first.");
             return false;
         }
 
-        calibration.setPixelXMin(calibrationPoints.get(0));
-        calibration.setPixelXMax(calibrationPoints.get(1));
-        calibration.setPixelYMin(calibrationPoints.get(2));
-        calibration.setPixelYMax(calibrationPoints.get(3));
+        // Convert collected calibrationPoints (canvas coords) into image (natural) pixels
+        Point2D p0 = canvasToImage(calibrationPoints.get(0));
+        Point2D p1 = canvasToImage(calibrationPoints.get(1));
+        Point2D p2 = canvasToImage(calibrationPoints.get(2));
+        Point2D p3 = canvasToImage(calibrationPoints.get(3));
+        calibration.setPixelXMin(p0);
+        calibration.setPixelXMax(p1);
+        calibration.setPixelYMin(p2);
+        calibration.setPixelYMax(p3);
 
         calibration.setDataXMin(dataXMin);
         calibration.setDataXMax(dataXMax);
@@ -759,11 +1080,83 @@ public class CanvasPanel extends StackPane {
         calibration.setXLog(xLog);
         calibration.setYLog(yLog);
 
+        // Optional secondary Y axis values
+        if (dataY2Min != null && dataY2Max != null) {
+            calibration.setDataY2Min(dataY2Min);
+            calibration.setDataY2Max(dataY2Max);
+            calibration.setY2Log(y2Log);
+        } else {
+            // Clear secondary axis when not provided
+            calibration.setDataY2Min(null);
+            calibration.setDataY2Max(null);
+            calibration.setY2Log(null);
+        }
+
         calibrationMode = false;
         logger.info("Calibration applied: {}", calibration);
         redraw();
         AccessibilityHelper.announceAction("Calibration applied");
         return true;
+    }
+    
+    /**
+     * Post-process traced points: optional median smoothing and outlier removal.
+     * @param pts raw traced points (in data coordinates)
+     * @param smooth whether to apply median smoothing
+     * @param medianWindow odd window size (3..11)
+     * @param outlierFraction remove jumps larger than this fraction of Y-range (0 disables)
+     * @param useSecondary whether Y uses the secondary axis (for range calculation)
+     * @return processed points
+     */
+    private List<com.digitizer.core.Point> postProcessTracedPoints(List<com.digitizer.core.Point> pts, boolean smooth, int medianWindow, double outlierFraction, boolean useSecondary) {
+        List<com.digitizer.core.Point> result = new ArrayList<>();
+        if (pts == null || pts.isEmpty()) return result;
+
+        int n = pts.size();
+        double[] xs = new double[n];
+        double[] ys = new double[n];
+        for (int i = 0; i < n; i++) {
+            xs[i] = pts.get(i).x();
+            ys[i] = pts.get(i).y();
+        }
+
+        double[] ys2 = ys.clone();
+        if (smooth) {
+            int half = Math.max(1, medianWindow / 2);
+            for (int i = 0; i < n; i++) {
+                int a = Math.max(0, i - half);
+                int b = Math.min(n - 1, i + half);
+                double[] window = new double[b - a + 1];
+                for (int j = a; j <= b; j++) window[j - a] = ys[j];
+                java.util.Arrays.sort(window);
+                ys2[i] = window[window.length / 2];
+            }
+        }
+
+        // Outlier removal based on Y-range fraction of chosen axis
+        double yMin, yMax;
+        if (useSecondary && calibration.getDataY2Min() != null && calibration.getDataY2Max() != null) {
+            yMin = calibration.getDataY2Min();
+            yMax = calibration.getDataY2Max();
+        } else {
+            yMin = calibration.getDataYMin();
+            yMax = calibration.getDataYMax();
+        }
+        double yRange = Math.abs(yMax - yMin);
+        double maxJump = (outlierFraction > 0 && yRange > 0) ? outlierFraction * yRange : Double.POSITIVE_INFINITY;
+
+        // Build filtered result by removing points with large jumps compared to previous accepted point
+        result.add(new com.digitizer.core.Point(xs[0], ys2[0]));
+        for (int i = 1; i < n; i++) {
+            double jump = Math.abs(ys2[i] - ys2[i - 1]);
+            if (jump <= maxJump) {
+                result.add(new com.digitizer.core.Point(xs[i], ys2[i]));
+            } else {
+                // skip this point as outlier
+            }
+        }
+
+        return result;
     }
     
 }

@@ -16,9 +16,10 @@
 
 package com.digitizer.io;
 
-import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Root data model for JSON file format.
@@ -51,6 +52,12 @@ public class ProjectJson {
 
     @SerializedName("y_log")
     public boolean yLog;
+    @SerializedName("y2_min")
+    public Double y2Min = null;
+    @SerializedName("y2_max")
+    public Double y2Max = null;
+    @SerializedName("y2_log")
+    public Boolean y2Log = null;
 
     @SerializedName("datasets")
     public List<DatasetJson> datasets;

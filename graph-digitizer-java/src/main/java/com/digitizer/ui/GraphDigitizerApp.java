@@ -62,7 +62,7 @@ public class GraphDigitizerApp extends Application {
     /**
      * Current application version. Must match the Maven project version.
      */
-    public static final String APP_VERSION = "1.0-beta";
+    public static final String APP_VERSION = "1.1";
     /**
      * Maximum number of datasets supported in the UI.
      * <p>

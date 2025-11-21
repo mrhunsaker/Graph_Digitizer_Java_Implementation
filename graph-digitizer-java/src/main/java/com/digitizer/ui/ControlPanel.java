@@ -32,7 +32,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
@@ -57,6 +60,7 @@ public class ControlPanel extends VBox {
     private TextField titleField;
     private TextField xlabelField;
     private TextField ylabelField;
+    private TextField y2labelField;
     // Keep a reference to the datasets so UI can be refreshed externally
     private java.util.List<com.digitizer.core.Dataset> datasets;
     // Canvas reference so color picker changes can trigger a redraw
@@ -170,6 +174,12 @@ public class ControlPanel extends VBox {
         xlabelLabel, this.xlabelField,
         ylabelLabel, this.ylabelField
     );
+    // Secondary Y-axis label (right-hand axis)
+    Label y2Label = new Label("Y2 Label (secondary):");
+    AccessibilityHelper.setLabelAccessibility(y2Label, "Y2 Label (secondary):", "Form label for secondary Y axis");
+    this.y2labelField = new TextField();
+    AccessibilityHelper.setTextFieldAccessibility(this.y2labelField, "Secondary Y-axis Label", "Enter secondary Y-axis label", "Label for the secondary (right-hand) Y axis");
+    getChildren().addAll(y2Label, this.y2labelField);
 
         // Calibration section
         getChildren().add(new Separator());
@@ -187,15 +197,29 @@ public class ControlPanel extends VBox {
         TextField xMaxField = new TextField("1");
         AccessibilityHelper.setTextFieldAccessibility(xMaxField, "Maximum X Value", "1", "Maximum value on the X axis. Right-click on image to set automatically.");
 
-        Label yMinLabel = new Label("Y Min:");
-        AccessibilityHelper.setLabelAccessibility(yMinLabel, "Y Min:", "Form label");
+        Label yMinLabel = new Label("Y Min (primary):");
+        AccessibilityHelper.setLabelAccessibility(yMinLabel, "Y Min (primary):", "Form label");
         TextField yMinField = new TextField("0");
         AccessibilityHelper.setTextFieldAccessibility(yMinField, "Minimum Y Value", "0", "Minimum value on the Y axis. Bottom-click on image to set automatically.");
 
-        Label yMaxLabel = new Label("Y Max:");
-        AccessibilityHelper.setLabelAccessibility(yMaxLabel, "Y Max:", "Form label");
+        Label yMaxLabel = new Label("Y Max (primary):");
+        AccessibilityHelper.setLabelAccessibility(yMaxLabel, "Y Max (primary):", "Form label");
         TextField yMaxField = new TextField("1");
         AccessibilityHelper.setTextFieldAccessibility(yMaxField, "Maximum Y Value", "1", "Maximum value on the Y axis. Top-click on image to set automatically.");
+
+        // Secondary Y axis fields (right-hand axis)
+        Label y2MinLabel = new Label("Y2 Min (secondary):");
+        AccessibilityHelper.setLabelAccessibility(y2MinLabel, "Y2 Min (secondary):", "Form label");
+        TextField y2MinField = new TextField();
+        AccessibilityHelper.setTextFieldAccessibility(y2MinField, "Minimum secondary Y Value", "", "Minimum value on the secondary (right-hand) Y axis.");
+
+        Label y2MaxLabel = new Label("Y2 Max (secondary):");
+        AccessibilityHelper.setLabelAccessibility(y2MaxLabel, "Y2 Max (secondary):", "Form label");
+        TextField y2MaxField = new TextField();
+        AccessibilityHelper.setTextFieldAccessibility(y2MaxField, "Maximum secondary Y Value", "", "Maximum value on the secondary (right-hand) Y axis.");
+
+        CheckBox y2LogCheckBox = new CheckBox("Y2 Log Scale");
+        AccessibilityHelper.setCheckBoxAccessibility(y2LogCheckBox, "Y2 Log Scale", "Check to use logarithmic scaling on the secondary Y axis");
 
         CheckBox xLogCheckBox = new CheckBox("X Log Scale");
         AccessibilityHelper.setCheckBoxAccessibility(xLogCheckBox, "X Log Scale", "Check to use logarithmic scaling on the X axis");
@@ -217,33 +241,86 @@ public class ControlPanel extends VBox {
                 logger.warn("Invalid calibration numeric input", nfe);
                 return;
             }
-
             boolean xlog = xLogCheckBox.isSelected();
             boolean ylog = yLogCheckBox.isSelected();
 
-            boolean ok = canvasPanel.confirmCalibration(dxmin, dxmax, dymin, dymax, xlog, ylog);
+            // Secondary Y values are optional; parse if provided
+            Double dy2min = null;
+            Double dy2max = null;
+            Boolean y2log = null;
+            try {
+                String t2min = y2MinField.getText();
+                String t2max = y2MaxField.getText();
+                if (t2min != null && !t2min.trim().isEmpty()) dy2min = Double.parseDouble(t2min.trim());
+                if (t2max != null && !t2max.trim().isEmpty()) dy2max = Double.parseDouble(t2max.trim());
+                if (dy2min != null && dy2max == null) {
+                    AccessibilityHelper.announceAction("Please provide both Y2 min and max or leave both empty");
+                    return;
+                }
+                if (dy2max != null && dy2min == null) {
+                    AccessibilityHelper.announceAction("Please provide both Y2 min and max or leave both empty");
+                    return;
+                }
+                if (dy2min != null && dy2max != null) {
+                    y2log = y2LogCheckBox.isSelected();
+                }
+            } catch (NumberFormatException nfe) {
+                AccessibilityHelper.announceAction("Invalid numeric secondary Y value");
+                logger.warn("Invalid secondary Y calibration numeric input", nfe);
+                return;
+            }
+
+            boolean ok = canvasPanel.confirmCalibration(dxmin, dxmax, dymin, dymax, xlog, ylog, dy2min, dy2max, y2log);
             if (ok) {
                 AccessibilityHelper.announceAction("Calibration applied");
             }
         });
 
-        getChildren().addAll(
-                calibLabel,
-                new HBox(10, xMinLabel, xMinField),
-                new HBox(10, xMaxLabel, xMaxField),
-                new HBox(10, yMinLabel, yMinField),
-                new HBox(10, yMaxLabel, yMaxField),
-                xLogCheckBox,
-                yLogCheckBox,
-                applyCalibBtn
-        );
+        // Replace row HBoxes with a GridPane so labels/fields align in columns
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(6);
+        grid.setPadding(new Insets(4, 0, 0, 0));
+        ColumnConstraints c0 = new ColumnConstraints();
+        c0.setMinWidth(140);
+        c0.setPrefWidth(140);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setHgrow(Priority.ALWAYS);
+        grid.getColumnConstraints().addAll(c0, c1);
+
+        grid.add(xMinLabel, 0, 0);
+        grid.add(xMinField, 1, 0);
+        grid.add(xMaxLabel, 0, 1);
+        grid.add(xMaxField, 1, 1);
+        grid.add(yMinLabel, 0, 2);
+        grid.add(yMinField, 1, 2);
+        grid.add(yMaxLabel, 0, 3);
+        grid.add(yMaxField, 1, 3);
+        grid.add(y2MinLabel, 0, 4);
+        grid.add(y2MinField, 1, 4);
+        grid.add(y2MaxLabel, 0, 5);
+        grid.add(y2MaxField, 1, 5);
+
+        HBox checks = new HBox(12, xLogCheckBox, yLogCheckBox, y2LogCheckBox);
+        checks.setPadding(new Insets(6, 0, 0, 0));
+        HBox bottomRow = new HBox(12, checks, applyCalibBtn);
+        bottomRow.setPadding(new Insets(6, 0, 0, 0));
+
+        getChildren().addAll(calibLabel, grid, bottomRow);
 
         // Snap-to-X UI
         getChildren().add(new Separator());
         Label snapLabel = new Label("Snap X values (comma-separated):");
         AccessibilityHelper.setLabelAccessibility(snapLabel, "Snap X values", "Enter comma-separated X values to snap input points to");
         TextField snapField = new TextField();
-        snapField.setPromptText("e.g. 0.1, 0.2, 0.5");
+        snapField.setPromptText("e.g. 0.1, 0.2, 0.5 or 0:0.2:1.0");
+        snapField.setTooltip(new javafx.scene.control.Tooltip(
+            "Enter comma-separated X values or ranges. Examples:\n" +
+            "- Single values: 0.1,0.5,1.0\n" +
+            "- Colon range: start:step:end (e.g. 0:0.2:1.0)\n" +
+            "- Dot-dot range: start..end:step (e.g. 0..1:0.25)\n" +
+            "- Dash/slash range: start-end/step (e.g. 0-1/0.25)\n" +
+            "Ranges are inclusive and limited to 10000 generated values."));
         snapField.setPrefColumnCount(20);
 
         CheckBox snapExistingCheck = new CheckBox("Also snap existing points");
@@ -281,15 +358,135 @@ public class ControlPanel extends VBox {
 
             String[] parts = text.split(",");
             java.util.List<Double> xs = new java.util.ArrayList<>();
+            final int MAX_GENERATED = 10000;
+
+            java.util.regex.Pattern pColon = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+            java.util.regex.Pattern pDot = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*\\.\\.\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*:\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+            java.util.regex.Pattern pDash = java.util.regex.Pattern.compile("^\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*-\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*/\\s*([+-]?[0-9]*\\.?[0-9]+)\\s*$");
+
             for (String p : parts) {
+                String token = p.trim();
+                if (token.isEmpty()) continue;
+
+                java.util.regex.Matcher m;
+                // Colon form: start:step:end
+                m = pColon.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double step = Double.parseDouble(m.group(2));
+                        double end = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Dot-dot form: start..end:step
+                m = pDot.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double end = Double.parseDouble(m.group(2));
+                        double step = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Dash/slash form: start-end/step
+                m = pDash.matcher(token);
+                if (m.matches()) {
+                    try {
+                        double start = Double.parseDouble(m.group(1));
+                        double end = Double.parseDouble(m.group(2));
+                        double step = Double.parseDouble(m.group(3));
+                        if (step == 0.0) {
+                            AccessibilityHelper.announceAction("Step cannot be zero in range: " + token);
+                            logger.warn("Zero step in snap range: {}", token);
+                            return;
+                        }
+                        int generated = 0;
+                        if (step > 0) {
+                            for (double v = start; v <= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        } else {
+                            for (double v = start; v >= end; v = v + step) {
+                                xs.add(v);
+                                if (++generated > MAX_GENERATED) break;
+                            }
+                        }
+                        if (generated > MAX_GENERATED) {
+                            AccessibilityHelper.announceAction("Range generates too many values: " + token);
+                            logger.warn("Snap range {} produced more than {} values", token, MAX_GENERATED);
+                            return;
+                        }
+                        continue;
+                    } catch (NumberFormatException nfe) {
+                        AccessibilityHelper.announceAction("Invalid numeric value in range: " + token);
+                        logger.warn("Invalid numeric in snap range: {}", token, nfe);
+                        return;
+                    }
+                }
+
+                // Fallback: single numeric value
                 try {
-                    String trimmed = p.trim();
-                    if (trimmed.isEmpty()) continue;
-                    double v = Double.parseDouble(trimmed);
+                    double v = Double.parseDouble(token);
                     xs.add(v);
                 } catch (NumberFormatException nfe) {
-                    AccessibilityHelper.announceAction("Invalid number: " + p.trim());
-                    logger.warn("Invalid snap value entered: {}", p, nfe);
+                    AccessibilityHelper.announceAction("Invalid number: " + token);
+                    logger.warn("Invalid snap value entered: {}", token, nfe);
                     return;
                 }
             }
@@ -424,13 +621,18 @@ public class ControlPanel extends VBox {
                 }
             });
 
-            HBox line = new HBox(8, swatch, datasetInfo, picker);
+            // Align controls: spacer ensures picker/checkboxes align at right
+            javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+            javafx.scene.layout.HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+            HBox line = new HBox(8, swatch, datasetInfo, spacer, picker);
+            line.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
             // Visibility checkbox
             javafx.scene.control.CheckBox visibleBox = new javafx.scene.control.CheckBox("Visible");
             visibleBox.setSelected(dataset.isVisible());
+            visibleBox.setMinWidth(70);
+            visibleBox.setPrefWidth(72);
             visibleBox.setOnAction(evt -> {
                 boolean vis = visibleBox.isSelected();
-                // Use undo manager to perform toggle
                 if (this.undoManager != null) {
                     UndoManager.ToggleVisibilityAction act = new UndoManager.ToggleVisibilityAction(dataset, !vis, vis);
                     this.undoManager.push(act);
@@ -446,37 +648,23 @@ public class ControlPanel extends VBox {
                 AccessibilityHelper.announceAction(dataset.getName() + (vis ? " shown" : " hidden"));
             });
             line.getChildren().add(visibleBox);
+            // Axis assignment: Primary / Secondary (secondary maps to right-hand axis)
+            javafx.scene.control.CheckBox axisCheck = new javafx.scene.control.CheckBox("Secondary Y");
+            axisCheck.setSelected(dataset.isUseSecondaryYAxis());
+            axisCheck.setTooltip(new javafx.scene.control.Tooltip("When checked, this dataset is plotted against the secondary (right-hand) Y axis"));
+            axisCheck.setOnAction(evt -> {
+                boolean useSec = axisCheck.isSelected();
+                dataset.setUseSecondaryYAxis(useSec);
+                if (this.canvasPanel != null) this.canvasPanel.redraw();
+                AccessibilityHelper.announceAction(dataset.getName() + (useSec ? " assigned to secondary Y axis" : " assigned to primary Y axis"));
+            });
+            axisCheck.setMinWidth(120);
+            axisCheck.setPrefWidth(140);
+            line.getChildren().add(axisCheck);
             line.setPadding(new Insets(2, 0, 0, 0));
             datasetInfoBox.getChildren().add(line);
         }
     }
-
-    public int getSelectedDatasetIndex() {
-        if (datasetSelector == null) return 0;
-        return datasetSelector.getSelectionModel().getSelectedIndex();
-    }
-
-    public void toggleVisibility(int index) {
-        if (index < 0 || index >= datasets.size()) return;
-        Dataset ds = datasets.get(index);
-        boolean newVis = !ds.isVisible();
-        if (this.undoManager != null) {
-            UndoManager.ToggleVisibilityAction act = new UndoManager.ToggleVisibilityAction(ds, ds.isVisible(), newVis);
-            this.undoManager.push(act);
-        } else {
-            ds.setVisible(newVis);
-            // persist
-            if (this.accessibilityPrefs != null) {
-                String[] visArr = new String[this.datasets.size()];
-                for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(this.datasets.get(i).isVisible());
-                this.accessibilityPrefs.setDatasetVisibilities(visArr);
-            }
-            refreshDatasetInfoDisplay();
-            if (this.canvasPanel != null) this.canvasPanel.redraw();
-        }
-        AccessibilityHelper.announceAction(ds.getName() + (newVis ? " shown" : " hidden"));
-    }
-
     /**
      * Programmatically select a dataset by index (0-based) and update the title field.
      */
@@ -488,6 +676,39 @@ public class ControlPanel extends VBox {
         if (safe >= 0 && safe < datasets.size()) {
             // nothing else to do; the selector's listener will update UI
         }
+    }
+
+    /**
+     * Returns the currently selected dataset index (0-based). Safe to call any time.
+     */
+    public int getSelectedDatasetIndex() {
+        if (datasetSelector == null) return 0;
+        int idx = datasetSelector.getSelectionModel().getSelectedIndex();
+        return idx < 0 ? 0 : idx;
+    }
+
+    /**
+     * Toggle visibility for the dataset at the given index and refresh UI.
+     * This honors the undo manager when present.
+     */
+    public void toggleVisibility(int index) {
+        if (index < 0 || index >= this.datasets.size()) return;
+        Dataset ds = this.datasets.get(index);
+        boolean newVis = !ds.isVisible();
+        if (this.undoManager != null) {
+            UndoManager.ToggleVisibilityAction act = new UndoManager.ToggleVisibilityAction(ds, ds.isVisible(), newVis);
+            this.undoManager.push(act);
+        } else {
+            ds.setVisible(newVis);
+            if (this.accessibilityPrefs != null) {
+                String[] visArr = new String[this.datasets.size()];
+                for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(this.datasets.get(i).isVisible());
+                this.accessibilityPrefs.setDatasetVisibilities(visArr);
+            }
+            if (this.canvasPanel != null) this.canvasPanel.redraw();
+            refreshDatasetInfoDisplay();
+        }
+        AccessibilityHelper.announceAction(ds.getName() + (newVis ? " shown" : " hidden"));
     }
 
     // Public setters so MainWindow can update the fields when importing a project

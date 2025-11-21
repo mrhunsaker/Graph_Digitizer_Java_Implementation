@@ -76,6 +76,8 @@ public class AccessibilityPreferences {
     // Persist per-dataset colors as comma-separated hex values
     private String datasetColorsCsv = "";
     private String datasetVisibilitiesCsv = "";
+    // Should the startup help dialog be shown on first run (default true)
+    private boolean showStartupHelp = true;
 
     public AccessibilityPreferences() {
         load();
@@ -247,6 +249,11 @@ public class AccessibilityPreferences {
             paletteColorsCsv = props.getProperty("paletteColors", "");
             datasetColorsCsv = props.getProperty("datasetColors", "");
             datasetVisibilitiesCsv = props.getProperty("datasetVisibilities", "");
+            // backward-compatible: if property missing, default true
+            String showHelp = props.getProperty("showStartupHelp", "true");
+            try {
+                showStartupHelp = Boolean.parseBoolean(showHelp);
+            } catch (Exception ignore) { showStartupHelp = true; }
         } catch (IOException e) {
             System.err.println("Failed to load accessibility preferences: " + e.getMessage());
         }
@@ -269,6 +276,7 @@ public class AccessibilityPreferences {
             props.setProperty("paletteColors", paletteColorsCsv == null ? "" : paletteColorsCsv);
             props.setProperty("datasetColors", datasetColorsCsv == null ? "" : datasetColorsCsv);
             props.setProperty("datasetVisibilities", datasetVisibilitiesCsv == null ? "" : datasetVisibilitiesCsv);
+            props.setProperty("showStartupHelp", String.valueOf(showStartupHelp));
 
             try (OutputStream out = Files.newOutputStream(CONFIG_PATH)) {
                 props.store(out, "Graph Digitizer Accessibility Preferences");
@@ -276,5 +284,20 @@ public class AccessibilityPreferences {
         } catch (IOException e) {
             System.err.println("Failed to save accessibility preferences: " + e.getMessage());
         }
+    }
+
+    /**
+     * Whether the startup help dialog should be shown when the app first opens.
+     */
+    public boolean isShowStartupHelp() {
+        return showStartupHelp;
+    }
+
+    /**
+     * Set whether the startup help dialog should be shown on startup.
+     */
+    public void setShowStartupHelp(boolean show) {
+        this.showStartupHelp = show;
+        save();
     }
 }
