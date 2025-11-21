@@ -1,20 +1,15 @@
-﻿# Graph Digitizer (Java 21 Edition)
+# Graph Digitizer (Java 21 Edition)
 
 A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extracting numeric data points from raster images of graphs.
 
-## Version
-
-**1.0-beta** (Java Edition)
-
 ## 📚 Documentation
 
-**1.0** (Java Edition)
+**1.1** (Java Edition)
 
 - **[Quick Reference Guide](QUICK_REFERENCE.md)** - Commands, shortcuts, and common tasks
 - **[Developer Guide](DEVELOPER.md)** - Architecture, patterns, and extension guide
 - **[Project Summary](PROJECT_SUMMARY.md)** - Complete project overview
 - **[Index](INDEX.md)** - Comprehensive documentation index
-java -jar target/graph_digitizer_1.0.jar
 
 ### Accessibility Documentation
 
@@ -28,7 +23,6 @@ java -jar target/graph_digitizer_1.0.jar
 
 ### Themes Documentation
 
-java -jar target/graph_digitizer_1.0.jar
 - **[Quick Reference](THEMES_QUICK_REFERENCE.md)** - Theme selection guide
 - **[Implementation](THEMES_IMPLEMENTATION_SUMMARY.md)** - Technical details
 
@@ -56,8 +50,7 @@ the `pom.xml`).
 
 ```bash
 mvn clean package
-
-```text
+```
 
 ### Running the Application
 
@@ -65,15 +58,13 @@ Using Maven:
 
 ```bash
 mvn javafx:run
-
-```text
+```
 
 Or run the JAR directly:
 
 ```bash
 java -jar target/graph_digitizer_1.0-beta.jar
-
-```text
+```
 
 If you want to distribute a "clickable" application that does not require the
 end user to install Java, see "Packaging & Distribution" below.
@@ -139,7 +130,7 @@ Additional example files demonstrating common cases:
 
 ## Project Structure
 
-```text
+```bash
 ├── pom.xml                           # Maven configuration
 ├── src/
 │   │   ├── java/com/digitizer/
@@ -172,7 +163,6 @@ Additional example files demonstrating common cases:
 │           ├── core/
 │           └── io/
 └── target/                           # Build output
-
 ```
 
 ## Architecture
