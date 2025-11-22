@@ -492,6 +492,12 @@ Where to find the artifacts:
 
 Notes & troubleshooting
 - If you see an error about WiX missing, install the WiX Toolset and add its `bin` to your `PATH`.
+  - Use an Admin level powershell or Command Prompt and install through WinGet
+  ```pwsh
+  winget install WiXToolset.WiXCLI
+  winget install WiXToolset.WiXAdditionalTools
+  winget install WiXToolset.WiXToolset 
+  ```
 - If `jpackage` fails with an "application destination directory already exists" error, the `native` profile includes a cleanup exec that removes `target/jpackage/GraphDigitizer` before packaging — run `mvn -Pnative -DskipTests package` again.
 - The `pom.xml` copies the shaded JAR to `target/jpackage-input/graph-digitizer.jar` and platform JavaFX jars into `target/jpackage-input/lib` automatically when using the `native` profile.
 - If you want to run packaging on CI, run the packaging job on Windows-hosted runners for MSI outputs, and ensure WiX and a matching JDK are installed on the runner.
@@ -515,20 +521,15 @@ For AppImage, DEB/RPM maintainer scripts, desktop integration, icon auto-selecti
 Quick examples:
 
 ```bash
-
 # Linux AppImage build (after jpackage app-image)
-
 appimage-builder --recipe packaging/appimage-builder.yml
 appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta updates
-
 ```
 
 ```pwsh
-
 # Windows signing (example)
 
 pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
-
 ```
 
 ```bash
@@ -634,7 +635,6 @@ mvn test -Dtest=FileUtilsTest
 
 ## Development Notes
 
-### Coordinate Systems
 ### Coordinate Systems
 
 The application manages three related coordinate systems and clarifies how they interact:
@@ -785,7 +785,7 @@ java -version
 
 Verify the file is:
 
-- A valid PNG or JPEG file
+- A valid image file
 - Readable by the current user
 - Not too large (tested up to 4K resolution)
 
