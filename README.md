@@ -2,13 +2,9 @@
 
 A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extracting numeric data points from raster images of graphs.
 
-## Version
-
-**1.1** 
-
 ## 📚 Documentation
 
-**1.0** (Java Edition)
+**1.1** (Java Edition)
 
 - **[Quick Reference Guide](QUICK_REFERENCE.md)** - Commands, shortcuts, and common tasks
 - **[Developer Guide](DEVELOPER.md)** - Architecture, patterns, and extension guide
@@ -52,7 +48,7 @@ the `pom.xml`).
 2. Navigate to the project directory
 3. Build the project:
 
-```bash
+````bash
 mvn clean package
 ```
 
@@ -75,7 +71,7 @@ end user to install Java, see "Packaging & Distribution" below.
 
 ## Features
 
-- **Load PNG/JPEG Images**: Load raster images of graphs for digitization
+- **Load  Images**: Load raster images of graphs for digitization
 - **Non-blocking Calibration**: Record four clicks to establish coordinate mapping
 - **Manual Point Editing**: Left-click to add points, right-click or Delete to remove
 - **Precision Placement**: Zoom and magnifier tools for pixel-level accuracy (planned)
@@ -107,7 +103,7 @@ x,Linear,InverseLinear,zigzag,nil,Mountain,Dataset 6
 1,0.13245033112582782,-0.033112582781456956,-0.033112582781456956,0,0.16556291390728478,
 2,0.9602649006622516,15.132450331125828,0.8940397350993378,0.9271523178807948,1.0596026490066226,
 3,1.9867549668874174,14.072847682119205,2.185430463576159,0.9271523178807948,1.0264900662251657,
-```
+````
 
 JSON excerpt:
 
@@ -496,6 +492,12 @@ Where to find the artifacts:
 
 Notes & troubleshooting
 - If you see an error about WiX missing, install the WiX Toolset and add its `bin` to your `PATH`.
+  - Use an Admin level powershell or Command Prompt and install through WinGet
+  ```pwsh
+  winget install WiXToolset.WiXCLI
+  winget install WiXToolset.WiXAdditionalTools
+  winget install WiXToolset.WiXToolset 
+  ```
 - If `jpackage` fails with an "application destination directory already exists" error, the `native` profile includes a cleanup exec that removes `target/jpackage/GraphDigitizer` before packaging — run `mvn -Pnative -DskipTests package` again.
 - The `pom.xml` copies the shaded JAR to `target/jpackage-input/graph-digitizer.jar` and platform JavaFX jars into `target/jpackage-input/lib` automatically when using the `native` profile.
 - If you want to run packaging on CI, run the packaging job on Windows-hosted runners for MSI outputs, and ensure WiX and a matching JDK are installed on the runner.
@@ -519,20 +521,15 @@ For AppImage, DEB/RPM maintainer scripts, desktop integration, icon auto-selecti
 Quick examples:
 
 ```bash
-
 # Linux AppImage build (after jpackage app-image)
-
 appimage-builder --recipe packaging/appimage-builder.yml
 appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta updates
-
 ```
 
 ```pwsh
-
 # Windows signing (example)
 
 pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
-
 ```
 
 ```bash
@@ -639,21 +636,20 @@ mvn test -Dtest=FileUtilsTest
 ## Development Notes
 
 ### Coordinate Systems
-### Coordinate Systems
 
 The application manages three related coordinate systems and clarifies how they interact:
 
 1. **Image Pixel Coordinates**: The image's natural pixel coordinate space (0..width-1, 0..height-1). The
-  {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
-  coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
-  {@link com.digitizer.core.CalibrationState}).
+    {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
+    coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
+    {@link com.digitizer.core.CalibrationState}).
 
 2. **Canvas Coordinates**: Pixel positions in the JavaFX Canvas where the image is rendered. The canvas may
-  render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
-  (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
+    render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
+    (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
 
 3. **Data Coordinates**: Actual numeric values from the graph axes (e.g., 0.0..100.0). The transformer supports
-  linear and logarithmic mappings between data coordinates and image pixels.
+    linear and logarithmic mappings between data coordinates and image pixels.
 
 Note: Because the UI supports zooming (which changes `displayScale`) and fitting, the conversion helpers
 in the UI layer perform image<->canvas conversions. This ensures points and tick marks remain visually in the
@@ -789,7 +785,7 @@ java -version
 
 Verify the file is:
 
-- A valid PNG or JPEG file
+- A valid image file
 - Readable by the current user
 - Not too large (tested up to 4K resolution)
 
