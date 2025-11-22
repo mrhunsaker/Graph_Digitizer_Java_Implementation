@@ -54,10 +54,9 @@ the `pom.xml`).
 2. Navigate to the project directory
 3. Build the project:
 
-```bash
+````bash
 mvn clean package
-
-```text
+```
 
 ### Running the Application
 
@@ -65,22 +64,20 @@ Using Maven:
 
 ```bash
 mvn javafx:run
-
-```text
+```
 
 Or run the JAR directly:
 
 ```bash
 java -jar target/graph_digitizer_1.0-beta.jar
-
-```text
+```
 
 If you want to distribute a "clickable" application that does not require the
 end user to install Java, see "Packaging & Distribution" below.
 
 ## Features
 
-- **Load PNG/JPEG Images**: Load raster images of graphs for digitization
+- **Load  Images**: Load raster images of graphs for digitization
 - **Non-blocking Calibration**: Record four clicks to establish coordinate mapping
 - **Manual Point Editing**: Left-click to add points, right-click or Delete to remove
 - **Precision Placement**: Zoom and magnifier tools for pixel-level accuracy (planned)
@@ -112,7 +109,7 @@ x,Linear,InverseLinear,zigzag,nil,Mountain,Dataset 6
 1,0.13245033112582782,-0.033112582781456956,-0.033112582781456956,0,0.16556291390728478,
 2,0.9602649006622516,15.132450331125828,0.8940397350993378,0.9271523178807948,1.0596026490066226,
 3,1.9867549668874174,14.072847682119205,2.185430463576159,0.9271523178807948,1.0264900662251657,
-```
+````
 
 JSON excerpt:
 
@@ -650,16 +647,16 @@ mvn test -Dtest=FileUtilsTest
 The application manages three related coordinate systems and clarifies how they interact:
 
 1. **Image Pixel Coordinates**: The image's natural pixel coordinate space (0..width-1, 0..height-1). The
-  {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
-  coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
-  {@link com.digitizer.core.CalibrationState}).
+    {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
+    coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
+    {@link com.digitizer.core.CalibrationState}).
 
 2. **Canvas Coordinates**: Pixel positions in the JavaFX Canvas where the image is rendered. The canvas may
-  render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
-  (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
+    render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
+    (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
 
 3. **Data Coordinates**: Actual numeric values from the graph axes (e.g., 0.0..100.0). The transformer supports
-  linear and logarithmic mappings between data coordinates and image pixels.
+    linear and logarithmic mappings between data coordinates and image pixels.
 
 Note: Because the UI supports zooming (which changes `displayScale`) and fitting, the conversion helpers
 in the UI layer perform image<->canvas conversions. This ensures points and tick marks remain visually in the
