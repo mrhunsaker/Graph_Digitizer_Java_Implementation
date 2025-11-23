@@ -69,7 +69,7 @@ BASE_PACKAGE="${BASE_PACKAGE:-}"
 INDEX_FILE="index.html"
 VERSIONS_JSON="versions.json"
 VERSIONS_TXT="versions.txt"
-SITE_BASE="${SITE_BASE:-https://mrhunsaker.github.io/graph_digitizer_java_implementation}"
+SITE_BASE="${SITE_BASE:-https://mrhunsaker.github.io/Graph_Digitizer_Java_Implementation}"
 
 # ---------------------------
 # Helpers
