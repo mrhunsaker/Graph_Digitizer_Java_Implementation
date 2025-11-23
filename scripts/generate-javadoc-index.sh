@@ -37,7 +37,7 @@
 #   --root <dir>        Root directory that becomes the GitHub Pages document root.
 #   --version <ver>     Semantic version string for current docs (e.g. 1.2.0, 1.2, v1.2).
 #   --latest            Mark this version as the latest (updates redirect target).
-#   --project-url <url> Optional project homepage (link displayed on index).
+#   --project-url <url> Optional project homepage (link displayed on index, defaults to https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation).
 #   --title <text>      Optional custom title for landing page.
 #   --package <pkg>     Optional Java base package to deep-link into (e.g. com/digitizer/ui).
 #   --help              Show help.
@@ -63,12 +63,13 @@ set -euo pipefail
 ROOT_DIR=""
 VERSION=""
 MARK_LATEST=0
-PROJECT_URL="${PROJECT_URL:-}"
+PROJECT_URL="${PROJECT_URL:-https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation}"
 DOC_TITLE="${DOC_TITLE:-Graph Digitizer API Documentation}"
 BASE_PACKAGE="${BASE_PACKAGE:-}"
 INDEX_FILE="index.html"
 VERSIONS_JSON="versions.json"
 VERSIONS_TXT="versions.txt"
+SITE_BASE="${SITE_BASE:-https://mrhunsaker.github.io/graph_digitizer_java_implementation}"
 
 # ---------------------------
 # Helpers
@@ -220,20 +221,10 @@ fi
 # ---------------------------
 # Landing page (index.html)
 # ---------------------------
-REDIRECT_TARGET="/${LATEST_VERSION}/"
-PACKAGE_PATH=""
-if [[ -n "${BASE_PACKAGE}" ]]; then
-  PACKAGE_PATH="${BASE_PACKAGE//./\/}/"
-  # Only add if the package docs folder actually exists
-  if [[ -d "${ROOT_DIR}/${LATEST_VERSION}/${PACKAGE_PATH}" ]]; then
-    REDIRECT_TARGET="/${LATEST_VERSION}/${PACKAGE_PATH}"
-  fi
-fi
-
-PROJECT_LINK_HTML=""
-if [[ -n "${PROJECT_URL}" ]]; then
-  PROJECT_LINK_HTML="<p><a href=\"${PROJECT_URL}\">Project Homepage</a></p>"
-fi
+REDIRECT_TARGET="${SITE_BASE}/${LATEST_VERSION}/index.html"
+# Deep package linking disabled to ensure redirect hits version root index.html
+# (Previously attempted to link into package path which lacked its own index.html)
+PROJECT_LINK_HTML="<p><a href=\"${PROJECT_URL}\">Project Homepage</a></p>"
 
 # Generate HTML
 cat > "${ROOT_DIR}/${INDEX_FILE}" <<EOF
@@ -269,7 +260,7 @@ EOF
 while read -r v; do
   CLASS=""
   [[ "${v}" == "${LATEST_VERSION}" ]] && CLASS="latest"
-  echo "      <li class=\"${CLASS}\"><a href=\"/${v}/\">${v}</a> $( [[ "${CLASS}" == "latest" ]] && echo "(latest)" )</li>" >> "${ROOT_DIR}/${INDEX_FILE}"
+  echo "      <li class=\"${CLASS}\"><a href=\"${SITE_BASE}/${v}/index.html\">${v}</a> $( [[ "${CLASS}" == "latest" ]] && echo "(latest)" )</li>" >> "${ROOT_DIR}/${INDEX_FILE}"
 done <<< "${SORTED_VERSIONS}"
 
 cat >> "${ROOT_DIR}/${INDEX_FILE}" <<EOF
@@ -277,7 +268,7 @@ cat >> "${ROOT_DIR}/${INDEX_FILE}" <<EOF
   </div>
   <div class="footer">
     <p>Generated on $(date -u +"%Y-%m-%d %H:%M UTC").</p>
-    <p>Metadata: <a href="/${VERSIONS_JSON}">${VERSIONS_JSON}</a> | <a href="/${VERSIONS_TXT}">${VERSIONS_TXT}</a></p>
+    <p>Metadata: <a href="${SITE_BASE}/${VERSIONS_JSON}">${VERSIONS_JSON}</a> | <a href="${SITE_BASE}/${VERSIONS_TXT}">${VERSIONS_TXT}</a></p>
   </div>
 </body>
 </html>
