@@ -1,35 +1,48 @@
-name: Deploy Maven Site (Javadocs)
+name: Deploy API Docs (Javadocs Only)
 
 on:
-  push:
-    branches: [ main, v2.0-beta ]
-  workflow_dispatch:
+    push:
+        branches: [main, v2.0-beta]
+    workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
+            - name: Set up JDK
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: "21"
 
-      - name: Cache Maven repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2-
+            - name: Cache Maven repository
+              uses: actions/cache@v4
+              with:
+                  path: ~/.m2/repository
+                  key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+                  restore-keys: ${{ runner.os }}-m2-
 
-      - name: Build Maven site
-        run: mvn -B -DskipTests site
+            - name: Build Maven site (includes apidocs)
+              run: mvn -B -DskipTests site
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/site
-          publish_branch: gh-pages
+            - name: Determine project version
+              id: get-version
+              run: echo "version=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)" >> $GITHUB_OUTPUT
+
+            - name: Prepare versioned Javadocs
+              run: |
+                  mkdir -p build/site-workdir
+                  cp -R target/site/apidocs build/site-workdir/apidocs-temp
+                  chmod +x scripts/generate-javadoc-index.sh
+                  scripts/generate-javadoc-index.sh --root build/site-workdir --version "${{ steps.get-version.outputs.version }}" --latest --project-url https://github.com/YOUR_USERNAME/YOUR_REPO_NAME --package com.digitizer.ui
+
+            - name: Deploy versioned Javadocs to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: build/site-workdir
+                  publish_branch: gh-pages
+                  force_orphan: true
+                  disable_nojekyll: true

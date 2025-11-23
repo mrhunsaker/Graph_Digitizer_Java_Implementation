@@ -1,4 +1,5 @@
 # Graph Digitizer (Java 21 Edition)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Latest-blue.svg)](https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/)
 
 A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extracting numeric data points from raster images of graphs.
 
@@ -29,6 +30,12 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 ### Packaging & Distribution
 
 - **[Packaging Guide](packaging/README.md)** - AppImage, DEB, RPM, and native installers
+
+### API Documentation
+
+- **[Latest API (Javadoc)](https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/)** – Generated from the current main branch
+- **Versioned Archives:** Each release will publish Javadocs under a subdirectory (e.g. `/1.1/`, `/1.2/`). Navigate directly to a version path to view older APIs.
+- If the badge link is not yet active, enable GitHub Pages (Settings → Pages → Branch: `gh-pages`).
 
 ## Quick Start
 
@@ -405,23 +412,41 @@ jpackage --type exe \
 Tip: Use `maven-jlink-plugin` and the `jpackage` Maven plugin to integrate
 this into your Maven lifecycle so OS-specific packages are reproducible.
 
-The repository includes a Maven profile named `native` that automates
-runtime image creation and packaging using `maven-jlink-plugin` and
-`org.panteleyev:jpackage-maven-plugin`. Example usages:
+The repository includes a unified Maven packaging setup driven by the `native` property. A single command now builds the shaded JAR, copies icons, gathers JavaFX modules for the current OS, creates the jpackage app-image, and then produces any OS-specific installers.
+
+Unified build command (run this on your current OS):
+mvn clean package -Dnative
+
+Outputs per OS:
+Windows:
+- App image: target/jpackage/GraphDigitizer
+- MSI installer: target/jpackage-msi/GraphDigitizer-<version>.msi
+
+macOS:
+- App image: target/jpackage/GraphDigitizer.app
+- DMG installer: target/jpackage-dmg/GraphDigitizer-<version>.dmg
+
+Linux:
+- App image: target/jpackage/GraphDigitizer
+- DEB package: target/jpackage-deb/graphdigitizer_<version>_amd64.deb (name may vary by architecture)
+- RPM package: target/jpackage-rpm/graphdigitizer-<version>-1.x86_64.rpm (name may vary by architecture)
+
+Optional overrides (examples):
+- mvn clean package -Dnative -Dicon.win=build/icons/custom.ico
+- mvn clean package -Dnative -Dicon.mac=build/icons/custom.icns
+- mvn clean package -Dnative -Dicon.linux=build/icons/custom.png
+(Icon properties default to the copied files under build/icons.)
+
+Skip tests if desired:
+mvn clean package -Dnative -DskipTests
+
+If you only want to adjust version or icon without rebuilding everything, you can reuse the previous target artifacts; however, the unified command is designed to be reproducible and idempotent.
+
+Advanced: You can still run jpackage manually for debugging; see the manual section below.
 
 ```bash
 
-# On Windows (EXE installer)
-
-mvn -Pnative -Djpackage.type=exe package
-
-# On macOS (DMG)
-
-mvn -Pnative -Djpackage.type=dmg package
-
-# On Linux (DEB)
-
-mvn -Pnative -Djpackage.type=deb package
+(Deprecated examples removed: previous per-OS -Pnative + -Djpackage.type usage has been replaced by the single -Dnative flow.)
 
 ```
 
@@ -432,8 +457,9 @@ Notes:
 
 #### Automated MSI via Maven
 
-The `native` profile now automates `jpackage` as part of `mvn -Pnative package`. On Windows, if
-you want an MSI installer the steps are:
+Windows MSI creation is automatic with:
+mvn clean package -Dnative
+(Previous instructions using -Pnative and -Djpackage.type are obsolete.)
 
 1. Install the WiX Toolset (v3.11 or v4+) and ensure `candle.exe`/`light.exe` (or equivalent WiX binaries) are on your `PATH`.
 

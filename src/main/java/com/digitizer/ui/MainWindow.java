@@ -16,28 +16,27 @@
 
 package com.digitizer.ui;
 
-import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.digitizer.core.CalibrationState;
 import com.digitizer.core.Dataset;
 import com.digitizer.core.FileUtils;
 import com.digitizer.io.CsvExporter;
 import com.digitizer.io.JsonExporter;
-
+import java.awt.Desktop;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -50,14 +49,12 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.scene.layout.Region;
-import java.awt.Desktop;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Main window for the Graph Digitizer application.
@@ -116,8 +113,13 @@ public class MainWindow {
      * @param maxDatasets    maximum number of datasets allowed
      * @param defaultColors  default color palette
      */
-    public MainWindow(Stage primaryStage, CalibrationState calibration, List<Dataset> datasets,
-                      int maxDatasets, String[] defaultColors) {
+    public MainWindow(
+        Stage primaryStage,
+        CalibrationState calibration,
+        List<Dataset> datasets,
+        int maxDatasets,
+        String[] defaultColors
+    ) {
         this.primaryStage = primaryStage;
         this.calibration = calibration;
         this.datasets = datasets;
@@ -154,11 +156,11 @@ public class MainWindow {
                     try {
                         boolean visible = Boolean.parseBoolean(v.trim());
                         datasets.get(i).setVisible(visible);
-                    } catch (Exception ignore) { }
+                    } catch (Exception ignore) {}
                 }
             }
         }
-        
+
         // Create UI components
         // Create undo manager and wire to canvas/control panels
         this.undoManager = new UndoManager(datasets, accessibilityPrefs);
@@ -171,11 +173,11 @@ public class MainWindow {
         controlPanel.setMinWidth(700);
         controlPanel.setMaxWidth(Double.MAX_VALUE);
         statusBar = new StatusBar();
-        
+
         // Detect OS text scaling
         double osScaling = AccessibilityHelper.getOSTextScaling();
         if (osScaling > 1.0) {
-            logger.info("Detected OS text scaling: {}% ({}x)", (int)(osScaling * 100), osScaling);
+            logger.info("Detected OS text scaling: {}% ({}x)", (int) (osScaling * 100), osScaling);
         }
 
         // Create root layout
@@ -213,7 +215,7 @@ public class MainWindow {
                         leftScroll.setValue(newV.doubleValue() * max);
                     }
                 });
-            } catch (Exception ignore) { }
+            } catch (Exception ignore) {}
         });
 
         // Sync leftScroll -> ScrollPane (convert pixel offset to vvalue 0..1)
@@ -229,7 +231,7 @@ public class MainWindow {
                         this.scrollPane.setVvalue(newV.doubleValue() / max);
                     }
                 });
-            } catch (Exception ignore) { }
+            } catch (Exception ignore) {}
         });
 
         // When content size or viewport changes, update scrollbar metrics
@@ -239,8 +241,8 @@ public class MainWindow {
         root.setLeft(this.leftScroll);
         root.setCenter(this.scrollPane);
 
-    // Right: Control panel (use the instantiated ControlPanel so added UI is visible)
-    root.setRight(controlPanel);
+        // Right: Control panel (use the instantiated ControlPanel so added UI is visible)
+        root.setRight(controlPanel);
 
         // Bottom: Status bar
         root.setBottom(statusBar);
@@ -388,30 +390,30 @@ public class MainWindow {
             }
         });
 
-    // Ensure the stage is shown maximized so controls and large images are visible
-    primaryStage.setTitle("Graph Digitizer");
-    primaryStage.setMinWidth(1000);
-    primaryStage.setMinHeight(700);
-    primaryStage.setScene(scene);
-    
-    // Now that scene is set, apply accessibility settings
-    applyAccessibilitySettings();
-    // Apply saved palette (if any)
-    String[] savedPal = accessibilityPrefs.getPaletteColors();
-    if (savedPal != null && savedPal.length > 0) {
-        applyColorPalette(savedPal, accessibilityPrefs.getPaletteName());
-    }
-    
-    // Show and maximize (maximize after show for better cross-platform compatibility)
-    primaryStage.show();
-    primaryStage.setMaximized(true);
+        // Ensure the stage is shown maximized so controls and large images are visible
+        primaryStage.setTitle("Graph Digitizer");
+        primaryStage.setMinWidth(1000);
+        primaryStage.setMinHeight(700);
+        primaryStage.setScene(scene);
+
+        // Now that scene is set, apply accessibility settings
+        applyAccessibilitySettings();
+        // Apply saved palette (if any)
+        String[] savedPal = accessibilityPrefs.getPaletteColors();
+        if (savedPal != null && savedPal.length > 0) {
+            applyColorPalette(savedPal, accessibilityPrefs.getPaletteName());
+        }
+
+        // Show and maximize (maximize after show for better cross-platform compatibility)
+        primaryStage.show();
+        primaryStage.setMaximized(true);
 
         // Show startup help dialog if the user has it enabled in preferences
         try {
             if (this.accessibilityPrefs != null && this.accessibilityPrefs.isShowStartupHelp()) {
                 Platform.runLater(() -> showStartupHelpDialog(false));
             }
-        } catch (Exception ignore) { }
+        } catch (Exception ignore) {}
 
         logger.info("Main window initialized and shown");
     }
@@ -486,9 +488,7 @@ public class MainWindow {
         MenuItem reportEmail = new MenuItem("Report a Bug - Email");
         reportEmail.setOnAction(e -> {
             try {
-                String subject = "Graph Digitizer - Bug Report
-                
-                ";
+                String subject = "Graph Digitizer - Bug Report";
                 openEmail("hunsakerconsulting@gmail.com", subject);
             } catch (Exception ex) {
                 logger.warn("Could not open email client: {}", ex.getMessage());
@@ -496,12 +496,24 @@ public class MainWindow {
         });
 
         MenuItem featureGithub = new MenuItem("Feature Request - GitHub");
-        featureGithub.setOnAction(e -> openUrl("https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation/discussions"));
+        featureGithub.setOnAction(e ->
+            openUrl("https://github.com/mrhunsaker/Graph_Digitizer_Java_Implementation/discussions")
+        );
 
         MenuItem featureEmail = new MenuItem("Feature Request - Email");
         featureEmail.setOnAction(e -> openEmail("hunsakerconsulting@gmail.com", "Graph Digitizer - Feature Request"));
 
-        helpMenu.getItems().addAll(usageItem, new SeparatorMenuItem(), reportGithub, reportEmail, new SeparatorMenuItem(), featureGithub, featureEmail);
+        helpMenu
+            .getItems()
+            .addAll(
+                usageItem,
+                new SeparatorMenuItem(),
+                reportGithub,
+                reportEmail,
+                new SeparatorMenuItem(),
+                featureGithub,
+                featureEmail
+            );
 
         // Actions menu mirrors toolbar buttons and provides accelerators
         Menu actionsMenu = new Menu("Actions");
@@ -543,9 +555,9 @@ public class MainWindow {
                         double maxH = Math.max(0.0, contentHeight - viewportHeight);
                         if (maxH <= 0) this.scrollPane.setVvalue(0);
                         else this.scrollPane.setVvalue(0.5);
-                    } catch (Exception ignore) { }
+                    } catch (Exception ignore) {}
                 });
-            } catch (Exception ignore) { }
+            } catch (Exception ignore) {}
         });
         // No standard accelerator for Fit; allow Ctrl+Shift+F
         fitItem.setAccelerator(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN));
@@ -557,7 +569,17 @@ public class MainWindow {
         });
         oneToOneItem.setAccelerator(new KeyCodeCombination(KeyCode.DIGIT0, KeyCombination.CONTROL_DOWN));
 
-        actionsMenu.getItems().addAll(loadImageItem, calibrateItem, enableAutoTraceToggle, this.autoTraceItem, new SeparatorMenuItem(), fitItem, oneToOneItem);
+        actionsMenu
+            .getItems()
+            .addAll(
+                loadImageItem,
+                calibrateItem,
+                enableAutoTraceToggle,
+                this.autoTraceItem,
+                new SeparatorMenuItem(),
+                fitItem,
+                oneToOneItem
+            );
 
         menuBar.getMenus().addAll(fileMenu, actionsMenu, themesMenu, accessibilityMenu);
 
@@ -574,7 +596,9 @@ public class MainWindow {
                     for (Dataset d : this.datasets) d.setVisible(false);
                     if (this.accessibilityPrefs != null) {
                         String[] visArr = new String[this.datasets.size()];
-                        for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(this.datasets.get(i).isVisible());
+                        for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(
+                            this.datasets.get(i).isVisible()
+                        );
                         this.accessibilityPrefs.setDatasetVisibilities(visArr);
                     }
                     if (this.controlPanel != null) this.controlPanel.refreshDatasetInfoDisplay();
@@ -596,7 +620,9 @@ public class MainWindow {
                     for (Dataset d : this.datasets) d.setVisible(true);
                     if (this.accessibilityPrefs != null) {
                         String[] visArr = new String[this.datasets.size()];
-                        for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(this.datasets.get(i).isVisible());
+                        for (int i = 0; i < this.datasets.size(); i++) visArr[i] = String.valueOf(
+                            this.datasets.get(i).isVisible()
+                        );
                         this.accessibilityPrefs.setDatasetVisibilities(visArr);
                     }
                     if (this.controlPanel != null) this.controlPanel.refreshDatasetInfoDisplay();
@@ -702,7 +728,7 @@ public class MainWindow {
         // Point Size submenu
         Menu pointSizeMenu = new Menu("Point Size");
         for (AccessibilityPreferences.PointSize size : AccessibilityPreferences.PointSize.values()) {
-            MenuItem item = new MenuItem(size.name().replace("_", " ") + " (" + (int)size.size + "px)");
+            MenuItem item = new MenuItem(size.name().replace("_", " ") + " (" + (int) size.size + "px)");
             item.setOnAction(e -> {
                 accessibilityPrefs.setPointSize(size);
                 canvasPanel.setPointSize(size.size);
@@ -758,15 +784,17 @@ public class MainWindow {
             focusBorderMenu.getItems().add(item);
         }
 
-        accessibilityMenu.getItems().addAll(
-            fontSizeMenu,
-            pointSizeMenu,
-            new SeparatorMenuItem(),
-            shapeVariationItem,
-            highContrastItem,
-            new SeparatorMenuItem(),
-            focusBorderMenu
-        );
+        accessibilityMenu
+            .getItems()
+            .addAll(
+                fontSizeMenu,
+                pointSizeMenu,
+                new SeparatorMenuItem(),
+                shapeVariationItem,
+                highContrastItem,
+                new SeparatorMenuItem(),
+                focusBorderMenu
+            );
 
         // Color-blind friendly palettes submenu (radio items with persistent selection)
         Menu palettesSub = new Menu("Color-blind Palettes");
@@ -774,7 +802,7 @@ public class MainWindow {
 
         javafx.scene.control.RadioMenuItem okabe = new javafx.scene.control.RadioMenuItem("Okabe-Ito (friendly)");
         okabe.setToggleGroup(paletteToggle);
-        String[] okabePal = new String[]{"#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#CC79A7"};
+        String[] okabePal = new String[] { "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#CC79A7" };
         okabe.setOnAction(e -> {
             accessibilityPrefs.setPalette("Okabe-Ito", okabePal);
             applyColorPalette(okabePal, "Okabe-Ito");
@@ -782,7 +810,7 @@ public class MainWindow {
 
         javafx.scene.control.RadioMenuItem brewer = new javafx.scene.control.RadioMenuItem("ColorBrewer (colorblind)");
         brewer.setToggleGroup(paletteToggle);
-        String[] brewerPal = new String[]{"#377eb8", "#ff7f00", "#4daf4a", "#f781bf", "#a65628", "#984ea3"};
+        String[] brewerPal = new String[] { "#377eb8", "#ff7f00", "#4daf4a", "#f781bf", "#a65628", "#984ea3" };
         brewer.setOnAction(e -> {
             accessibilityPrefs.setPalette("ColorBrewer", brewerPal);
             applyColorPalette(brewerPal, "ColorBrewer");
@@ -822,18 +850,14 @@ public class MainWindow {
 
         // Apply font sizes
         AccessibilityPreferences.FontSize fontSize = accessibilityPrefs.getFontSize();
-        String fontStyle = String.format(
-            "-fx-font-size: %.0fpx;",
-            fontSize.body
-        );
+        String fontStyle = String.format("-fx-font-size: %.0fpx;", fontSize.body);
         controlPanel.setStyle(fontStyle);
         statusBar.setStyle(fontStyle);
 
         // Apply focus border width
         double borderWidth = accessibilityPrefs.getFocusBorderWidth();
         String focusStyle = String.format(
-            "-fx-focus-color: #0096FF; -fx-faint-focus-color: #0096FF22; " +
-            "-fx-focus-border-width: %.1fpx;",
+            "-fx-focus-color: #0096FF; -fx-faint-focus-color: #0096FF22; " + "-fx-focus-border-width: %.1fpx;",
             borderWidth
         );
         primaryStage.getScene().getRoot().setStyle(focusStyle);
@@ -849,9 +873,12 @@ public class MainWindow {
         alert.initOwner(primaryStage);
         alert.setTitle("About Graph Digitizer");
         alert.setHeaderText("Graph Digitizer");
-        String content = "Version " + GraphDigitizerApp.APP_VERSION + "\n\n" +
-                "Author: Michael Ryan Hunsaker, M.Ed., Ph.D.\n" +
-                "Licensed under the Apache 2.0 License.";
+        String content =
+            "Version " +
+            GraphDigitizerApp.APP_VERSION +
+            "\n\n" +
+            "Author: Michael Ryan Hunsaker, M.Ed., Ph.D.\n" +
+            "Licensed under the Apache 2.0 License.";
         alert.setContentText(content);
         alert.showAndWait();
     }
@@ -869,52 +896,82 @@ public class MainWindow {
 
         // Load Image button
         Button loadImageBtn = new Button("Load Image");
-        AccessibilityHelper.setButtonAccessibility(loadImageBtn, "Load Image", 
-            "Load a PNG or JPEG image for digitization", "Ctrl+O");
+        AccessibilityHelper.setButtonAccessibility(
+            loadImageBtn,
+            "Load Image",
+            "Load a PNG or JPEG image for digitization",
+            "Ctrl+O"
+        );
         loadImageBtn.setOnAction(e -> handleLoadImage());
 
         // Calibrate button
         Button calibrateBtn = new Button("Calibrate");
-        AccessibilityHelper.setButtonAccessibility(calibrateBtn, "Calibrate", 
-            "Enter calibration mode to set axis reference points by clicking 4 locations", "Ctrl+L");
+        AccessibilityHelper.setButtonAccessibility(
+            calibrateBtn,
+            "Calibrate",
+            "Enter calibration mode to set axis reference points by clicking 4 locations",
+            "Ctrl+L"
+        );
         calibrateBtn.setOnAction(e -> handleCalibrate());
 
         // Auto Trace button (enabled/disabled by runtime feature flag)
         this.autoTraceBtn = new Button("Auto Trace");
-        AccessibilityHelper.setButtonAccessibility(this.autoTraceBtn, "Auto Trace", 
-            "Automatically detect and trace the data curve using color matching", "Ctrl+T");
+        AccessibilityHelper.setButtonAccessibility(
+            this.autoTraceBtn,
+            "Auto Trace",
+            "Automatically detect and trace the data curve using color matching",
+            "Ctrl+T"
+        );
         this.autoTraceBtn.setOnAction(e -> handleAutoTrace());
         this.autoTraceBtn.setDisable(!autoTraceEnabled);
 
         // Save JSON button
         Button saveJsonBtn = new Button("Save JSON");
-        AccessibilityHelper.setButtonAccessibility(saveJsonBtn, "Save JSON", 
-            "Export all data and calibration to a JSON file for later editing", "Ctrl+S");
+        AccessibilityHelper.setButtonAccessibility(
+            saveJsonBtn,
+            "Save JSON",
+            "Export all data and calibration to a JSON file for later editing",
+            "Ctrl+S"
+        );
         saveJsonBtn.setOnAction(e -> handleSaveJson());
 
         // Save CSV button
         Button saveCsvBtn = new Button("Save CSV");
-        AccessibilityHelper.setButtonAccessibility(saveCsvBtn, "Save CSV", 
-            "Export data points to a CSV file for use in spreadsheets and other tools", "Ctrl+E");
+        AccessibilityHelper.setButtonAccessibility(
+            saveCsvBtn,
+            "Save CSV",
+            "Export data points to a CSV file for use in spreadsheets and other tools",
+            "Ctrl+E"
+        );
         saveCsvBtn.setOnAction(e -> handleSaveCsv());
 
         Button clearDataBtn = new Button("Clear Data");
-        AccessibilityHelper.setButtonAccessibility(clearDataBtn, "Clear Data",
-            "Clear all datasets, calibration and X-axis snap values (start fresh)", "Ctrl+K");
+        AccessibilityHelper.setButtonAccessibility(
+            clearDataBtn,
+            "Clear Data",
+            "Clear all datasets, calibration and X-axis snap values (start fresh)",
+            "Ctrl+K"
+        );
         clearDataBtn.setOnAction(e -> {
             // Confirm with the user before clearing data to avoid accidental loss
-            javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+            javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.CONFIRMATION
+            );
             confirm.initOwner(primaryStage);
             confirm.setTitle("Confirm Clear Data");
             confirm.setHeaderText("Clear all data and reset datasets?");
-            confirm.setContentText("This will remove all data points, calibration, snap X values, and reset dataset names/colors. This action cannot be undone.");
-            confirm.showAndWait().ifPresent(bt -> {
-                if (bt == javafx.scene.control.ButtonType.OK) {
-                    clearAllData();
-                } else {
-                    AccessibilityHelper.announceAction("Clear data cancelled");
-                }
-            });
+            confirm.setContentText(
+                "This will remove all data points, calibration, snap X values, and reset dataset names/colors. This action cannot be undone."
+            );
+            confirm
+                .showAndWait()
+                .ifPresent(bt -> {
+                    if (bt == javafx.scene.control.ButtonType.OK) {
+                        clearAllData();
+                    } else {
+                        AccessibilityHelper.announceAction("Clear data cancelled");
+                    }
+                });
         });
 
         toolbar.getChildren().addAll(loadImageBtn, calibrateBtn, this.autoTraceBtn, saveJsonBtn, saveCsvBtn, clearDataBtn);
@@ -928,7 +985,7 @@ public class MainWindow {
         this.zoomSlider.valueProperty().addListener((obs, oldV, newV) -> {
             try {
                 canvasPanel.setZoom(newV.doubleValue());
-            } catch (Exception ignore) { }
+            } catch (Exception ignore) {}
         });
         fitBtn.setOnAction(e -> {
             Bounds vp = this.scrollPane.getViewportBounds();
@@ -948,7 +1005,7 @@ public class MainWindow {
                     double maxH = Math.max(0.0, contentHeight - viewportHeight);
                     if (maxH <= 0) this.scrollPane.setVvalue(0);
                     else this.scrollPane.setVvalue(0.5); // center vertically
-                } catch (Exception ignore) { }
+                } catch (Exception ignore) {}
             });
         });
         oneBtn.setOnAction(e -> {
@@ -979,10 +1036,12 @@ public class MainWindow {
     private void handleLoadImage() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Image");
-        fileChooser.getExtensionFilters().addAll(
+        fileChooser
+            .getExtensionFilters()
+            .addAll(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
+            );
 
         File file = fileChooser.showOpenDialog(primaryStage);
         if (file != null) {
@@ -1008,7 +1067,7 @@ public class MainWindow {
                         double maxH = Math.max(0.0, contentHeight - viewportHeight);
                         if (maxH <= 0) this.scrollPane.setVvalue(0);
                         else this.scrollPane.setVvalue(0.5);
-                    } catch (Exception ignore) { }
+                    } catch (Exception ignore) {}
                 });
             } catch (Exception e) {
                 String message = "Error loading image: " + e.getMessage();
@@ -1033,11 +1092,15 @@ public class MainWindow {
                 d.setVisible(true);
                 d.setUseSecondaryYAxis(false);
                 // Reset name to default (Dataset 1..N)
-                try { d.setName("Dataset " + (i + 1)); } catch (Exception ignore) {}
+                try {
+                    d.setName("Dataset " + (i + 1));
+                } catch (Exception ignore) {}
                 // Reset color to default palette if available
                 if (this.defaultColors != null && this.defaultColors.length > 0) {
                     String hex = this.defaultColors[i % this.defaultColors.length];
-                    try { d.setHexColor(hex); } catch (Exception ignore) {}
+                    try {
+                        d.setHexColor(hex);
+                    } catch (Exception ignore) {}
                 }
             }
 
@@ -1103,9 +1166,11 @@ public class MainWindow {
     private void handleCalibrate() {
         String message = "Calibration mode: Click 4 points (X-left, X-right, Y-bottom, Y-top)";
         statusBar.setStatus(message);
-        AccessibilityHelper.announceModeChange("Calibration Mode", 
+        AccessibilityHelper.announceModeChange(
+            "Calibration Mode",
             "Click in the image canvas to mark 4 calibration points: " +
-            "1. Left X value, 2. Right X value, 3. Bottom Y value, 4. Top Y value");
+                "1. Left X value, 2. Right X value, 3. Bottom Y value, 4. Top Y value"
+        );
         canvasPanel.enterCalibrationMode();
         logger.info("Entered calibration mode");
     }
@@ -1155,22 +1220,24 @@ public class MainWindow {
         String safe = FileUtils.sanitizeFilename(title.trim());
         String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         fileChooser.setInitialFileName(safe + "_" + ts + ".json");
-        fileChooser.getExtensionFilters().addAll(
+        fileChooser
+            .getExtensionFilters()
+            .addAll(
                 new FileChooser.ExtensionFilter("JSON Files", "*.json"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
+            );
 
         File file = fileChooser.showSaveDialog(primaryStage);
         if (file != null) {
             try {
-        JsonExporter.exportToJson(
-            file.getAbsolutePath(),
-            title.trim(),
-            controlPanel.getXLabel(),
-            controlPanel.getYLabel(),
-            calibration,
-            datasets
-        );
+                JsonExporter.exportToJson(
+                    file.getAbsolutePath(),
+                    title.trim(),
+                    controlPanel.getXLabel(),
+                    controlPanel.getYLabel(),
+                    calibration,
+                    datasets
+                );
                 String message = "Saved JSON to: " + file.getName();
                 statusBar.setStatus(message);
                 AccessibilityHelper.announceAction(message);
@@ -1203,10 +1270,9 @@ public class MainWindow {
         String safe = FileUtils.sanitizeFilename(title.trim());
         String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
         fileChooser.setInitialFileName(safe + "_" + ts + ".csv");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("CSV Files", "*.csv"),
-                new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
+        fileChooser
+            .getExtensionFilters()
+            .addAll(new FileChooser.ExtensionFilter("CSV Files", "*.csv"), new FileChooser.ExtensionFilter("All Files", "*.*"));
 
         File file = fileChooser.showSaveDialog(primaryStage);
         if (file != null) {
@@ -1232,10 +1298,12 @@ public class MainWindow {
     private void handleOpenJson() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Project JSON");
-        fileChooser.getExtensionFilters().addAll(
+        fileChooser
+            .getExtensionFilters()
+            .addAll(
                 new FileChooser.ExtensionFilter("JSON Files", "*.json"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
+            );
 
         File file = fileChooser.showOpenDialog(primaryStage);
         if (file != null) {
@@ -1299,7 +1367,7 @@ public class MainWindow {
                 double v = this.scrollPane.getVvalue();
                 if (max <= 0) this.leftScroll.setValue(0);
                 else this.leftScroll.setValue(v * max);
-            } catch (Exception ignore) { }
+            } catch (Exception ignore) {}
         });
     }
 
@@ -1319,7 +1387,7 @@ public class MainWindow {
             if (this.statusBar != null) this.statusBar.setStatus(msg);
             AccessibilityHelper.announceAction(msg);
             logger.info("Auto Trace toggled: {}", enabled);
-        } catch (Exception ignore) { }
+        } catch (Exception ignore) {}
     }
 
     /**
@@ -1339,7 +1407,9 @@ public class MainWindow {
         if (controlPanel != null) controlPanel.refreshDatasetInfoDisplay();
         String msg = "Color palette applied: " + name;
         if (statusBar != null) statusBar.setStatus(msg);
-        AccessibilityHelper.announceAction(msg + ". Use the Color Picker in the control panel to adjust individual series colors. Changes are remembered.");
+        AccessibilityHelper.announceAction(
+            msg + ". Use the Color Picker in the control panel to adjust individual series colors. Changes are remembered."
+        );
         // Persist per-dataset colors so app-level overrides survive restarts
         if (accessibilityPrefs != null) {
             String[] hexes = new String[this.datasets.size()];
@@ -1419,7 +1489,7 @@ public class MainWindow {
                 Desktop.getDesktop().browse(new URI(url));
             } else {
                 // Fallback: attempt runtime exec for common platforms
-                Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", url});
+                Runtime.getRuntime().exec(new String[] { "cmd", "/c", "start", url });
             }
         } catch (Exception e) {
             logger.warn("Unable to open URL {}: {}", url, e.getMessage());
@@ -1433,7 +1503,7 @@ public class MainWindow {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
                 Desktop.getDesktop().mail(new URI(mailto));
             } else {
-                Runtime.getRuntime().exec(new String[]{"cmd", "/c", "start", mailto});
+                Runtime.getRuntime().exec(new String[] { "cmd", "/c", "start", mailto });
             }
         } catch (UnsupportedEncodingException uee) {
             logger.warn("Encoding not supported for email subject: {}", uee.getMessage());
