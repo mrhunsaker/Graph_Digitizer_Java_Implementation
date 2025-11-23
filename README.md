@@ -33,9 +33,8 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 ### API Documentation
 
-- **[Latest API (Javadoc)](https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/)** – Generated from the current main branch
+- **[Latest API (Javadoc)](https://mrhunsaker.github.io/Graph_Digitizer_Java_Implementation/** – Generated from the current main branch
 - **Versioned Archives:** Each release will publish Javadocs under a subdirectory (e.g. `/1.1/`, `/1.2/`). Navigate directly to a version path to view older APIs.
-- If the badge link is not yet active, enable GitHub Pages (Settings → Pages → Branch: `gh-pages`).
 
 ## Quick Start
 

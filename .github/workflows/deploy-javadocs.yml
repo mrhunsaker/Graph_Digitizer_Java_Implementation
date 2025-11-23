@@ -2,7 +2,7 @@ name: Deploy API Docs (Javadocs Only)
 
 on:
     push:
-        branches: [main, v2.0-beta]
+        branches: [main]
     workflow_dispatch:
 
 jobs:
