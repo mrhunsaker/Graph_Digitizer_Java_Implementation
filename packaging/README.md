@@ -2,6 +2,8 @@
 
 This directory contains supplemental packaging assets and templates used to produce native installers and portable distributions beyond the default jpackage outputs.
 
+See `docs/JPACKAGE.md` for detailed `jlink` / `jpackage` guidance and cross-architecture runtime image examples.
+
 ## Files
 
  | File | Purpose |
@@ -17,9 +19,13 @@ This directory contains supplemental packaging assets and templates used to prod
 
 The desktop file declares:
 
+
 - `Name`, `Comment`: Display metadata
+
 - `Exec`: Launcher name produced by jpackage (`graph-digitizer`)
+
 - `Icon`: Logical icon reference; when installed system-wide place icon under `usr/share/icons/hicolor/...`
+
 - `Categories`: Classification for desktop environment menus
 
 For DEB/RPM packaging you may optionally install this file as part of a post-install step. For AppImage it is bundled automatically by the build script.
@@ -31,23 +37,24 @@ The template assumes you have run:
 ```bash
 mvn -Pnative -Djpackage.type=app-image package
 
-```text
+```
 
 This produces `graph-digitizer-java/target/GraphDigitizer` which becomes the ingredient for AppImage creation. The template script section:
 
+
 1. Copies desktop entry into `usr/share/applications`
+
 2. Installs a 256x256 icon into `usr/share/icons/hicolor/256x256/apps/`
+
 3. Leaves remaining runtime contents under `usr/bin`
 
 ### Build Example
 
 ```bash
-
 # Install appimage-builder (refer to official docs)
-
 appimage-builder --recipe graph-digitizer-java/packaging/appimage-builder.yml
 
-```text
+```
 
 Resulting artifact: `GraphDigitizer-x86_64.AppImage` (optionally create a `.zsync` file for delta updates).
 
@@ -56,18 +63,15 @@ Resulting artifact: `GraphDigitizer-x86_64.AppImage` (optionally create a `.zsyn
 AppImage can support binary delta updates via a companion `.zsync` file. After building the AppImage:
 
 ```bash
-
 # Extract update information (optional embedded metadata)
-
 export APPIMAGE=GraphDigitizer-x86_64.AppImage
 
 # Generate .zsync using appimagetool (needs AppImageKit/appimagetool installed)
-
 appimagetool --generate-update-info "$APPIMAGE" > update-info.txt || true
 appimagetool --embed-update-information update-info.txt "$APPIMAGE"
 appimagetool --create-zsync "$APPIMAGE"
 
-```text
+```
 
 Host both the `.AppImage` and `.AppImage.zsync` at a stable URL. Users of AppImage update tools (e.g. `AppImageUpdate`) can then perform efficient incremental updates.
 
@@ -75,18 +79,26 @@ Host both the `.AppImage` and `.AppImage.zsync` at a stable URL. Users of AppIma
 
 Icons are maintained in repository root `icons/` (multiple sizes .png/.ico). During build:
 
+
 - `maven-resources-plugin` copies them to `graph-digitizer-java/build/icons/`
+
 - Optional selection script `scripts/select-icon.ps1` chooses best sizes and writes `selected-icon.properties`
+
 - `properties-maven-plugin` reads that properties file (if present) at `initialize` phase overriding `icon.win`, `icon.mac`, `icon.linux`
+
 - macOS specific `.icns` is generated in CI or locally with `scripts/create-mac-iconset.sh`
+
 - Fallback `selected-icon.properties` is auto-created if absent so builds never fail; generate a tailored one via `scripts/select-icon.ps1 -DesiredSize 512` on Windows.
 
 ## CI Workflow Integration
 
 See `.github/workflows/ci.yml`:
 
+
 - Linux job builds JAR, DEB, RPM, AppImage (.AppImage + optional .zsync generation step can be added).
+
 - macOS job generates `.icns` prior to DMG packaging.
+
 - Windows job runs icon selection script then builds EXE.
 
 Artifacts are uploaded separately (`build-linux`, `build-macos`, `build-windows`). See the workflow file for the AppImage build using `appimage-builder`.
@@ -98,12 +110,12 @@ Integrate signing by inserting steps that invoke:
 ```pwsh
 pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
 
-```text
+```
 
 ```bash
 ./scripts/sign-macos.sh GraphDigitizer.app "Developer ID Application: Your Company" "teamid123" GraphDigitizer.dmg
 
-```text
+```
 
 Provide secrets via CI (e.g. GitHub Actions encrypted secrets) and guard steps with `if: startsWith(github.ref, 'refs/tags/')` for releases.
 
@@ -113,23 +125,38 @@ Provide secrets via CI (e.g. GitHub Actions encrypted secrets) and guard steps w
 
 ## Extending Packaging
 
+
 - Add post-install scripts for DEB/RPM: supply maintainer scripts to install `graph-digitizer.desktop`, run `update-desktop-database` and refresh icon caches (see provided `deb/postinst`, `deb/prerm`).
+
 - Add AppImage update metadata: edit `update-information` field in template.
+
 - Add additional icon sizes: place new PNGs/ICOs into root `icons/` naming pattern `scatter-plot-SIZE.png`.
+
 - Add Windows / macOS code signing: use provided scripts to sign executables / DMG.
+
 - Add `.zsync` generation and publish both `.AppImage` and `.AppImage.zsync`.
 
 ## Verification Checklist
 
+
 - [ ] Icons copied to `build/icons`
+
 - [ ] `selected-icon.properties` loaded (if generated)
+
 - [ ] `.icns` generated on macOS (or provided manually)
+
 - [ ] AppImage built and launches `graph-digitizer` binary
+
 - [ ] Desktop file present in AppImage (check with `--appimage-extract`)
+
 - [ ] `.zsync` file generated for AppImage (optional)
+
 - [ ] DEB postinst installs desktop entry & icons
+
 - [ ] RPM spec includes desktop file & icon paths
+
 - [ ] Windows EXE signed (optional)
+
 - [ ] macOS DMG / app signed & notarized (optional)
 
 ## Troubleshooting

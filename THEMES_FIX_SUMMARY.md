@@ -4,7 +4,9 @@
 
 The original ThemeManager was using **Swing's UIManager and FlatLaf Look and Feel**, which don't affect JavaFX controls. This is why:
 
+
 - ✅ The message "Theme changed to: [Theme]" appeared in the status bar
+
 - ❌ But the actual UI colors didn't change
 
 **Root Cause**: FlatLaf themes are Swing-based and cannot style JavaFX nodes.
@@ -17,26 +19,30 @@ Completely rewrote `ThemeManager.java` to use **JavaFX CSS styling** instead of 
 
 ### How It Works Now
 
+
 1. **Theme Definitions**: Each theme is defined as a CSS style string:
 
    ```java
    "-fx-base: #f5f5f5; -fx-control-inner-background: #ffffff; -fx-text-fill: #000000;"
 
-```text
+```
+
 
 2. **Scene Registration**: MainWindow registers the Scene with ThemeManager:
 
    ```java
    ThemeManager.setScene(scene);
 
-```text
+```
+
 
 3. **Theme Application**: When user selects a theme, CSS is applied to the root node:
 
    ```java
    currentScene.getRoot().setStyle(themeStyle);
 
-```text
+```
+
 
 4. **Instant Update**: JavaFX automatically redraws all nodes with the new styles.
 
@@ -74,9 +80,13 @@ All themes now use JavaFX CSS color values that actually affect the UI:
 
 **Key Methods**:
 
+
 - `setScene(Scene scene)` - Register the scene for theme application
+
 - `getAvailableThemes()` - Returns list of 14 themes
+
 - `applyTheme(String themeName)` - Applies CSS theme to the scene root
+
 - `getCurrentThemeStyle()` - Returns the current theme's CSS
 
 ### 2. MainWindow.java (Minor Update)
@@ -87,7 +97,7 @@ Added scene registration right after creating the scene:
 // Register scene with theme manager
 ThemeManager.setScene(scene);
 
-```text
+```
 
 ---
 
@@ -95,25 +105,33 @@ ThemeManager.setScene(scene);
 
 ### To Test the Fixed Themes
 
+
 1. **Recompile**:
 
    ```bash
    mvn clean compile
 
-```text
+```
+
 
 2. **Run**:
 
    ```bash
    mvn javafx:run
 
-```text
+```
+
 
 3. **Test Theme Switching**:
+
    - Click "Themes" in menu bar
+
    - Select any theme (e.g., "Dark")
+
    - ✅ You should now see instant color change!
+
    - Try other themes: "Dracula", "Solarized Dark", "Arc", etc.
+
    - ✅ All themes should apply instantly
 
 ---
@@ -122,17 +140,26 @@ ThemeManager.setScene(scene);
 
 Each theme modifies these JavaFX CSS properties:
 
+
 - `-fx-base` - Base background color
+
 - `-fx-control-inner-background` - Control/input background
+
 - `-fx-text-fill` - Text color
 
 These properties cascade through all JavaFX controls:
 
+
 - Buttons
+
 - TextFields
+
 - Labels
+
 - Menus
+
 - ScrollBars
+
 - Everything else!
 
 ---
@@ -153,8 +180,11 @@ JavaFX CSS is the **native way** to style JavaFX applications. Unlike Swing Look
 
 ✅ **BUILD SUCCESS**
 
+
 - Compilation: Clean (0 errors)
+
 - Files compiled: 19 Java files
+
 - Time: ~2 seconds
 
 ---
@@ -163,10 +193,15 @@ JavaFX CSS is the **native way** to style JavaFX applications. Unlike Swing Look
 
 ✅ **No Breaking Changes**
 
+
 - All existing features still work
+
 - Menu and status bar updates still function
+
 - Screen reader announcements still work
+
 - Accessibility features unchanged
+
 - All other application logic untouched
 
 ---
@@ -175,21 +210,34 @@ JavaFX CSS is the **native way** to style JavaFX applications. Unlike Swing Look
 
 Potential improvements:
 
+
 1. **More Granular CSS**
+
    - Fine-tune colors for specific controls
+
    - Add hover/focus states
+
    - Custom button styles
 
+
 2. **Theme Persistence**
+
    - Save selected theme to config file
+
    - Auto-load on next launch
 
+
 3. **Dynamic Theme Creation**
+
    - Allow users to define custom themes
+
    - Theme editor UI
 
+
 4. **Theme Variants**
+
    - High contrast versions
+
    - Accessibility-specific themes
 
 ---
@@ -200,9 +248,13 @@ Potential improvements:
 
 The fix replaces Swing-based themes with JavaFX CSS styling, which instantly updates all UI colors when a theme is selected. Users can now:
 
+
 - Click "Themes" in the menu bar
+
 - Select any of 14 professional themes
+
 - See instant, real-time color changes
+
 - Continue using the application normally
 
 ---

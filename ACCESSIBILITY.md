@@ -14,16 +14,24 @@
 
 The entire application is designed to work with screen readers such as:
 
+
 - **JAWS** (Windows)
+
 - **NVDA** (Windows, Linux - Free)
+
 - **VoiceOver** (macOS)
+
 - **Narrator** (Windows built-in)
 
 #### How It Works
 
+
 1. All UI controls have accessible labels and descriptions
+
 2. Status updates are announced via logging (visible to accessibility tools)
+
 3. Actions and mode changes are announced with context
+
 4. Numerical feedback (coordinates, progress) is provided in speech-friendly format
 
 ### ✅ Keyboard Navigation
@@ -34,25 +42,43 @@ All application features are accessible via keyboard only. No mouse required.
 
 The application follows standard tab order:
 
+
 1. **Toolbar buttons** (left to right):
+
    - Load Image (Ctrl+O)
+
    - Calibrate (Ctrl+L)
+
    - Auto Trace (Ctrl+T)
+
    - Save JSON (Ctrl+S)
+
    - Save CSV (Ctrl+E)
 
+
 2. **Right Panel Controls** (top to bottom):
+
    - Title text field
+
    - X Label text field
+
    - Y Label text field
+
    - X Min value field
+
    - X Max value field
+
    - Y Min value field
+
    - Y Max value field
+
    - X Log Scale checkbox
+
    - Y Log Scale checkbox
 
+
 3. **Canvas** (image display area)
+
    - Can be focused for keyboard controls
 
 #### Keyboard Shortcuts
@@ -75,40 +101,56 @@ The application follows standard tab order:
 
 #### Calibration Mode
 
+
 1. Press **Ctrl+L** to enter Calibration Mode
+
 2. Click on image canvas 4 times to set calibration points, OR press **Tab** to focus canvas
+
 3. After focusing canvas:
+
    - Click to place calibration points (or use mouse)
+
    - **Enter** confirms point or applies calibration when 4 points placed
+
    - **Backspace/Delete** removes last calibration point
+
    - **Escape** cancels calibration mode
+
 4. Screen reader announces each point placed (number and coordinates)
 
 ### ✅ Labels and Descriptions
 
 Every interactive element has:
 
+
 - **Visual Label** - Text shown on screen
+
 - **Accessible Name** - Read by screen reader
+
 - **Accessible Description** - Explains what the control does
+
 - **Tooltip** - Appears on hover, includes keyboard shortcut
 
 #### Example - Load Image Button
 
-```text
+```
+
 Visual: "Load Image"
 Accessible Name: "Load Image"
 Accessible Description: "Load a PNG or JPEG image for digitization (Ctrl+O)"
 Tooltip: "Load a PNG or JPEG image for digitization (Ctrl+O)"
 
-```text
+```
 
 ### ✅ Color Independence
 
 All colored elements have accessible descriptions:
 
+
 - **Dataset Colors**: Announced as "Blue", "Orange", "Green", "Pink", "Yellow", "Light Blue"
+
 - **Calibration Points**: Shown as red circles with announced coordinates
+
 - **Status messages**: Text descriptions instead of color-coded feedback
 
 ### ✅ Status Announcements
@@ -128,9 +170,13 @@ The application announces important events for screen reader users:
 
 ### ✅ Text Accessibility
 
+
 - **Font Size**: Scalable with OS zoom settings
+
 - **Contrast**: Dark text on light background meets WCAG AA standards
+
 - **Font**: System default (easy to read)
+
 - **No Color-Only Indicators**: All information is conveyed with text
 
 ### ✅ Form Input Fields
@@ -155,31 +201,49 @@ All input fields are properly labeled:
 
 ### Getting Started
 
+
 1. Launch the application
+
 2. Your screen reader announces: "Graph Digitizer application started"
+
 3. Press **Tab** to navigate to the first button
+
 4. Use **Tab** and **Shift+Tab** to move between controls
+
 5. Press **Space** or **Enter** to activate buttons and checkboxes
+
 6. Type in text fields to enter values
 
 ### Typical Workflow
 
-```text
+```
+
+
 1. Ctrl+O or Tab → Load Image button → Enter
+
 2. Ctrl+L or Tab → Calibrate button → Enter
+
 3. Tab → Focus canvas → Click or Tab+Space 4 times to place points
+
 4. Enter to confirm calibration
+
 5. Ctrl+T or Tab → Auto Trace button → Enter
+
 6. Ctrl+S or Tab → Save JSON button → Enter
+
 7. Fill in filename (screen reader announces prompts)
+
 8. Enter to save
 
-```text
+```
 
 ### Discovering Keyboard Shortcuts
 
+
 - Every button's tooltip includes its keyboard shortcut
+
 - Hover over buttons or use arrow keys to read tooltips
+
 - All shortcuts are listed in this documentation
 
 ---
@@ -216,26 +280,32 @@ AccessibilityHelper.announceProgress("Calibration points", 3, 4);
 // Announce coordinates
 AccessibilityHelper.announceCoordinates("Calibration point 1", 125.0, 87.0);
 
-```text
+```
 
 ### Screen Reader Logging
 
 All accessibility announcements are logged at INFO level and can be monitored by screen reader applications:
 
-```text
+```
+
 [INFO] ACCESSIBILITY ANNOUNCEMENT: Graph Digitizer application started.
 [INFO] ACCESSIBILITY ANNOUNCEMENT: Press Tab to navigate through all controls.
 [INFO] MODE CHANGED: Entered Calibration Mode...
 [INFO] COORDINATES: Calibration point 1 - X: 125.0000, Y: 87.0000
 
-```text
+```
 
 ### JavaFX Accessibility APIs Used
 
+
 - **`setAccessibleText()`** - Primary label for controls
+
 - **`setAccessibleRoleDescription()`** - Describes the control's semantic role
+
 - **`setAccessibleHelp()`** - Detailed help text
+
 - **`setTooltip()`** - Hover text also read by screen readers
+
 - **Logging** - Announcements for dynamic updates
 
 ---
@@ -244,27 +314,40 @@ All accessibility announcements are logged at INFO level and can be monitored by
 
 ### Windows - NVDA (Free)
 
-1. Download from <https://www.nvaccess.org/>
+
+1. Download from [NVDA](https://www.nvaccess.org/)
+
 2. Install and start NVDA
+
 3. Navigate the application using Tab key
+
 4. NVDA reads all labels and announcements from logs
 
 ### Windows - Narrator (Built-in)
 
+
 1. Press **Windows + Ctrl + N** to start Narrator
+
 2. Tab through controls normally
+
 3. Narrator announces all accessible labels
 
 ### macOS - VoiceOver
 
+
 1. Press **Cmd + F5** to toggle VoiceOver
+
 2. Use **VO + Right Arrow** to navigate
+
 3. VoiceOver reads all labels and help text
 
 ### Linux - NVDA (Windows VM) or Orca
 
+
 1. Use NVDA in Windows VM, or
+
 2. Install Orca: `sudo apt-get install gnome-orca`
+
 3. Start Orca and navigate with Tab key
 
 ---
@@ -273,34 +356,54 @@ All accessibility announcements are logged at INFO level and can be monitored by
 
 ### Perceivable
 
+
 - [x] All images have text alternatives (image descriptions in status bar)
+
 - [x] Color is not the only way to convey information
+
 - [x] Text has sufficient contrast ratio (3:1 minimum, AA standard)
+
 - [x] Text is resizable with OS zoom
+
 - [x] No flashing elements
 
 ### Operable
 
+
 - [x] All functionality is accessible via keyboard
+
 - [x] Tab order is logical and predictable
+
 - [x] No keyboard traps
+
 - [x] Links and buttons are clearly labeled
+
 - [x] Shortcuts are available for all functions
+
 - [x] Animations can be disabled via OS settings
 
 ### Understandable
 
+
 - [x] Plain language is used throughout
+
 - [x] Labels are clear and descriptive
+
 - [x] Instructions are provided for complex tasks
+
 - [x] Actions have clear feedback (announcements)
+
 - [x] Error messages are specific and helpful
 
 ### Robust
 
+
 - [x] JavaFX controls are properly labeled
+
 - [x] Code follows accessibility best practices
+
 - [x] Compatible with screen readers (via logging)
+
 - [x] No proprietary accessibility features needed
 
 ---
@@ -309,12 +412,19 @@ All accessibility announcements are logged at INFO level and can be monitored by
 
 If you encounter accessibility barriers:
 
+
 1. **Note the issue**: What control? What screen reader? What action?
+
 2. **Provide context**: Operating system, Java version, screen reader version
+
 3. **Test without assistive tech**: Try with built-in screen reader (Narrator, VoiceOver)
+
 4. **File a GitHub issue** with:
+
    - Title: "[Accessibility] Brief description"
+
    - Body: Steps to reproduce, expected vs. actual behavior
+
    - Labels: `accessibility`, `bug`
 
 ---
@@ -323,12 +433,19 @@ If you encounter accessibility barriers:
 
 Planned for future releases:
 
+
 - [ ] High contrast mode toggle
+
 - [ ] Customizable keyboard shortcuts
+
 - [ ] FXML-based UI (better screen reader support)
+
 - [ ] Audio descriptions of canvas content
+
 - [ ] Haptic feedback for point placement (for visually impaired users)
+
 - [ ] Alternative input methods (voice commands)
+
 - [ ] More detailed help system accessible via keyboard
 
 ---
@@ -337,15 +454,22 @@ Planned for future releases:
 
 ### For Developers
 
+
 - [JavaFX Accessibility](https://openjfx.io/)
+
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+
 - [Java Accessibility](https://www.oracle.com/java/accessibility/)
+
 - [Screen Reader Testing Guide](https://www.nvaccess.org/about/testing/)
 
 ### For Users
 
+
 - [NVDA Screen Reader](https://www.nvaccess.org/)
+
 - [Windows Narrator Guide](https://support.microsoft.com/en-us/windows/hear-text-read-aloud-with-narrator-040814b5-4169-b5f9-a50b-67a63358bb94)
+
 - [macOS VoiceOver Guide](https://www.apple.com/accessibility/voiceover/features/)
 
 ---

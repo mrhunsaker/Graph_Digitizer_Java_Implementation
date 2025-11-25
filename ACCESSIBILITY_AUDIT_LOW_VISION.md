@@ -14,11 +14,17 @@ The Graph Digitizer application demonstrates solid accessibility foundations wit
 
 ### Audit Scope
 
+
 - Low vision user requirements (magnification, contrast, font sizes)
+
 - High contrast mode compatibility
+
 - Tab order and keyboard navigation
+
 - Screen reader announcements and ARIA-like properties
+
 - Visual focus indicators
+
 - Color dependency and alternatives
 
 ---
@@ -42,16 +48,21 @@ canvas.setAccessibleHelp(
     "Press Enter to confirm calibration."
 );
 
-```text
+```
 
 **Impact:**
 
+
 - Screen readers cannot announce canvas content (image, points, calibration markers)
+
 - Low vision users cannot inspect individual data points
+
 - No alternative text representation of visual data
+
 - Calibration points are visual-only (red circles)
 
 **Recommended Fixes:**
+
 
 1. **Add audio feedback for point placement:**
 
@@ -68,12 +79,17 @@ private void handleMouseClick(MouseEvent event) {
     }
 }
 
-```text
+```
+
 
 1. **Provide alternative point list view:**
+
    - Add a hidden accessible list control that mirrors canvas points
+
    - Allow keyboard navigation through points
+
    - Provide "read all points" command
+
 
 2. **Add keyboard navigation for calibration:**
 
@@ -95,7 +111,7 @@ case UP: case DOWN: case LEFT: case RIGHT:
     }
     break;
 
-```text
+```
 
 ---
 
@@ -108,11 +124,15 @@ case UP: case DOWN: case LEFT: case RIGHT:
 
 **Impact:**
 
+
 - Keyboard users cannot see which control has focus
+
 - Low vision users lose track during tab navigation
+
 - Fails WCAG 2.4.7 (Focus Visible)
 
 **Recommended Fixes:**
+
 
 1. **Add custom focus styles globally:**
 
@@ -123,7 +143,8 @@ scene.getRoot().setStyle(scene.getRoot().getStyle() +
     "-fx-faint-focus-color: #0066CC22; " +
     "-fx-focus-border-width: 3px;");
 
-```text
+```
+
 
 1. **Add focus event handlers for announcements:**
 
@@ -136,11 +157,15 @@ titleField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
     }
 });
 
-```text
+```
+
 
 1. **Ensure focus indicators work in all themes:**
+
    - Test with high contrast themes
+
    - Verify 3:1 contrast ratio against background
+
    - Consider thicker borders (3-4px) for low vision users
 
 ---
@@ -154,11 +179,15 @@ titleField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
 
 **Impact:**
 
+
 - Users who enable OS-level high contrast lose all theme styling
+
 - Critical UI elements may become invisible
+
 - Color-coded datasets become indistinguishable
 
 **Recommended Fixes:**
+
 
 1. **Detect OS high contrast mode:**
 
@@ -169,7 +198,8 @@ public static boolean isHighContrastMode() {
     return "true".equalsIgnoreCase(hcMode);
 }
 
-```text
+```
+
 
 1. **Add dedicated high contrast themes:**
 
@@ -188,13 +218,16 @@ THEMES.put("High Contrast White",
     "-fx-accent: #0000FF; " +
     "-fx-selection-bar: #FF0000;");
 
-```text
+```
+
 
 1. **Add contrast ratio validation:**
 
 ```java
 /**
+
  * Calculates WCAG contrast ratio between two colors.
+
  * Minimum: 4.5:1 for normal text, 3:1 for large text.
  */
 public static double getContrastRatio(Color fg, Color bg) {
@@ -205,7 +238,7 @@ public static double getContrastRatio(Color fg, Color bg) {
     return (lighter + 0.05) / (darker + 0.05);
 }
 
-```text
+```
 
 ---
 
@@ -217,11 +250,15 @@ public static double getContrastRatio(Color fg, Color bg) {
 
 **Strengths:**
 
+
 - Controls are keyboard accessible
+
 - Menu items have accelerators (Ctrl+S, Ctrl+O, etc.)
+
 - Canvas has focus traversable enabled
 
 **Gaps:**
+
 
 1. **No explicit tab order management:**
 
@@ -236,11 +273,15 @@ Platform.runLater(() -> {
     titleField.requestFocus(); // Start here
 });
 
-```text
+```
+
 
 1. **Missing keyboard shortcuts for common actions:**
+
    - Zoom in/out (Ctrl+Plus/Minus)
+
    - Pan canvas (Arrow keys when not in calibration mode)
+
    - Next/Previous dataset (Tab/Shift+Tab in data view)
 
 **Recommended Additions:**
@@ -270,7 +311,7 @@ scene.setOnKeyPressed(event -> {
     }
 });
 
-```text
+```
 
 ---
 
@@ -280,23 +321,35 @@ scene.setOnKeyPressed(event -> {
 
 **Current Implementation:**
 
+
 - Dataset colors: Blue, Orange, Green, Pink, Yellow, Light Blue
+
 - Color names announced via `getColorName()` method ✓
+
 - But visual distinction still required
 
 **Gaps for Low Vision Users:**
 
+
 1. **No pattern/texture alternatives:**
+
    - All points rendered as solid circles
+
    - No shape variation (circle, square, triangle, diamond)
+
    - No pattern fills
 
+
 2. **Small point size:**
+
    - Points rendered at 6px diameter
+
    - Difficult to see at high zoom
+
    - No option to increase point size
 
 **Recommended Fixes:**
+
 
 1. **Add shape variation per dataset:**
 
@@ -336,7 +389,8 @@ for (int i = 0; i < datasets.size(); i++) {
     }
 }
 
-```text
+```
+
 
 1. **Add point size control:**
 
@@ -350,7 +404,7 @@ AccessibilityHelper.setLabelAccessibility(
     new Label("Point Size:"),
     "Point Size", "Control");
 
-```text
+```
 
 ---
 
@@ -360,22 +414,33 @@ AccessibilityHelper.setLabelAccessibility(
 
 **Strengths:**
 
+
 - Comprehensive `AccessibilityHelper` class
+
 - Announcements via logging (picked up by screen readers)
+
 - Context-appropriate announcements (mode changes, progress, coordinates)
 
 **Gaps:**
 
+
 1. **Missing live region announcements:**
+
    - Status bar updates not announced
+
    - Point count changes not announced
+
    - Calibration progress not live-updated
 
+
 2. **Verbose announcements:**
+
    - Full color hex codes announced (e.g., "#0072B2")
+
    - Could be simplified to just color name
 
 **Recommended Fixes:**
+
 
 1. **Add ARIA-like live regions:**
 
@@ -395,7 +460,8 @@ public void setStatus(String message) {
     pause.play();
 }
 
-```text
+```
+
 
 1. **Simplify color announcements:**
 
@@ -414,7 +480,8 @@ private String getColorName(String hexColor) {
     };
 }
 
-```text
+```
+
 
 1. **Add progress announcements:**
 
@@ -430,7 +497,7 @@ public void performAutoTrace() {
         " points added to " + activeDataset.getName());
 }
 
-```text
+```
 
 ---
 
@@ -442,11 +509,15 @@ public void performAutoTrace() {
 
 **Gaps:**
 
+
 - No user control over font size
+
 - Small labels (14px for section headings)
+
 - May be difficult to read for low vision users
 
 **Recommended:**
+
 
 1. **Add font size preference:**
 
@@ -471,7 +542,8 @@ public static void applyFontSize(Scene scene, FontSize size) {
         "; -fx-font-size: " + size.body + "px;");
 }
 
-```text
+```
+
 
 1. **Respect OS text scaling:**
 
@@ -483,7 +555,7 @@ if (scale > 1.0) {
         "; -fx-font-size: " + (12 * scale) + "px;");
 }
 
-```text
+```
 
 ---
 
@@ -491,19 +563,27 @@ if (scale > 1.0) {
 
 **Current State:** GOOD ✓
 
+
 - Zoom slider (0.25x to 3x)
+
 - Fit and 100% buttons
+
 - Node-level scaling
 
 **Gaps:**
 
+
 - No keyboard shortcuts (covered in #4)
+
 - Zoom doesn't affect point rendering size
+
 - No magnifier lens for precise placement
 
 **Recommended:**
 
+
 - Points should maintain visual size at all zoom levels
+
 - Add circular magnifier window (like Julia version)
 
 ---
@@ -514,8 +594,11 @@ if (scale > 1.0) {
 
 **Gaps:**
 
+
 - Default tooltip delay (1 second) may be too short
+
 - No extended display time for screen reader users
+
 - Small font size
 
 **Recommended:**
@@ -529,7 +612,7 @@ Tooltip.install(control, new Tooltip(text) {{
     setStyle("-fx-font-size: 14px;");     // Larger text
 }});
 
-```text
+```
 
 ---
 
@@ -537,30 +620,51 @@ Tooltip.install(control, new Tooltip(text) {{
 
 ### Strengths
 
+
 1. **Comprehensive Screen Reader Support:**
+
    - All controls have accessible names
+
    - Role descriptions provided
+
    - Help text available
+
    - Coordinate and progress announcements
 
+
 2. **Keyboard Accessibility:**
+
    - All functionality available without mouse
+
    - Keyboard accelerators for common actions
+
    - Enter/Escape for mode changes
 
+
 3. **Multiple Themes:**
+
    - 14 themes including light and dark options
+
    - Themes persist across sessions
+
    - Good variety for personal preference
 
+
 4. **Semantic Structure:**
+
    - Logical grouping of controls
+
    - Section headings for screen readers
+
    - Clear separation of concern
 
+
 5. **Error Feedback:**
+
    - Validation errors announced
+
    - Clear error messages
+
    - Multiple feedback channels (visual + audio)
 
 ---
@@ -590,23 +694,35 @@ Tooltip.install(control, new Tooltip(text) {{
 
 ### Immediate (Sprint 1)
 
+
 1. Add keyboard navigation for calibration points
+
 2. Enhance focus indicators (3px borders, high contrast)
+
 3. Add high contrast themes
+
 4. Implement zoom keyboard shortcuts
 
 ### Short-term (Sprint 2-3)
 
+
 5. Add shape variations for datasets
+
 2. Implement point size control
+
 3. Add live region announcements
+
 4. Validate contrast ratios for all themes
 
 ### Long-term (Future Releases)
 
+
 9. Alternative canvas representation (accessible data table)
+
 2. Magnifier lens feature
+
 3. Font size preferences
+
 4. OS-level accessibility setting integration
 
 ---
@@ -615,34 +731,57 @@ Tooltip.install(control, new Tooltip(text) {{
 
 ### Required Testing Platforms
 
+
 1. **Windows Narrator** - Built-in screen reader
+
 2. **NVDA** - Popular free screen reader
+
 3. **JAWS** - Professional screen reader
+
 4. **Windows Magnifier** - Test at 200%, 400%
+
 5. **Windows High Contrast Mode** - All themes
 
 ### Test Scenarios
 
+
 1. **Screen Reader User:**
+
    - Navigate entire UI with keyboard only
+
    - Load image, calibrate, add points
+
    - Save data
+
    - Verify all actions announced
 
+
 2. **Low Vision User:**
+
    - Enable high contrast mode
+
    - Increase zoom to 400%
+
    - Verify all controls visible
+
    - Test with various themes
 
+
 3. **Keyboard-Only User:**
+
    - Complete full workflow without mouse
+
    - Verify focus always visible
+
    - Test all keyboard shortcuts
 
+
 4. **Color Blind User:**
+
    - Distinguish all datasets
+
    - Complete calibration
+
    - Verify shape/pattern alternatives work
 
 ---
@@ -651,8 +790,11 @@ Tooltip.install(control, new Tooltip(text) {{
 
 The Graph Digitizer application has a solid accessibility foundation with excellent screen reader support and keyboard navigation. The primary challenges are:
 
+
 1. **Canvas accessibility** - The pixel-based canvas needs alternative representations
+
 2. **High contrast support** - Themes need validation and high-contrast variants
+
 3. **Visual feedback** - Focus indicators and color alternatives need enhancement
 
 With the recommended fixes, the application can achieve WCAG 2.1 Level AA compliance and serve low vision professionals effectively.

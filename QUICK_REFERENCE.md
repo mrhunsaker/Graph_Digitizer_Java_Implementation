@@ -36,7 +36,7 @@ mvn test -Dtest=FileUtilsTest
 
 mvn dependency:tree
 
-```text
+```
 
 ## Running the Application
 
@@ -45,14 +45,14 @@ mvn dependency:tree
 ```bash
 mvn javafx:run
 
-```text
+```
 
 ### Production
 
 ```bash
 java -jar target/graph-digitizer-1.2.0.jar
 
-```text
+```
 
 ## Project Structure Quick Lookup
 
@@ -71,35 +71,52 @@ java -jar target/graph-digitizer-1.2.0.jar
 
 ### Core (No GUI)
 
+
 - `Point` - Immutable coordinate record
+
 - `Dataset` - Collection of points with metadata
+
 - `CalibrationState` - Calibration data
+
 - `CoordinateTransformer` - Linear/log transforms
+
 - `ColorUtils` - Color operations
+
 - `FileUtils` - File utilities
 
 ### Image Processing
 
+
 - `ImageLoader` - Load PNG/JPEG files
+
 - `AutoTracer` - Color-based curve extraction
 
 ### File I/O
 
+
 - `JsonExporter` - JSON format
+
 - `CsvExporter` - CSV format
+
 - `ProjectJson`, `DatasetJson` - POJO models
 
 ### UI (JavaFX)
 
+
 - `GraphDigitizerApp` - Application entry point
+
 - `MainWindow` - Main window + orchestration
+
 - `CanvasPanel` - Image canvas
+
 - `ControlPanel` - Control widgets
+
 - `StatusBar` - Status display
 
 ## Common Tasks
 
 ### Adding a New Button
+
 
 1. In `MainWindow.createToolbar()`:
 
@@ -108,7 +125,8 @@ Button newBtn = new Button("New Feature");
 newBtn.setOnAction(e -> handleNewFeature());
 toolbar.getChildren().add(newBtn);
 
-```text
+```
+
 
 1. Implement handler:
 
@@ -118,9 +136,10 @@ private void handleNewFeature() {
     statusBar.setStatus("Feature complete");
 }
 
-```text
+```
 
 ### Adding a Test
+
 
 1. Create test class in `src/test/java/com/digitizer/[package]/`:
 
@@ -133,15 +152,20 @@ public class MyClassTest {
     }
 }
 
-```text
+```
+
 
 1. Run: `mvn test`
 
 ### Accessing Application Data
 
+
 - Current image: `canvasPanel.currentImage`
+
 - Calibration: `calibration` field (passed to components)
+
 - Datasets: `datasets` list (mutable)
+
 - Active dataset: `datasets.get(activeIndex)`
 
 ## Maven Plugin Reference
@@ -172,16 +196,23 @@ public class MyClass {
     }
 }
 
-```text
+```
 
 ## Dependency Version Info
 
+
 - Java: 21+
+
 - JavaFX: 21.0.2
+
 - GSON: 2.10.1
+
 - Apache Commons CSV: 1.10.0
+
 - SLF4J: 2.0.9
+
 - Logback: 1.4.11
+
 - JUnit: 4.13.2 and 5.9.3
 
 Update in `pom.xml` under `<properties>` and `<dependencies>`.
@@ -210,16 +241,17 @@ Update in `pom.xml` under `<properties>` and `<dependencies>`.
   ]
 }
 
-```text
+```
 
 ### CSV Export
 
-```text
+```
+
 x,Dataset_1,Dataset_2
 0.0,0.1,-0.05
 1.0,0.15,0.2
 
-```text
+```
 
 ## Troubleshooting
 
@@ -233,11 +265,17 @@ x,Dataset_1,Dataset_2
 
 ## File Locations
 
+
 - Source code: `src/main/java/com/digitizer/`
+
 - Test code: `src/test/java/com/digitizer/`
+
 - Resources: `src/main/resources/`
+
 - Build output: `target/`
+
 - Javadoc: `target/site/apidocs/`
+
 - Logs: `logs/`
 
 ## Documentation
@@ -252,7 +290,11 @@ x,Dataset_1,Dataset_2
 
 ## Performance Tips
 
+
 - Use `mvn clean package` for final builds
+
 - Run `mvn test` before pushing changes
+
 - Profile auto-trace with large images using Java profiler
+
 - Canvas redraw is O(points) - optimize if > 10K points

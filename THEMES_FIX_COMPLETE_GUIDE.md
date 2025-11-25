@@ -9,19 +9,27 @@
 
 ### The Problem
 
+
 - Theme menu appeared and announced changes
+
 - But colors didn't actually change
 
 ### The Root Cause
 
+
 - Original implementation used Swing's `UIManager.setLookAndFeel()`
+
 - FlatLaf themes are Swing-based and cannot style JavaFX controls
+
 - JavaFX and Swing are two separate UI frameworks that don't share styling
 
 ### The Solution
 
+
 - **Completely rewrote ThemeManager.java** to use JavaFX CSS instead
+
 - Now applies themes directly to JavaFX nodes via inline CSS
+
 - Instant, visible color changes when theme is selected
 
 ---
@@ -36,7 +44,7 @@
 // Swing's UIManager - doesn't affect JavaFX
 UIManager.setLookAndFeel(new FlatDarkLaf());
 
-```text
+```
 
 **New Approach** (Works Perfectly):
 
@@ -44,7 +52,7 @@ UIManager.setLookAndFeel(new FlatDarkLaf());
 // JavaFX CSS - directly styles JavaFX nodes
 scene.getRoot().setStyle("-fx-base: #2b2b2b; ...");
 
-```text
+```
 
 **How Themes Are Stored**:
 
@@ -53,13 +61,17 @@ THEMES.put("Dark", "-fx-base: #2b2b2b; -fx-control-inner-background: #1e1e1e; -f
 THEMES.put("Dracula", "-fx-base: #282a36; -fx-control-inner-background: #21222c; -fx-text-fill: #f8f8f2;");
 // ... 12 more themes
 
-```text
+```
 
 **Key Methods**:
 
+
 - `setScene(Scene scene)` - Register the JavaFX scene
+
 - `applyTheme(String name)` - Apply theme via CSS
+
 - `getAvailableThemes()` - Return list of all themes
+
 - `getCurrentThemeStyle()` - Get current theme's CSS
 
 ### File 2: MainWindow.java (Minor Update)
@@ -73,7 +85,7 @@ primaryStage.setScene(scene);
 // NEW: Register scene with theme manager
 ThemeManager.setScene(scene);
 
-```text
+```
 
 **Why**: ThemeManager needs the scene reference to apply CSS styles
 
@@ -83,19 +95,33 @@ ThemeManager.setScene(scene);
 
 All now use JavaFX CSS colors that actually update the UI:
 
+
 1. **Light** - Light gray background, white controls, black text
+
 2. **Dark** - Dark gray background, darker controls, white text
+
 3. **Darcula** - Medium gray background (IntelliJ's Darcula)
+
 4. **Dracula** - Dark background with off-white text
+
 5. **Material Dark** - Google Material Design dark palette
+
 6. **Nord** - Arctic color palette (slate blues)
+
 7. **Solarized Light** - Warm light theme
+
 8. **Solarized Dark** - Warm dark theme
+
 9. **One Dark** - Inspired by Atom editor
+
 10. **Arc** - Modern flat light design
+
 11. **Arc Dark** - Modern flat dark design
+
 12. **Atom One Light** - Atom editor light palette
+
 13. **Atom One Dark** - Atom editor dark palette
+
 14. **Gruvbox Dark** - Retro dark palette with warm tones
 
 ---
@@ -104,7 +130,8 @@ All now use JavaFX CSS colors that actually update the UI:
 
 ### Flow Diagram
 
-```text
+```
+
 User clicks theme in menu
         ↓
 MenuItem.setOnAction() fires
@@ -125,17 +152,23 @@ Status bar announces: "Theme changed to: Dark"
         ↓
 ✅ Theme is now active!
 
-```text
+```
 
 ### Why JavaFX CSS Works
 
 JavaFX CSS is the **native styling system** for JavaFX applications:
 
+
 - ✅ Directly styles JavaFX nodes (Button, Label, TextField, etc.)
+
 - ✅ Changes apply instantly without restarting
+
 - ✅ Cascades through the entire scene graph
+
 - ✅ Works with all JavaFX controls
+
 - ✅ Cross-platform compatible
+
 - ✅ No Swing dependencies needed
 
 ---
@@ -152,12 +185,19 @@ Each theme modifies these JavaFX CSS properties:
 
 These cascade to style:
 
+
 - Buttons (and all button-like controls)
+
 - TextFields (and text inputs)
+
 - Labels (and text displays)
+
 - Menus and MenuItems
+
 - ComboBoxes
+
 - ScrollBars
+
 - Everything in the scene!
 
 ---
@@ -170,7 +210,7 @@ These cascade to style:
 cd d:\GitHubRepos\Graph_Digitizer_java_implementation\graph-digitizer-java
 mvn clean compile
 
-```text
+```
 
 **Expected Output**: `BUILD SUCCESS`
 
@@ -179,43 +219,68 @@ mvn clean compile
 ```bash
 mvn javafx:run
 
-```text
+```
 
 **Expected**: Application launches with default styling
 
 ### Step 3: Test Themes
 
+
 1. Click **"Themes"** in the menu bar
+
 2. Select **"Dark"**
+
    - ✅ Background should turn dark
+
    - ✅ Text should turn white
+
    - ✅ Status bar should show: "Theme changed to: Dark"
 
+
 3. Select **"Dracula"**
+
    - ✅ Colors should instantly change to Dracula palette
+
    - ✅ No restart needed!
 
+
 4. Try other themes:
+
    - Solarized Dark
+
    - Material Dark
+
    - Nord
+
    - Arc
+
    - etc.
+
    - ✅ All should apply instantly
 
 ---
 
 ## Verification Checklist
 
+
 - [x] ThemeManager.java rewritten to use JavaFX CSS
+
 - [x] 14 themes defined with JavaFX color values
+
 - [x] MainWindow.java updated to register scene
+
 - [x] Maven compilation successful (19 files)
+
 - [x] No breaking changes to existing code
+
 - [x] Accessibility features unchanged
+
 - [x] Status bar announcements still work
+
 - [x] Menu functionality preserved
+
 - [x] All CSS properties properly formatted
+
 - [x] Themes applied to scene root node
 
 ---
@@ -233,14 +298,17 @@ THEMES.put("Dark",
     "-fx-text-fill: #ffffff;"
 );
 
-```text
+```
 
 ### Color Values
 
 All colors use **hex color codes** (#RRGGBB format):
 
+
 - #2b2b2b = RGB(43, 43, 43) = dark gray
+
 - #ffffff = RGB(255, 255, 255) = white
+
 - #282a36 = RGB(40, 42, 54) = dark blue
 
 ### Scene Root Styling
@@ -250,7 +318,7 @@ All colors use **hex color codes** (#RRGGBB format):
 // Applying style to it cascades to all child nodes
 scene.getRoot().setStyle("-fx-base: #2b2b2b; ...");
 
-```text
+```
 
 ---
 
@@ -258,12 +326,19 @@ scene.getRoot().setStyle("-fx-base: #2b2b2b; ...");
 
 ✅ **No Breaking Changes**
 
+
 - All existing features work perfectly
+
 - Accessibility enhancements unchanged
+
 - Status bar updates work
+
 - Screen reader announcements work
+
 - Menu navigation works
+
 - All other application logic unaffected
+
 - Can easily add more themes in future
 
 ---
@@ -285,13 +360,15 @@ scene.getRoot().setStyle("-fx-base: #2b2b2b; ...");
 
 Potential enhancements:
 
+
 1. **Theme Persistence**
 
    ```java
    // Save selected theme to config file
    // Load on next application launch
 
-```text
+```
+
 
 2. **Custom CSS Files**
 
@@ -299,7 +376,8 @@ Potential enhancements:
    // Load themes from .css files
    // Allow user-defined themes
 
-```text
+```
+
 
 3. **Dynamic Theme Creation**
 
@@ -307,7 +385,8 @@ Potential enhancements:
    // UI dialog to create custom themes
    // Color picker for each property
 
-```text
+```
+
 
 4. **Advanced Styling**
 
@@ -316,7 +395,7 @@ Potential enhancements:
    // Add hover/focus states
    // Custom fonts per theme
 
-```text
+```
 
 ---
 
@@ -324,20 +403,29 @@ Potential enhancements:
 
 ### Lines of Code Changed
 
+
 - **ThemeManager.java**: 118 lines (complete rewrite)
+
 - **MainWindow.java**: 2 lines added (scene registration)
+
 - **Total changes**: ~120 lines
 
 ### Build Impact
 
+
 - ✅ Zero compilation errors
+
 - ✅ All 19 files compile successfully
+
 - ✅ Build time: ~2 seconds
 
 ### Performance Impact
 
+
 - ✅ Theme application: <100ms
+
 - ✅ No ongoing performance overhead
+
 - ✅ CSS styling is highly optimized in JavaFX
 
 ---
@@ -346,9 +434,13 @@ Potential enhancements:
 
 The themes now work perfectly! Users can:
 
+
 1. ✅ Click "Themes" menu
+
 2. ✅ Select any of 14 themes
+
 3. ✅ See instant color changes
+
 4. ✅ Continue using the application
 
 The fix was simple but effective: **replace Swing theming with JavaFX CSS**.

@@ -7,38 +7,64 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 **1.1** (Java Edition)
 
+
 - **[Quick Reference Guide](QUICK_REFERENCE.md)** - Commands, shortcuts, and common tasks
+
 - **[Developer Guide](DEVELOPER.md)** - Architecture, patterns, and extension guide
+
 - **[Project Summary](PROJECT_SUMMARY.md)** - Complete project overview
+
 - **[Index](INDEX.md)** - Comprehensive documentation index
 
 ### Accessibility Documentation
 
+
 - **[Accessibility Overview](ACCESSIBILITY.md)** - Complete accessibility features guide
+
 - **[Quick Start](ACCESSIBILITY_QUICK_START.md)** - Get started with screen readers
+
 - **[Implementation Guide](ACCESSIBILITY_IMPLEMENTATION.md)** - Technical implementation details
+
 - **[Implementation Complete](ACCESSIBILITY_IMPLEMENTATION_COMPLETE.md)** - ✅ All audit fixes applied
+
 - **[Low Vision Audit](ACCESSIBILITY_AUDIT_LOW_VISION.md)** - Comprehensive accessibility audit results
+
 - **[Summary](ACCESSIBILITY_SUMMARY.md)** - Features and capabilities overview
+
 - **[Checklist](ACCESSIBILITY_CHECKLIST.md)** - Verification and testing checklist
 
 ### Themes Documentation
 
+
 - **[Quick Reference](THEMES_QUICK_REFERENCE.md)** - Theme selection guide
+
 - **[Implementation](THEMES_IMPLEMENTATION_SUMMARY.md)** - Technical details
 
 ### Packaging & Distribution
 
+
 - **[Packaging Guide](packaging/README.md)** - AppImage, DEB, RPM, and native installers
+
+- **[jlink / jpackage Guide](docs/JPACKAGE.md)** - How to create runtime images, cross-arch examples (Docker), and use `jpackage` for native installers.
+  
+### Packaging Scripts
+
+
+- **`scripts/README.md`** - Quick reference for the `scripts/` helpers (jpackage wrappers) and how to produce OS installers. This includes the Windows MSI generator (`scripts/generate-msi.ps1`) which can produce per-architecture MSIs when supplied with matching runtime images; outputs are placed under `target/generated_builds`.
+
+- **`docs/JPACKAGE.md`** - Extended guide for `jlink` and `jpackage`, cross-arch runtime image creation (including Docker examples), and CI recommendations.
 
 ### API Documentation
 
-- **[Latest API (Javadoc)](https://mrhunsaker.github.io/Graph_Digitizer_Java_Implementation/** – Generated from the current main branch
+
+- **[Latest API (Javadoc)](https://mrhunsaker.github.io/Graph_Digitizer_Java_Implementation/)** – Generated from the current main branch
+
 - **Versioned Archives:** Each release will publish Javadocs under a subdirectory (e.g. `/1.1/`, `/1.2/`). Navigate directly to a version path to view older APIs.
 
 ## Quick Start
 
 ### Prerequisites
+
 
 - Java 21 or later
 jpackage --type dmg --name GraphDigitizer --main-jar graph_digitizer_1.0.jar \
@@ -50,12 +76,16 @@ the `pom.xml`).
 
 ### Installation
 
+
 1. Clone or download the repository
+
 2. Navigate to the project directory
+
 3. Build the project:
 
 ````bash
 mvn clean package
+
 ```
 
 ### Running the Application
@@ -64,12 +94,14 @@ Using Maven:
 
 ```bash
 mvn javafx:run
+
 ```
 
 Or run the JAR directly:
 
 ```bash
 java -jar target/graph_digitizer_1.0-beta.jar
+
 ```
 
 If you want to distribute a "clickable" application that does not require the
@@ -77,27 +109,40 @@ end user to install Java, see "Packaging & Distribution" below.
 
 ## Features
 
+
 - **Load  Images**: Load raster images of graphs for digitization
+
 - **Non-blocking Calibration**: Record four clicks to establish coordinate mapping
+
 - **Manual Point Editing**: Left-click to add points, right-click or Delete to remove
+
 - **Precision Placement**: Zoom and magnifier tools for pixel-level accuracy (planned)
+
 - **Auto-trace**: Automatically extract curve points using color matching
+
 - **Multiple Datasets**: Support for up to 6 color-coded datasets
+
 - **Linear & Log Scales**: Support for both linear and logarithmic axes
+
 - **Export Formats**: Save to JSON (full metadata) or CSV (tabular data)
+
 - **Responsive UI**: Modern JavaFX interface with intuitive controls
 
 ## Example Session & Assets
 
 The `docs/README_Assets` folder contains a screenshot from a sample digitization session and the raw data files produced during that session. The assets were moved into the documentation directory so they are versioned with the project.
 
+
 - **Screenshot (inline):**
 
   ![Session Screenshot](docs/README_Assets/Screenshot 2025-11-19 073537.png)
 
+
 - **Session data (raw files):**
 
+
   - CSV: [Sample_Graph_20251119-073453.csv](docs/README_Assets/Sample_Graph_20251119-073453.csv)
+
   - JSON: [Sample_Graph_20251119-073453.json](docs/README_Assets/Sample_Graph_20251119-073453.json)
 
 Inline examples (small excerpts):
@@ -109,6 +154,7 @@ x,Linear,InverseLinear,zigzag,nil,Mountain,Dataset 6
 1,0.13245033112582782,-0.033112582781456956,-0.033112582781456956,0,0.16556291390728478,
 2,0.9602649006622516,15.132450331125828,0.8940397350993378,0.9271523178807948,1.0596026490066226,
 3,1.9867549668874174,14.072847682119205,2.185430463576159,0.9271523178807948,1.0264900662251657,
+
 ````
 
 JSON excerpt:
@@ -121,16 +167,23 @@ JSON excerpt:
   "x_min": 0.0,
   "x_max": 15.0
 }
+
 ```
 
 Additional example files demonstrating common cases:
 
+
 - Log-scaled X axis example (CSV/JSON):
+
   - [graph_digitizer_example_log.csv](docs/README_Assets/graph_digitizer_example_log.csv)
+
   - [graph_digitizer_example_log.json](docs/README_Assets/graph_digitizer_example_log.json)
 
+
 - Missing values example (CSV/JSON):
+
   - [graph_digitizer_example_missing.csv](docs/README_Assets/graph_digitizer_example_missing.csv)
+
   - [graph_digitizer_example_missing.json](docs/README_Assets/graph_digitizer_example_missing.json)
 
 
@@ -169,6 +222,7 @@ Additional example files demonstrating common cases:
 │           ├── core/
 │           └── io/
 └── target/                           # Build output
+
 ```
 
 ## Architecture
@@ -177,34 +231,50 @@ Additional example files demonstrating common cases:
 
 Pure business logic with no GUI dependencies:
 
+
 - **Point**: Immutable record representing a single data point (x, y)
+
 - **Dataset**: Mutable collection of points with metadata (name, color)
+
 - **CalibrationState**: Manages calibration anchors and numeric axis ranges
+
 - **CoordinateTransformer**: Transforms between data and canvas coordinates (supports log scales)
+
 - **ColorUtils**: Color parsing, distance calculations, and blending
+
 - **FileUtils**: Filename sanitization, defaults, and file operations
 
 ### Image Package (`com.digitizer.image`)
 
 Image loading and automatic curve extraction:
 
+
 - **ImageLoader**: Loads PNG/JPEG images from files
+
 - **AutoTracer**: Column-by-column color matching for curve extraction
 
 ### IO Package (`com.digitizer.io`)
 
+
 - **ProjectJson** / **DatasetJson**: POJO models for JSON serialization
+
 - **JsonExporter**: Full-fidelity JSON format with metadata and log flags
+
 - **CsvExporter**: Wide-format CSV export for spreadsheet compatibility
 
 ### UI Package (`com.digitizer.ui`)
 
 JavaFX-based graphical interface:
 
+
 - **GraphDigitizerApp**: Application entry point and lifecycle management
+
 - **MainWindow**: Main window orchestration and menu bar
+
 - **CanvasPanel**: Image display, point visualization, and user interaction
+
 - **ControlPanel**: Dataset and calibration controls
+
 - **StatusBar**: Status message display
 
 ## How to Use
@@ -215,17 +285,26 @@ Click "Load Image" button and select a PNG or JPEG file containing the graph.
 
 ### 2. Calibrate
 
+
 1. Click "Calibrate" button
+
 2. Click four points on the image in order:
+
    - Y-top: top known y-axis position
+
 3. Enter numeric axis ranges (X min/max, Y min/max)
+
 4. Toggle "X Log" / "Y Log" if axes are logarithmic
+
 5. Click "Apply Calibration"
 
 ### 3. Add/Edit Points
 
+
 - **Left-click**: Add a point at that location
+
 - **Drag**: Move an existing point
+
 - **Right-click**: Delete a point (or press Delete/Backspace)
 
 ### 4. Auto-trace (Optional)
@@ -236,7 +315,9 @@ Note: Auto Trace is guarded by a runtime feature flag. If the Auto Trace control
 
 ### 5. Save Your Work
 
+
 - **Save JSON**: Full project with metadata and all datasets
+
 - **Save CSV**: Tabular format suitable for spreadsheets and further analysis
 
 ## File Formats
@@ -324,6 +405,7 @@ application on macOS, Linux, and Windows.
 
 ### Option A: Fat JAR (Quick 1-file package; Java must be installed)
 
+
 1. Add the Maven Shade plugin to your `pom.xml` to build a "fat" JAR bundling
    all libraries (not native JavaFX OS libs). Example in `pom.xml`:
 
@@ -352,6 +434,7 @@ application on macOS, Linux, and Windows.
 
 ```
 
+
 1. Then build the artifact:
 
 ```bash
@@ -365,9 +448,11 @@ java -jar target/graph_digitizer_1.0-beta.jar
 
 Notes:
 
+
 - A standard fat JAR will still require the end user to have a compatible
   Java runtime installed. For JavaFX, you still need the JavaFX runtime
   for the target OS if not bundled.
+
 - For a fully self-contained native app (recommended), use Option B.
 
 ### Option B: Self-contained native binaries (recommended for end-users)
@@ -382,6 +467,7 @@ installed that contains `jlink` and `jpackage` tools.
 
 Basic flow (CLI approach):
 
+
 1. Create runtime image with required modules (JavaFX modules and your app):
 
 ```bash
@@ -391,6 +477,7 @@ Basic flow (CLI approach):
 jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,java.logging,javafx.controls,javafx.graphics --output custom-runtime
 
 ```
+
 
 1. Build an app image with jpackage (Windows example creating an exe):
 
@@ -405,7 +492,9 @@ jpackage --type exe \
 
 ```
 
+
 1. For macOS, use `--type dmg` or `--type pkg` and `--icon` as .icns.
+
 1. For Linux, use `--type deb` or `--type rpm`, or create an AppImage.
 
 Tip: Use `maven-jlink-plugin` and the `jpackage` Maven plugin to integrate
@@ -414,55 +503,85 @@ this into your Maven lifecycle so OS-specific packages are reproducible.
 The repository includes a unified Maven packaging setup driven by the `native` property. A single command now builds the shaded JAR, copies icons, gathers JavaFX modules for the current OS, creates the jpackage app-image, and then produces any OS-specific installers.
 
 Unified build command (run this on your current OS):
+
+```bash
 mvn clean package -Dnative
 
-Outputs per OS:
+```
+
+
+- Outputs per OS:
+
 Windows:
-- App image: target/jpackage/GraphDigitizer
-- MSI installer: target/jpackage-msi/GraphDigitizer-<version>.msi
+
+
+- App image: `target/jpackage/GraphDigitizer`
+
+- MSI installer: `target/jpackage-msi/GraphDigitizer-<version>.msi`
 
 macOS:
-- App image: target/jpackage/GraphDigitizer.app
-- DMG installer: target/jpackage-dmg/GraphDigitizer-<version>.dmg
+
+
+- App image: `target/jpackage/GraphDigitizer.app`
+
+- DMG installer: `target/jpackage-dmg/GraphDigitizer-<version>.dmg`
 
 Linux:
-- App image: target/jpackage/GraphDigitizer
-- DEB package: target/jpackage-deb/graphdigitizer_<version>_amd64.deb (name may vary by architecture)
-- RPM package: target/jpackage-rpm/graphdigitizer-<version>-1.x86_64.rpm (name may vary by architecture)
+
+
+- App image: `target/jpackage/GraphDigitizer`
+
+- DEB package: `target/jpackage-deb/graphdigitizer_<version>_amd64.deb` (name may vary by architecture)
+
+- RPM package: `target/jpackage-rpm/graphdigitizer-<version>-1.x86_64.rpm` (name may vary by architecture)
 
 Optional overrides (examples):
-- mvn clean package -Dnative -Dicon.win=build/icons/custom.ico
-- mvn clean package -Dnative -Dicon.mac=build/icons/custom.icns
-- mvn clean package -Dnative -Dicon.linux=build/icons/custom.png
+
+```bash
+mvn clean package -Dnative -Dicon.win=build/icons/custom.ico
+mvn clean package -Dnative -Dicon.mac=build/icons/custom.icns
+mvn clean package -Dnative -Dicon.linux=build/icons/custom.png
+
+```
+
 (Icon properties default to the copied files under build/icons.)
 
 Skip tests if desired:
+
+```bash
 mvn clean package -Dnative -DskipTests
+
+```
 
 If you only want to adjust version or icon without rebuilding everything, you can reuse the previous target artifacts; however, the unified command is designed to be reproducible and idempotent.
 
 Advanced: You can still run jpackage manually for debugging; see the manual section below.
 
-```bash
-
 (Deprecated examples removed: previous per-OS -Pnative + -Djpackage.type usage has been replaced by the single -Dnative flow.)
-
-```
 
 Notes:
 
+
 - Set `-Dicon=path/to/icon` to provide a custom icon for the installer.
+
 - Run packaging on the target OS (Windows packages on Windows, macOS on macOS) for best results.
 
 #### Automated MSI via Maven
 
 Windows MSI creation is automatic with:
+
+```bash
 mvn clean package -Dnative
+
+```
+
 (Previous instructions using -Pnative and -Djpackage.type are obsolete.)
+
 
 1. Install the WiX Toolset (v3.11 or v4+) and ensure `candle.exe`/`light.exe` (or equivalent WiX binaries) are on your `PATH`.
 
-2. Recommended quick command (PowerShell) — full automated flow using the `native` Maven profile:
+
+1. Recommended quick command (PowerShell) — full automated flow using the `native` Maven profile:
 
 ```powershell
 # Ensure JAVA_HOME is set and points to a JDK that includes `jpackage` (Java 21+ or Semeru/Adoptium with tools)
@@ -474,9 +593,11 @@ if (Test-Path 'target\jpackage\GraphDigitizer') { Remove-Item -Recurse -Force 't
 
 # Build MSI with the native profile (runs jpackage via the POM)
 mvn -Pnative -DskipTests -Djpackage.type=msi -Dicon.win=build/icons/scatter-plot-256.ico package
+
 ```
 
-3. Manual two-step `jpackage` (if you need to debug or run `jpackage` yourself):
+
+1. Manual two-step `jpackage` (if you need to debug or run `jpackage` yourself):
 
 ```powershell
 # Create the app-image (bundles the runtime libs and application)
@@ -499,37 +620,54 @@ mvn -Pnative -DskipTests -Djpackage.type=msi -Dicon.win=build/icons/scatter-plot
   --icon build/icons/scatter-plot-256.ico \
   --app-version 1.1 \
   --win-dir-chooser --win-menu --win-shortcut
+
 ```
 
-4. Verify the produced MSI (automated smoke test):
+
+1. Verify the produced MSI (automated smoke test):
 
 ```powershell
 # Run the included verification script (extracts the MSI, runs the bundled EXE briefly, and performs a silent install)
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-msi.ps1 -TimeoutSeconds 30 -DoInstall
 
 # Logs are written to: target/jpackage-msi/verify-msi.log, exe-run.log, exe-err.log, install.log
+
 ```
 
 Where to find the artifacts:
 
+
 - App image: `target/jpackage/GraphDigitizer`
+
 - MSI installer: `target/jpackage-msi/GraphDigitizer-${project.version}.msi` (example: `target/jpackage-msi/GraphDigitizer-1.1.msi`)
 
 Notes & troubleshooting
+
+
 - If you see an error about WiX missing, install the WiX Toolset and add its `bin` to your `PATH`.
-  - Use an Admin level powershell or Command Prompt and install through WinGet
+
+  Use an Admin level PowerShell or Command Prompt and install through WinGet:
+
   ```pwsh
   winget install WiXToolset.WiXCLI
   winget install WiXToolset.WiXAdditionalTools
-  winget install WiXToolset.WiXToolset 
+  winget install WiXToolset.WiXToolset
   ```
+
+
 - If `jpackage` fails with an "application destination directory already exists" error, the `native` profile includes a cleanup exec that removes `target/jpackage/GraphDigitizer` before packaging — run `mvn -Pnative -DskipTests package` again.
+
 - The `pom.xml` copies the shaded JAR to `target/jpackage-input/graph-digitizer.jar` and platform JavaFX jars into `target/jpackage-input/lib` automatically when using the `native` profile.
+
 - If you want to run packaging on CI, run the packaging job on Windows-hosted runners for MSI outputs, and ensure WiX and a matching JDK are installed on the runner.
 
 Advanced notes
+
+
 - You can override the installer type and icon via Maven properties: `-Djpackage.type=exe|msi|dmg|deb|rpm` and `-Dicon.win=path\to\icon.ico`.
+
 - To debug `jpackage` arguments, run the manual two-step commands above and append `--verbose` to see detailed output.
+
 - For signing the final EXE/MSI in CI, see `scripts/sign-windows.ps1` which accepts a PFX and password (integrate with secure CI secrets).
 
 If you'd like, I can add a small CI job example (GitHub Actions) to build and archive the MSI per-release.
@@ -538,9 +676,13 @@ If you'd like, I can add a small CI job example (GitHub Actions) to build and ar
 
 For AppImage, DEB/RPM maintainer scripts, desktop integration, icon auto-selection, and cross-platform signing/notarization:
 
+
 - See `packaging/README.md` for: AppImage recipe (`appimage-builder.yml`), `.zsync` delta update steps, Debian `postinst`/`prerm`, RPM spec template, verification checklist, CI integration notes.
+
 - Windows code signing: `scripts/sign-windows.ps1` (SecureString support; integrate with CI secrets).
+
 - macOS signing & notarization: `scripts/sign-macos.sh` (codesign, submit, staple).
+
 - Icon selection / generation: `scripts/select-icon.ps1` (Windows) and `scripts/create-mac-iconset.sh` (macOS) produce `selected-icon.properties` / `.icns`.
 
 Quick examples:
@@ -549,18 +691,18 @@ Quick examples:
 # Linux AppImage build (after jpackage app-image)
 appimage-builder --recipe packaging/appimage-builder.yml
 appimagetool --create-zsync GraphDigitizer-x86_64.AppImage  # optional delta updates
+
 ```
 
 ```pwsh
 # Windows signing (example)
 
 pwsh scripts/sign-windows.ps1 -PfxPath certs/code_signing.pfx -PasswordEnvVar WINDOWS_CERT_PASS -Files (Get-ChildItem target -Filter *.exe).FullName
+
 ```
 
 ```bash
-
 # macOS signing & notarization (example)
-
 ./scripts/sign-macos.sh GraphDigitizer.app "Developer ID Application: Your Company" TEAMID GraphDigitizer.dmg
 
 ```
@@ -575,7 +717,9 @@ artifacts.
 
 ### Example: Creating a macOS App (brief)
 
+
 1. Install a JDK 21 with `jpackage` (Adoptium OpenJDK or Liberica Full JDK).
+
 2. Build the jar and modules:
 
 ```bash
@@ -583,6 +727,7 @@ mvn clean package
 jlink --module-path $JAVA_HOME/jmods:target/lib --add-modules java.base,java.desktop,javafx.controls,javafx.graphics --output runtime-mac
 
 ```
+
 
 1. Use `jpackage` to make a `.app` bundle and optionally `.dmg`:
 
@@ -593,54 +738,81 @@ jpackage --type dmg --name GraphDigitizer --main-jar graph-digitizer-1.2.0.jar -
 
 ### Troubleshooting packaging
 
+
 - Error "No JavaFX runtime found" typically means you haven't included
   the JavaFX modules for your OS; ensure `--module-path` contains
   the JavaFX SDK modules.
+
 - For Windows, use `--type msi` or `--type exe`. For `.msi` you may need
   `WiX` installed on Windows for full packaging.
+
 - Use `--verbose` with `jpackage` for extra messages.
 
 ### Project Layout Best Practices
 
+
 1. **Core Business Logic**: Place non-GUI code in the `core` package. These classes can be tested and reused without JavaFX dependencies.
 
+
 2. **Modularity**: Each package has a specific responsibility:
+
    - `core`: Data models and algorithms
+
    - `image`: Image I/O and processing
+
    - `io`: File format handlers
+
    - `ui`: User interface only
+
 
 3. **Testing**: Unit tests in `src/test/java` mirror the source structure. Test core logic independently of UI.
 
+
 4. **Dependencies**:
+
    - Core classes import only from Java standard library
+
    - Image/IO classes import from core and external libraries
+
    - UI classes import from core, image, and io packages
 
 ### Adding New Features
 
 Example: Adding a new export format
 
+
 1. Create a new exporter class in `com.digitizer.io` package
+
 2. Implement export logic
+
 3. Add unit tests in `src/test/java/com/digitizer/io/`
+
 4. Call the exporter from `MainWindow` in the appropriate event handler
 
 ### Extending the UI
 
 The UI is designed to be easily extensible. To add new controls:
 
+
 1. Create a new panel class extending `javafx.scene.layout.Region` or `VBox`
+
 2. Initialize it in `MainWindow.initialize()`
+
 3. Add it to the appropriate layout container
 
 ## Dependencies
 
+
 - **JavaFX 21.0.2**: Modern UI framework
+
 - **GSON 2.10.1**: JSON serialization
+
 - **Apache Commons CSV 1.10.0**: CSV parsing and writing
+
 - **SLF4J + Log4j2**: Logging (console, rolling file, JSON, async option)
+
 - **LMAX Disruptor**: Enables Log4j2 asynchronous loggers
+
 - **JUnit 4 & JUnit 5**: Testing frameworks
 
 ## Testing
@@ -649,6 +821,7 @@ Run all tests:
 
 ```bash
 mvn test
+
 ```
 
 Run specific test:
@@ -664,14 +837,17 @@ mvn test -Dtest=FileUtilsTest
 
 The application manages three related coordinate systems and clarifies how they interact:
 
+
 1. **Image Pixel Coordinates**: The image's natural pixel coordinate space (0..width-1, 0..height-1). The
     {@link com.digitizer.core.CoordinateTransformer} maps between numeric data values and these image pixel
     coordinates (this is the coordinate space used by the tracer and by the calibration anchors stored in
     {@link com.digitizer.core.CalibrationState}).
 
+
 2. **Canvas Coordinates**: Pixel positions in the JavaFX Canvas where the image is rendered. The canvas may
     render the image at a scaled size (`displayScale`) and with offsets (`offsetX`, `offsetY`) so UI drawing
     (snap lines, points, ticks) must convert image-pixel coordinates into canvas coordinates before drawing.
+
 
 3. **Data Coordinates**: Actual numeric values from the graph axes (e.g., 0.0..100.0). The transformer supports
     linear and logarithmic mappings between data coordinates and image pixels.
@@ -684,17 +860,24 @@ same place on the plotted graph when zoom/fitting changes are applied.
 
 All core logic (coordinate transforms, color operations, file I/O) is intentionally GUI-free. This allows:
 
+
 - Unit testing without JavaFX/GUI headaches
+
 - Headless/command-line processing
+
 - Embedding in other applications
 
 ### Logging
 
 The application uses SLF4J with a Log4j2 backend (`log4j2.xml`). The configuration defines:
 
+
 - Console output with concise pattern
+
 - Rolling text file (`logs/graph-digitizer.log`) with daily + size rollover (max 14 archives)
+
 - Structured JSON events (`logs/graph-digitizer.json`) newline-delimited for ingestion
+
 - Package logger `com.digitizer` at DEBUG and root at INFO
 
 #### Asynchronous Logging (Optional Performance Tuning)
@@ -728,7 +911,9 @@ jq -c '.' logs/graph-digitizer.json
 
 Two example helper scripts are provided in `scripts/` to parse and filter the structured JSON log:
 
+
 - PowerShell: `scripts/ingest-json-log.ps1` (filter by level/logger)
+
 - Python: `scripts/ingest_json_log.py` (arguments `--level` / `--logger`)
 
 Examples:
@@ -748,7 +933,9 @@ python scripts/ingest_json_log.py --level INFO --logger com.digitizer
 
 The application initializes a session identifier via `LoggingConfig.initializeMdc(...)`. Each log event includes MDC keys if referenced in patterns (add `%X{session}` to `PatternLayout` in `log4j2.xml` if you want it visible in the rolling text file). Current keys:
 
+
 - `session`: Unique per application run (epoch milliseconds)
+
 - `user`: Reserved for future use (currently unset / null for desktop context)
 
 Add a user id example:
@@ -769,8 +956,11 @@ Update pattern example:
 
 At startup `LoggingConfig.runEnvironmentChecks()` logs:
 
+
 - Java version (`java.version`)
+
 - Whether async logging property is present
+
 - Creates `logs/` directory if missing
 
 #### Archiving Old Logs
@@ -787,8 +977,11 @@ Creates `logs/archive-YYYYMMDD-HHMMSS.zip` and removes archived originals.
 
 #### Customization Tips
 
+
 - Change retention via `<DefaultRolloverStrategy max="X"/>` in `log4j2.xml`.
+
 - Modify patterns with `<PatternLayout>`; add `%X{key}` for MDC if needed.
+
 - Remove JSON appender if structured logging not required.
 
 #### Migrated From Logback
@@ -810,8 +1003,11 @@ java -version
 
 Verify the file is:
 
+
 - A valid image file
+
 - Readable by the current user
+
 - Not too large (tested up to 4K resolution)
 
 ### Build fails
@@ -828,22 +1024,34 @@ Ensure Maven has internet access to download dependencies.
 
 ## Future Improvements
 
+
 - [ ] FXML-based UI layouts for better separation of concerns
+
 - [ ] Undo/redo stack
+
 - [ ] Project file format (.gdz) combining image + metadata
+
 - [ ] Keyboard shortcuts customization
+
 - [ ] Snap X values and guide lines (from Julia version)
+
 - [ ] Batch processing from command line
+
 - [ ] Plugin system for custom export formats
+
 - [ ] Precision zoom with circular magnifier overlay
 
 ## Contributing
 
 Contributions are welcome! Please:
 
+
 1. Write tests for new features
+
 2. Follow the existing code style
+
 3. Update documentation
+
 4. Test on multiple platforms if possible
 
 ## License

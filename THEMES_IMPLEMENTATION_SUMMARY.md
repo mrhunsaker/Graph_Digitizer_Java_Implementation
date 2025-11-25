@@ -16,33 +16,51 @@ I've successfully added a **professional Themes menu** to the Graph Digitizer ap
 
 **Key Methods**:
 
+
 - `getAvailableThemes()` - Returns all 14 available themes (sorted alphabetically)
+
 - `applyTheme(String themeName)` - Applies a selected theme using reflection
+
 - `getCurrentTheme()` - Returns the name of the currently active theme
 
 **Features**:
 
+
 - Uses dynamic reflection to load theme classes (handles missing themes gracefully)
+
 - 14 themes pre-configured with full class name mapping
+
 - Error handling for unavailable themes (graceful fallback)
 
 ### 2. Modified: `MainWindow.java`
 
 **Changes**:
 
+
 1. Added `createMenuBar()` method that:
+
    - Creates MenuBar with Themes menu
+
    - Dynamically generates MenuItem for each available theme
+
    - Wires up event handlers for theme selection
 
+
 2. Updated `initialize()` method:
+
    - Creates a VBox container for top elements
+
    - Places menu bar above toolbar
+
    - Maintains all existing functionality
 
+
 3. Theme Change Feedback:
+
    - Status bar displays theme change message
+
    - Screen reader announcement (accessibility)
+
    - Console logging for debugging
 
 ### 3. Dependencies Added: `pom.xml`
@@ -60,7 +78,7 @@ I've successfully added a **professional Themes menu** to the Graph Digitizer ap
     <version>3.4.1</version>
 </dependency>
 
-```text
+```
 
 ---
 
@@ -96,17 +114,25 @@ I've successfully added a **professional Themes menu** to the Graph Digitizer ap
 
 ### User Perspective
 
+
 1. **Click "Themes"** in the menu bar
+
 2. **Select a theme** from the dropdown list
+
 3. **See instant feedback**:
+
    - Application UI updates immediately
+
    - Status bar shows "Theme changed to: [Theme Name]"
+
    - Screen reader announces the change
+
 4. **All features continue working** with the new theme
 
 ### Technical Perspective
 
-```text
+```
+
 User clicks theme
     ↓
 MenuItem.setOnAction() fires
@@ -123,7 +149,7 @@ Status bar updated with feedback
     ↓
 Screen reader announcement (if enabled)
 
-```text
+```
 
 ---
 
@@ -142,17 +168,23 @@ Screen reader announcement (if enabled)
 
 ## Accessibility
 
+
 - ✅ All menu items fully keyboard navigable
+
 - ✅ Screen reader announcements on theme change
+
 - ✅ Status bar acts as live region for theme announcements
+
 - ✅ Menu bar accessible via standard Alt+T navigation
+
 - ✅ Clear, descriptive menu item labels
 
 ---
 
 ## Build Status
 
-```text
+```
+
 ✅ BUILD SUCCESS
 
 Files Compiled: 19 Java files
@@ -160,7 +192,7 @@ Build Time: ~2 seconds
 Errors: 0
 Warnings: 6 (dependency resolution, non-blocking)
 
-```text
+```
 
 ---
 
@@ -168,16 +200,21 @@ Warnings: 6 (dependency resolution, non-blocking)
 
 ### Created (1 file)
 
+
 - ✅ `ThemeManager.java` (123 lines)
 
 ### Modified (2 files)
 
+
 - ✅ `MainWindow.java` (added menu bar creation)
+
 - ✅ `pom.xml` (added FlatLaf dependencies)
 
 ### Documentation (2 files)
 
+
 - ✅ `THEMES_MENU.md` - Comprehensive documentation
+
 - ✅ `THEMES_QUICK_REFERENCE.md` - Quick user guide
 
 ---
@@ -186,34 +223,49 @@ Warnings: 6 (dependency resolution, non-blocking)
 
 ### Manual Testing Steps
 
+
 1. **Compile Project**
 
    ```bash
    mvn clean compile
 
-```text
+```
+
 
 2. **Run Application**
 
    ```bash
    mvn javafx:run
 
-```text
+```
+
 
 3. **Test Theme Switching**
+
    - Click "Themes" in menu bar
+
    - Select "Dracula" → verify instant color change
+
    - Select "FlatLaf Light" → verify light theme applied
+
    - Try other themes to verify variety
 
+
 4. **Verify Accessibility**
+
    - Use Tab to navigate to "Themes" menu
+
    - Use arrow keys to navigate theme list
+
    - Enable screen reader to verify announcements
 
+
 5. **Verify Functionality**
+
    - Load an image
+
    - Switch themes multiple times
+
    - Verify all features still work correctly
 
 ---
@@ -222,20 +274,29 @@ Warnings: 6 (dependency resolution, non-blocking)
 
 ### No Breaking Changes
 
+
 - All existing code remains unchanged
+
 - Themes menu is purely additive
+
 - Backward compatible with all current features
+
 - No API changes to existing classes
 
 ### Theme Persistence
 
+
 - **Current**: Themes change within session only
+
 - **Future Enhancement**: Could persist preference to config file
 
 ### Performance
 
+
 - Theme loading takes <1 second
+
 - No ongoing performance impact
+
 - FlatLaf is lightweight and optimized
 
 ---
@@ -254,7 +315,7 @@ List<String> themes = ThemeManager.getAvailableThemes();
 // Get current theme
 String current = ThemeManager.getCurrentTheme();
 
-```text
+```
 
 ### Menu Creation Pattern
 
@@ -270,7 +331,7 @@ for (String themeName : ThemeManager.getAvailableThemes()) {
     themesMenu.getItems().add(item);
 }
 
-```text
+```
 
 ---
 
@@ -278,24 +339,39 @@ for (String themeName : ThemeManager.getAvailableThemes()) {
 
 Potential improvements for consideration:
 
+
 1. **Theme Persistence**
+
    - Save user's selected theme to config file
+
    - Auto-apply theme on app startup
 
+
 2. **Theme Previews**
+
    - Show preview of selected theme before applying
+
    - Live preview of specific controls
 
+
 3. **Quick Toggle**
+
    - Keyboard shortcut for Light/Dark toggle (Ctrl+Shift+T)
+
    - Auto-detect system dark mode preference
 
+
 4. **Custom Themes**
+
    - Allow users to create custom color schemes
+
    - Import theme from .properties files
 
+
 5. **More Themes**
+
    - Add additional FlatLaf community themes
+
    - Custom theme marketplace
 
 ---

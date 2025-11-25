@@ -18,7 +18,8 @@ A professional, production-ready Java Maven project with the following structure
 
 ### Directory Structure
 
-```text
+```
+
 graph-digitizer-java/
 ├── pom.xml                    # Maven build configuration
 ├── README.md                  # User guide and quick start
@@ -67,7 +68,7 @@ graph-digitizer-java/
             │   └── FileUtilsTest.java
             └── io/
 
-```text
+```
 
 ### Key Files
 
@@ -84,28 +85,48 @@ graph-digitizer-java/
 
 ### ✅ Implemented
 
+
 1. **Image Loading** - PNG and JPEG support
+
 2. **Calibration** - Four-point click-to-calibrate with numeric axis ranges
+
 3. **Data Entry** - Manual point placement and editing
+
 4. **Auto-trace** - Color-matching based automatic curve extraction
+
 5. **Multiple Datasets** - Support for up to 6 color-coded datasets
+
 6. **Coordinate Transforms** - Linear and logarithmic (base-10) axis support
+
 7. **Export Formats**:
+
    - JSON (full metadata and calibration)
+
    - CSV (wide format for spreadsheets)
+
 8. **Responsive UI** - Modern JavaFX with toolbar, canvas, and control panels
+
 9. **Logging** - SLF4J with Logback configuration
+
 10. **Unit Tests** - Core utilities and algorithms tested
 
 ### 📋 Planned for Future
 
+
 1. **Snap X Values** - Batch coordinate snapping to grid
+
 2. **Precision Zoom** - Circular magnifier overlay
+
 3. **Undo/Redo** - Command pattern implementation
+
 4. **Project Files** - .gdz format with embedded images
+
 5. **Plugin System** - Custom export format support
+
 6. **Keyboard Shortcuts** - Customizable accelerators
+
 7. **Batch Processing** - Command-line interface
+
 8. **More Image Formats** - TIFF, PDF support
 
 ---
@@ -129,14 +150,14 @@ mvn javafx:run
 
 java -jar target/graph-digitizer-1.2.0.jar
 
-```text
+```
 
 ### Running Tests
 
 ```bash
 mvn test
 
-```text
+```
 
 ### Creating Executable JAR
 
@@ -149,7 +170,7 @@ mvn clean package
 
 # - target/graph-digitizer-1.2.0-shaded.jar (fat JAR with dependencies)
 
-```text
+```
 
 ---
 
@@ -159,7 +180,8 @@ mvn clean package
 
 The project is organized into **four distinct packages**:
 
-```text
+```
+
 ┌─────────────────────────────────────────┐
 │          UI Package (JavaFX)            │
 │  ┌────────────────────────────────────┐ │
@@ -180,14 +202,17 @@ The project is organized into **four distinct packages**:
     │  + Third-party Libraries    │
     └─────────────────────────────┘
 
-```text
+```
 
 ### Core Package Design
 
 The **core** package contains **zero GUI dependencies**:
 
+
 - Testable without JavaFX startup overhead
+
 - Reusable in headless/CLI applications
+
 - Can be packaged as a library for other projects
 
 **Example: Testing coordinate transforms without GUI**
@@ -202,7 +227,7 @@ CoordinateTransformer transformer = new CoordinateTransformer(calib);
 Point2D canvasCoord = transformer.dataToCanvas(50, 25);
 // Test passes without starting JavaFX!
 
-```text
+```
 
 ### Plugin-Ready Architecture
 
@@ -221,7 +246,7 @@ private void handleSaveSvg() {
     SvgExporter.exportToSvg(filePath, datasets);
 }
 
-```text
+```
 
 ---
 
@@ -229,16 +254,23 @@ private void handleSaveSvg() {
 
 ### Build (Maven)
 
+
 - **JavaFX 21.0.2** - Modern cross-platform GUI
+
 - **GSON 2.10.1** - JSON serialization
+
 - **Apache Commons CSV 1.10.0** - CSV I/O
+
 - **SLF4J 2.0.9** - Logging API
+
 - **Logback 1.4.11** - Logging implementation
+
 - **JUnit 4 & 5** - Testing frameworks
 
 All configured in `pom.xml` with correct versions.
 
 ### Runtime
+
 
 - **Java 21+** (comes with JavaFX via Maven)
 
@@ -304,17 +336,18 @@ All configured in `pom.xml` with correct versions.
   ]
 }
 
-```text
+```
 
 ### CSV Export (Wide Format)
 
-```text
+```
+
 x,Dataset_1,Dataset_2
 0.0,0.1,-0.05
 1.0,0.15,0.2
 2.5,,0.15
 
-```text
+```
 
 ---
 
@@ -342,15 +375,21 @@ mvn javafx:run
 
 mvn javadoc:javadoc
 
-```text
+```
 
 ### Adding a Feature
 
+
 1. **Plan** - Understand which package(s) it belongs in
+
 2. **Code** - Write the implementation
+
 3. **Test** - Add unit tests in `src/test/java`
+
 4. **Document** - Add Javadoc comments
+
 5. **Build** - Run `mvn clean package` to verify
+
 6. **Commit** - Use clear, descriptive commit messages
 
 ### Running Tests
@@ -360,7 +399,7 @@ mvn test                              # All tests
 mvn test -Dtest=FileUtilsTest        # Specific test
 mvn test -Dtest=*Utils*Test          # Pattern matching
 
-```text
+```
 
 ---
 
@@ -368,30 +407,43 @@ mvn test -Dtest=*Utils*Test          # Pattern matching
 
 ### Adding a New Export Format
 
+
 1. Create `MyFormatExporter.java` in `com.digitizer.io`
+
 2. Implement static export methods
+
 3. Write unit tests in `src/test/java/com/digitizer/io/MyFormatExporterTest.java`
+
 4. Wire up UI button in `MainWindow.handleSaveMyFormat()`
 
 ### Adding a New Core Algorithm
 
+
 1. Create class in `com.digitizer.core`
+
 2. Avoid GUI dependencies
+
 3. Write unit tests that run without JavaFX
+
 4. Document with Javadoc
 
 ### Customizing the UI
 
+
 1. Edit components in `com.digitizer.ui`
+
 2. Add new panels as subclasses of Region/VBox
+
 3. Wire up in `MainWindow.initialize()`
+
 4. Update `DEVELOPER.md` with new UI patterns
 
 ---
 
 ## Package Dependencies
 
-```text
+```
+
 ui/
 ├── uses → core/
 ├── uses → image/
@@ -411,7 +463,7 @@ core/
 └── uses → JavaFX (Color only)
     └── (Can be made 100% standalone if needed)
 
-```text
+```
 
 **Rule**: Lower packages never depend on higher packages.
 
@@ -431,9 +483,13 @@ core/
 
 ## Security Considerations
 
+
 - **File I/O**: No arbitrary command execution, only reads/writes files
+
 - **JSON Parsing**: Uses GSON which is memory-safe
+
 - **No Network**: Application is entirely offline
+
 - **Temporary Files**: Uses `File.createTempFile()` which is secure
 
 ---
@@ -471,36 +527,52 @@ core/
 
 ### For Users
 
+
 1. Build: `mvn clean package`
+
 2. Run: `java -jar target/graph-digitizer-1.2.0.jar`
+
 3. Load image → Calibrate → Edit points → Export
+
 4. See `README.md` for detailed usage guide
 
 ### For Developers
 
+
 1. Read `DEVELOPER.md` for architecture overview
+
 2. Explore the code structure starting with `core` package
+
 3. Look at unit tests as usage examples
+
 4. Run `mvn javadoc:javadoc` to generate API docs
+
 5. Check `CHANGELOG.md` for planned features
 
 ### For Contributors
 
+
 1. Fork the repository
+
 2. Create a feature branch
+
 3. Write tests for new features
+
 4. Ensure `mvn test` passes
+
 5. Submit a pull request
 
 ---
 
 ## Support & Resources
 
+
 - **Documentation**: See `README.md` and `DEVELOPER.md`
+
 - **Build Issues**: Check Maven dependencies with `mvn dependency:tree`
-- **JavaFX Help**: <https://gluonhq.com/products/javafx/>
-- **Maven Help**: <https://maven.apache.org/>
-- **Java 21 Docs**: <https://docs.oracle.com/en/java/javase/21/>
+-- **JavaFX Help**: [Gluon JavaFX](https://gluonhq.com/products/javafx/)
+-- **Maven Help**: [Maven](https://maven.apache.org/)
+-- **Java 21 Docs**: [Java 21 docs](https://docs.oracle.com/en/java/javase/21/)
 
 ---
 

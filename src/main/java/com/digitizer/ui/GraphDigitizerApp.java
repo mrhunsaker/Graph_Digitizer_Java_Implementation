@@ -49,6 +49,10 @@ import javafx.stage.Stage;
  * <p>
  * Fields documented below are application-wide defaults used to create
  * the initial datasets and to provide versioning information.
+ * <p>
+ * <strong>Packaging:</strong> See `docs/JPACKAGE.md` and `scripts/README.md` for
+ * guidance on creating runtime images and native installers via `jlink` and
+ * `jpackage` (including multi-architecture MSI generation notes).
  */
 public class GraphDigitizerApp extends Application {
 
