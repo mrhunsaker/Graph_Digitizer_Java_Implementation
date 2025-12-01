@@ -86,12 +86,13 @@ class ExportIntegrationTest {
         File jsonFile = tempDir.resolve("test_export.json").toFile();
         
         JsonExporter.exportToJson(
-                jsonFile.getAbsolutePath(),
-                "Test Title",
-                "X Axis",
-                "Y Axis",
-                null, // no calibration state for this test
-                datasets
+            jsonFile.getAbsolutePath(),
+            "Test Title",
+            "X Axis",
+            "Y Axis",
+            "",
+            null, // no calibration state for this test
+            datasets
         );
         
         assertTrue(jsonFile.exists(), "JSON file should be created");
@@ -131,12 +132,13 @@ class ExportIntegrationTest {
         
         File jsonFile = tempDir.resolve("special_chars.json").toFile();
         JsonExporter.exportToJson(
-                jsonFile.getAbsolutePath(),
-                "Title & <Special>",
-                "X",
-                "Y",
-                null,
-                singleDataset
+            jsonFile.getAbsolutePath(),
+            "Title & <Special>",
+            "X",
+            "Y",
+            "",
+            null,
+            singleDataset
         );
         
         assertTrue(jsonFile.exists(), "JSON should handle special characters");

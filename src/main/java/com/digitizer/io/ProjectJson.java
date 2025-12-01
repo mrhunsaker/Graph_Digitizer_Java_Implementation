@@ -59,6 +59,9 @@ public class ProjectJson {
     @SerializedName("y2_log")
     public Boolean y2Log = null;
 
+    @SerializedName("y2label")
+    public String y2label = "";
+
     @SerializedName("datasets")
     public List<DatasetJson> datasets;
 
@@ -69,6 +72,7 @@ public class ProjectJson {
         this.title = "";
         this.xlabel = "";
         this.ylabel = "";
+        this.y2label = "";
         this.xMin = 0.0;
         this.xMax = 1.0;
         this.yMin = 0.0;
@@ -98,6 +102,7 @@ public class ProjectJson {
         this.title = title;
         this.xlabel = xlabel;
         this.ylabel = ylabel;
+        this.y2label = "";
         this.xMin = xMin;
         this.xMax = xMax;
         this.yMin = yMin;

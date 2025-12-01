@@ -725,6 +725,22 @@ public class ControlPanel extends VBox {
     }
 
     /**
+     * Sets the secondary (right-hand) Y-axis label text.
+     * @param y2label secondary y label
+     */
+    public void setY2Label(String y2label) {
+        if (this.y2labelField != null) this.y2labelField.setText(y2label == null ? "" : y2label);
+    }
+
+    /**
+     * Returns the current secondary (right-hand) Y-axis label text.
+     * @return secondary y label
+     */
+    public String getY2Label() {
+        return y2labelField == null ? "" : y2labelField.getText();
+    }
+
+    /**
      * Returns the current plot title (may be empty).
      * @return title text
      */

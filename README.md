@@ -353,7 +353,38 @@ x,Dataset_1,Dataset_2
 1.0,0.15,
 2.5,,0.2
 
+#### Export details: secondary Y axis and unused datasets
+
+- **Secondary Y-axis label**: The JSON export now includes a `y2label` field containing the secondary (right-hand) Y-axis title when provided in the Control panel. Example:
+
+```json
+{
+  "title": "Sample Graph",
+  "xlabel": "X values (0-15)",
+  "ylabel": "Y values (0-15)",
+  "y2label": "Concentration (mg/L)",
+  "x_min": 0.0,
+  "x_max": 15.0
+}
 ```
+
+- **Datasets that use the secondary axis**: Each dataset object in the JSON now contains a boolean `use_secondary_y` property. If a dataset is assigned to the secondary (right-hand) Y axis in the UI, that field will be `true`. Example dataset entry:
+
+```json
+{
+  "name": "Chlorophyll",
+  "color": "#0072B2",
+  "use_secondary_y": true,
+  "points": [[0.0, 1.2], [1.0, 1.5]]
+}
+```
+
+- **Unused datasets omitted**: Datasets that contain no points are no longer written to the JSON or included as CSV columns. This keeps exported files concise and avoids empty columns in CSV.
+
+```
+
+Note: The CSV exporter now omits series that have no data points, so the header and subsequent columns only include datasets with at least one point.
+
 
 ## Building and Extending
 

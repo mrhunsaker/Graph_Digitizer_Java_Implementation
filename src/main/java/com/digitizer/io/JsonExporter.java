@@ -56,13 +56,16 @@ public class JsonExporter {
      * @param datasets        the list of datasets to export
      * @throws IOException if writing to the file fails
      */
-    public static void exportToJson(String filePath, String title, String xlabel, String ylabel,
+    public static void exportToJson(String filePath, String title, String xlabel, String ylabel, String y2label,
                                    CalibrationState calibration, List<Dataset> datasets)
             throws IOException {
         
         // Build ProjectJson from input data
         List<DatasetJson> datasetJsonList = new ArrayList<>();
         for (Dataset dataset : datasets) {
+            // Skip datasets that have no points (unused)
+            if (dataset.getPoints() == null || dataset.getPoints().isEmpty()) continue;
+
             List<List<Double>> pointsList = new ArrayList<>();
             for (Point point : dataset.getPoints()) {
                 List<Double> pointPair = new ArrayList<>();
@@ -70,14 +73,14 @@ public class JsonExporter {
                 pointPair.add(point.y());
                 pointsList.add(pointPair);
             }
-            
-                DatasetJson dsJson = new DatasetJson(
-                    dataset.getName(),
-                    dataset.getHexColor(),
-                    pointsList,
-                    // include visibility flag
-                    (dataset instanceof com.digitizer.core.Dataset) ? ((com.digitizer.core.Dataset)dataset).isVisible() : true
-                );
+
+            DatasetJson dsJson = new DatasetJson(
+                dataset.getName(),
+                dataset.getHexColor(),
+                pointsList,
+                (dataset instanceof com.digitizer.core.Dataset) ? ((com.digitizer.core.Dataset)dataset).isVisible() : true,
+                dataset.isUseSecondaryYAxis()
+            );
             datasetJsonList.add(dsJson);
         }
 
@@ -99,18 +102,20 @@ public class JsonExporter {
         }
 
         ProjectJson project = new ProjectJson(
-                title,
-                xlabel,
-                ylabel,
-                xMin,
-                xMax,
-                yMin,
-                yMax,
-                xLog,
-                yLog,
-                datasetJsonList
+            title,
+            xlabel,
+            ylabel,
+            xMin,
+            xMax,
+            yMin,
+            yMax,
+            xLog,
+            yLog,
+            datasetJsonList
         );
-        // Populate secondary Y axis if present
+        // Set secondary Y axis label if provided
+        project.y2label = y2label == null ? "" : y2label;
+        // Populate secondary Y axis numeric range if present
         if (y2Min != null && y2Max != null) {
             project.y2Min = y2Min;
             project.y2Max = y2Max;
