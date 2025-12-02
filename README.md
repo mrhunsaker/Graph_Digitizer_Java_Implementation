@@ -186,6 +186,16 @@ Additional example files demonstrating common cases:
 
   - [graph_digitizer_example_missing.json](docs/README_Assets/graph_digitizer_example_missing.json)
 
+- Full export example (includes secondary Y-axis label and per-dataset `use_secondary_y` flag):
+
+  - [example_export_with_y2.json](docs/example_export_with_y2.json)
+
+  - Annotated explanation: [example_export_with_y2_annotated.md](docs/example_export_with_y2_annotated.md)
+  
+  - CSV wide-format example: [example_export_with_y2.csv](docs/example_export_with_y2.csv)
+    
+    - Note: CSV column headers use sanitized dataset names (non-alphanumeric characters replaced with underscores). See the example above for exact header formatting.
+
 
 ## Project Structure
 

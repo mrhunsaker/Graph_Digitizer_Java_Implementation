@@ -24,6 +24,9 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Root data model for JSON file format.
  * Represents the complete application state: title, labels, axes, and datasets.
+ * <p>
+ * Includes support for a secondary (right-hand) Y axis via the optional
+ * {@code y2label}, {@code y2_min}, {@code y2_max} and {@code y2_log} fields.
  */
 public class ProjectJson {
     @SerializedName("title")

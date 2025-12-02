@@ -39,6 +39,14 @@ import com.digitizer.core.Point;
  * corresponding Y value for a given dataset. The exporter collates values
  * from multiple series and leaves empty cells when a dataset lacks a value
  * for a particular X.
+ * <p>
+ * Export behavior notes:
+ * <ul>
+ *   <li>Datasets that contain no points are omitted from the CSV header
+ *   and data columns so spreadsheets do not receive empty/unused columns.</li>
+ *   <li>Values are matched by X using a small tolerance; missing cells are
+ *   left blank.</li>
+ * </ul>
  */
 public class CsvExporter {
 
@@ -51,10 +59,11 @@ public class CsvExporter {
     /**
      * Exports datasets to a CSV file in wide format.
      * The first column contains x values, followed by one column per dataset containing y values.
+     * Datasets with no points are omitted from the CSV to avoid empty columns.
      * Missing values are left blank.
      *
      * @param filePath the path where the CSV file will be written
-     * @param datasets the datasets to export
+     * @param datasets the datasets to export (the exporter filters out empty series)
      * @throws IOException if writing to the file fails
      */
     public static void exportToCsv(String filePath, List<Dataset> datasets) throws IOException {

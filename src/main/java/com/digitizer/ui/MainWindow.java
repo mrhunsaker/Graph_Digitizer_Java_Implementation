@@ -1218,6 +1218,18 @@ public class MainWindow {
             String message = "Please enter a title before saving";
             statusBar.setStatus(message);
             AccessibilityHelper.announceAction(message);
+            try {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.initOwner(primaryStage);
+                alert.setTitle("Missing Title");
+                alert.setHeaderText("A project title is required");
+                alert.setContentText("Please enter a title before saving the project.");
+                alert.showAndWait();
+                // After the dialog is dismissed, move focus to the Title field so the user can type immediately
+                try {
+                    if (controlPanel != null) controlPanel.focusTitleField();
+                } catch (Exception ignore) {}
+            } catch (Exception ignore) {}
             return;
         }
         String safe = FileUtils.sanitizeFilename(title.trim());
@@ -1269,6 +1281,17 @@ public class MainWindow {
             String message = "Please enter a title before saving";
             statusBar.setStatus(message);
             AccessibilityHelper.announceAction(message);
+            try {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.initOwner(primaryStage);
+                alert.setTitle("Missing Title");
+                alert.setHeaderText("A project title is required");
+                alert.setContentText("Please enter a title before saving the project.");
+                alert.showAndWait();
+                try {
+                    if (controlPanel != null) controlPanel.focusTitleField();
+                } catch (Exception ignore) {}
+            } catch (Exception ignore) {}
             return;
         }
         String safe = FileUtils.sanitizeFilename(title.trim());

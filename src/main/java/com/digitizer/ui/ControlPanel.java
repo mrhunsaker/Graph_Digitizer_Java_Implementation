@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.digitizer.core.CalibrationState;
 import com.digitizer.core.Dataset;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -738,6 +739,20 @@ public class ControlPanel extends VBox {
      */
     public String getY2Label() {
         return y2labelField == null ? "" : y2labelField.getText();
+    }
+
+    /**
+     * Move keyboard focus to the Title text field and select its contents.
+     * Safe to call from any thread; uses Platform.runLater to perform UI work.
+     */
+    public void focusTitleField() {
+        if (this.titleField == null) return;
+        Platform.runLater(() -> {
+            try {
+                this.titleField.requestFocus();
+                this.titleField.selectAll();
+            } catch (Exception ignore) {}
+        });
     }
 
     /**
