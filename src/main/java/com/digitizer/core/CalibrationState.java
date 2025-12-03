@@ -73,6 +73,11 @@ public class CalibrationState {
         return pixelXMin;
     }
 
+    /**
+     * Sets the pixel coordinate of the left X calibration anchor.
+     *
+     * @param pixelXMin the pixel Point2D for the left X anchor (may be null)
+     */
     public void setPixelXMin(Point2D pixelXMin) {
         this.pixelXMin = pixelXMin;
     }
@@ -81,6 +86,11 @@ public class CalibrationState {
         return pixelXMax;
     }
 
+    /**
+     * Sets the pixel coordinate of the right X calibration anchor.
+     *
+     * @param pixelXMax the pixel Point2D for the right X anchor (may be null)
+     */
     public void setPixelXMax(Point2D pixelXMax) {
         this.pixelXMax = pixelXMax;
     }
@@ -89,6 +99,11 @@ public class CalibrationState {
         return pixelYMin;
     }
 
+    /**
+     * Sets the pixel coordinate of the bottom Y calibration anchor.
+     *
+     * @param pixelYMin the pixel Point2D for the bottom Y anchor (may be null)
+     */
     public void setPixelYMin(Point2D pixelYMin) {
         this.pixelYMin = pixelYMin;
     }
@@ -97,6 +112,11 @@ public class CalibrationState {
         return pixelYMax;
     }
 
+    /**
+     * Sets the pixel coordinate of the top Y calibration anchor.
+     *
+     * @param pixelYMax the pixel Point2D for the top Y anchor (may be null)
+     */
     public void setPixelYMax(Point2D pixelYMax) {
         this.pixelYMax = pixelYMax;
     }
@@ -105,6 +125,11 @@ public class CalibrationState {
         return dataXMin;
     }
 
+    /**
+     * Sets the numeric minimum value for the X axis (data coordinates).
+     *
+     * @param dataXMin minimum X data value
+     */
     public void setDataXMin(double dataXMin) {
         this.dataXMin = dataXMin;
     }
@@ -113,6 +138,11 @@ public class CalibrationState {
         return dataXMax;
     }
 
+    /**
+     * Sets the numeric maximum value for the X axis (data coordinates).
+     *
+     * @param dataXMax maximum X data value
+     */
     public void setDataXMax(double dataXMax) {
         this.dataXMax = dataXMax;
     }
@@ -121,6 +151,11 @@ public class CalibrationState {
         return dataYMin;
     }
 
+    /**
+     * Sets the numeric minimum value for the primary Y axis (data coordinates).
+     *
+     * @param dataYMin minimum Y data value
+     */
     public void setDataYMin(double dataYMin) {
         this.dataYMin = dataYMin;
     }
@@ -129,6 +164,11 @@ public class CalibrationState {
         return dataYMax;
     }
 
+    /**
+     * Sets the numeric maximum value for the primary Y axis (data coordinates).
+     *
+     * @param dataYMax maximum Y data value
+     */
     public void setDataYMax(double dataYMax) {
         this.dataYMax = dataYMax;
     }

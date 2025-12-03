@@ -55,6 +55,12 @@ Example for Windows MSI (run on Windows host):
 
 For ARM64 MSI you would pass `--runtime-image C:\path\to\runtime-arm64` (and run jpackage on a Windows host or produce a Windows-compatible runtime image accordingly).
 
+### Recommended JVM & JavaFX builds
+
+- Use a HotSpot JDK (we recommend Eclipse Temurin) for `jlink` and `jpackage` — HotSpot builds are the most commonly tested and are known to work well with JavaFX. Some OpenJ9 builds have shown native compatibility issues with JavaFX rendering or native libraries.
+- Download JavaFX SDK/jmods that exactly match the `javafx.version` in `pom.xml` (for example `21.0.2`). Use the platform-specific `jmods` or platform jars for the target OS/arch.
+- When creating runtime images, use the JDK that matches the target architecture (x64 vs arm64) and include `java.desktop` and `java.management` modules if your app uses AWT/Swing interop or management APIs.
+
 ## CI recommendations
 
 
@@ -68,6 +74,24 @@ For ARM64 MSI you would pass `--runtime-image C:\path\to\runtime-arm64` (and run
 - `jpackage` may produce symlinks inside app-image outputs. The `scripts/` helpers attempt to copy files while dereferencing symlinks (use `rsync -aL` or `cp -rL`).
 
 - If an MSI fails to install on a target arch, verify the runtime image architecture matches the target and that the app's native libraries (JavaFX) were built for that arch.
+
+- **AWT / Accessibility startup error**: On some Windows systems the bundled launcher may attempt to load the Java Accessibility Access Bridge (`com.sun.java.accessibility.AccessBridge`) which is not always present in minimal runtime images. When the AWT Toolkit attempts to load configured assistive technologies and the AccessBridge class is missing, startup can fail with an `AWTError: Assistive Technology not found: com.sun.java.accessibility.AccessBridge`.
+
+  - Quick workaround (recommended for most builds): instruct the JVM to skip assistive-technology lookups by adding the JVM option:
+
+    ```text
+    -Djavax.accessibility.assistive_technologies=
+    ```
+
+    When using `jpackage` this should be included as a `--java-options` argument so generated launchers include the property. Example (snippet from this project's `pom.xml`):
+
+    ```text
+    --java-options -Djavax.accessibility.assistive_technologies=
+    ```
+
+  - Alternative: if you require full Access Bridge support, bundle the AccessBridge classes and native bits in the runtime image and enable them explicitly. This increases runtime size and complexity and is only needed for systems that rely on the Access Bridge.
+
+  - Note: This project's `README.md` and `pom.xml` are updated to include this `--java-options` by default for the Windows `jpackage` steps.
 
 ## References
 

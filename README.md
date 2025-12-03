@@ -47,6 +47,41 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 - **[jlink / jpackage Guide](docs/JPACKAGE.md)** - How to create runtime images, cross-arch examples (Docker), and use `jpackage` for native installers.
   
+### **Native Packaging (Windows)**
+
+- **Symptom:** Packaged launcher could exit early during GUI startup due to the runtime attempting to load a missing assistive-technology provider (AccessBridge). This manifests as an AWTError about "Assistive Technology not found: com.sun.java.accessibility.AccessBridge" during toolkit initialization.
+
+- **Fix applied:** The Windows `jpackage` launcher is now created with an explicit JVM option that disables assistive-technology lookups on startup:
+
+```
+--java-options -Djavax.accessibility.assistive_technologies=
+```
+
+- **Where it's configured:** In the project `pom.xml` under the `native` profile's `jpackage-app-image` execution. The produced launcher (`target/jpackage/GraphDigitizer/app/GraphDigitizer.cfg`) will include the `java-options=-Djavax.accessibility.assistive_technologies=` entry so the packaged app does not attempt to load `com.sun.java.accessibility.AccessBridge` at runtime.
+
+- **How to build (PowerShell):** quote properties in PowerShell so Maven parses them correctly, and use the `preserve.appimage` property to keep the `app-image` folder for inspection:
+
+```powershell
+mvn -DskipTests verify -Pnative "-Dpreserve.appimage=true"
+```
+
+- **How to test quickly (PowerShell):** run the bundled runtime to see verbose JavaFX output (example):
+
+```powershell
+# Run the bundled java with the packaged classpath
+& .\target\jpackage\GraphDigitizer\runtime\bin\java.exe \
+  -Djavax.accessibility.assistive_technologies= \
+  -Dprism.verbose=true -Dprism.order=d3d \
+  -cp ".\target\jpackage\GraphDigitizer\app\graph-digitizer.jar; .\target\jpackage\GraphDigitizer\app\lib\*" \
+  com.digitizer.ui.GraphDigitizerApp
+```
+
+- **Alternative:** If full assistive-technology support is required, bundle the appropriate Access Bridge classes in the runtime and enable them explicitly. For most users, disabling the lookup is lighter and avoids the ClassNotFoundException.
+
+- **Notes:**
+  - The `preserve.appimage` Maven property is used during the build to avoid an automated cleanup of `target/jpackage/GraphDigitizer` so you can inspect the `app` and `runtime` folders. In PowerShell, quote the `-Dpreserve.appimage=true` argument as shown above.
+  - The change is safe for end users — it prevents an unnecessary classloading attempt when the AccessBridge is not present and does not affect normal GUI behavior.
+  
 ### Packaging Scripts
 
 
@@ -59,35 +94,53 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 - **[Latest API (Javadoc)](https://mrhunsaker.github.io/Graph_Digitizer_Java_Implementation/)** – Generated from the current main branch
 
+- **Local Javadoc:** To regenerate the API docs locally run:
+
+```powershell
+mvn javadoc:javadoc
+```
+
+The generated docs are written to `target/site/apidocs`.
+
 - **Versioned Archives:** Each release will publish Javadocs under a subdirectory (e.g. `/1.1/`, `/1.2/`). Navigate directly to a version path to view older APIs.
 
 ## Quick Start
 
+### Java & JavaFX Requirements
+
+This project uses Java 21 and JavaFX 21 (see `<properties>` in `pom.xml`). Packaging and runtime behavior depend on two things matching correctly:
+
+- Java runtime (JDK/JRE) that is compatible with JavaFX (HotSpot builds are recommended). We recommend using Eclipse Temurin (HotSpot) builds for packaging and runtime (`Java 21` LTS builds are tested). Avoid using OpenJ9 builds for the runtime image used by `jlink`/`jpackage` since some OpenJ9 builds have exhibited native compatibility issues with JavaFX in past tests.
+
+- Matching JavaFX platform artifacts (jmods or platform jars) for the same JavaFX release (example: `javafx-21.0.2`). When creating runtime images with `jlink` you should use JavaFX `jmods` that match your JavaFX dependency version; for `jpackage` windows app-images we copy the platform jars into the app `lib/` directory so the launcher can find native JavaFX libraries at runtime.
+
+Where to get them:
+
+- Java (Temurin): https://adoptium.net/ — download the matching Java 21 (x64/arm64) HotSpot builds. Use the `jmods` or full JDK for `jlink`.
+- JavaFX SDK / jmods: https://openjfx.io/ or Gluon (https://gluonhq.com/products/javafx/) — download the JavaFX SDK / jmods that match the JavaFX version in `pom.xml`.
+
+Packaging tips:
+
+- Use a Temurin HotSpot JDK when running `jlink` and `jpackage` to produce the runtime image; specify the `--runtime-image` jlink output when invoking `jpackage`.
+- Ensure the JavaFX classifier/platform (e.g., `win`, `linux`, `mac`) matches the target OS when copying platform jars into `target/jpackage-input/lib`.
+- If you run into native crashes or rendering issues, try rebuilding the runtime with another HotSpot build (Temurin) and ensure JavaFX versions match exactly.
+
+See the `docs/JPACKAGE.md` for detailed packaging examples and cross-arch instructions.
+
 ### Prerequisites
 
-
-- Java 21 or later
 jpackage --type dmg --name GraphDigitizer --main-jar graph_digitizer_1.0.jar \
-
 Note: This project uses JavaFX 21 and therefore either the user's JDK should
-contain JavaFX modules (e.g., a Liberica Full JDK) or the build will need
 to download platform-specific JavaFX artifacts (handled by Maven profiles in
-the `pom.xml`).
-
-### Installation
 
 
 1. Clone or download the repository
-
 2. Navigate to the project directory
-
 3. Build the project:
 
 ````bash
 mvn clean package
-
 ```
-
 ### Running the Application
 
 Using Maven:

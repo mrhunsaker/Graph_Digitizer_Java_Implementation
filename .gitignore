@@ -9,6 +9,7 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 dependency-reduced-pom.xml
+GraphDigitizer/
 
 # IDE
 .idea/
@@ -50,3 +51,8 @@ bin/
 *.zip
 *.tar.gz
 *.rar
+*.exe
+*.msi
+*.dmp
+*.bak
+core.20251202.120453.9872.0001.dmp

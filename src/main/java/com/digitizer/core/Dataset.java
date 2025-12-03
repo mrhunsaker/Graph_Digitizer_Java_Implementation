@@ -28,7 +28,7 @@ import javafx.scene.paint.Color;
  * <p>
  * Each dataset contains a user-visible name and a CSS hex color string.
  * The color is cached as a {@link javafx.scene.paint.Color} for efficient
- * rendering on the {@link com.digitizer.ui.CanvasPanel}.  While datasets
+ * rendering on the {@link com.digitizer.ui.CanvasPanel}. While datasets
  * may be modified at runtime, callers should generally avoid changing
  * internal lists directly unless intentionally editing the dataset state.
  */
@@ -45,22 +45,14 @@ public class Dataset {
     /**
      * Constructs a new Dataset with the given name and hex color.
      *
-     * @param name      the dataset name (user-visible label)
-     * @param hexColor  the color as a hex string (e.g., "#0072B2")
+     * @param name     the dataset name (user-visible label)
+     * @param hexColor the color as a hex string (e.g., "#0072B2")
      */
     public Dataset(String name, String hexColor) {
         this.name = Objects.requireNonNull(name, "Dataset name cannot be null");
         this.hexColor = Objects.requireNonNull(hexColor, "Hex color cannot be null");
         this.color = ColorUtils.hexToColor(hexColor);
         this.points = new ArrayList<>();
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
     }
 
     /**
@@ -73,43 +65,106 @@ public class Dataset {
         this.hexColor = other.hexColor;
         this.color = other.color;
         this.points = new ArrayList<>(other.points);
+        this.visible = other.visible;
+        this.useSecondaryYAxis = other.useSecondaryYAxis;
     }
 
-    // Getters and Setters
+    /**
+     * Returns whether the dataset is visible on the canvas.
+     *
+     * @return true if visible
+     */
+    public boolean isVisible() {
+        return visible;
+    }
 
+    /**
+     * Sets the dataset visibility.
+     *
+     * @param visible true to show the dataset
+     */
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    /**
+     * Gets the dataset name (label shown in the UI).
+     *
+     * @return the dataset name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the dataset name.
+     *
+     * @param name the new dataset name (must not be null)
+     */
     public void setName(String name) {
         this.name = Objects.requireNonNull(name, "Dataset name cannot be null");
     }
 
+    /**
+     * Gets the dataset color expressed as a hex string (e.g. "#0072B2").
+     *
+     * @return the hex color string
+     */
     public String getHexColor() {
         return hexColor;
     }
 
+    /**
+     * Sets the dataset hex color and updates the cached {@link Color}.
+     *
+     * @param hexColor the hex color string (must not be null)
+     */
     public void setHexColor(String hexColor) {
         this.hexColor = Objects.requireNonNull(hexColor, "Hex color cannot be null");
         this.color = ColorUtils.hexToColor(hexColor);
     }
 
+    /**
+     * Gets the cached {@link javafx.scene.paint.Color} used for rendering.
+     *
+     * @return the JavaFX Color for this dataset
+     */
     public Color getColor() {
         return color;
     }
 
+    /**
+     * Returns whether this dataset should be plotted against the secondary Y axis.
+     *
+     * @return true if using the secondary Y axis
+     */
     public boolean isUseSecondaryYAxis() {
         return useSecondaryYAxis;
     }
 
+    /**
+     * Sets whether this dataset should use the secondary Y axis.
+     *
+     * @param useSecondaryYAxis true to map this dataset to the secondary Y axis
+     */
     public void setUseSecondaryYAxis(boolean useSecondaryYAxis) {
         this.useSecondaryYAxis = useSecondaryYAxis;
     }
 
+    /**
+     * Returns the mutable list of points belonging to this dataset.
+     *
+     * @return list of {@link Point} objects (never null)
+     */
     public List<Point> getPoints() {
         return points;
     }
 
+    /**
+     * Replaces the internal points list. Caller must provide a non-null list.
+     *
+     * @param points the new list of points (must not be null)
+     */
     public void setPoints(List<Point> points) {
         this.points = Objects.requireNonNull(points, "Points list cannot be null");
     }
@@ -117,7 +172,7 @@ public class Dataset {
     /**
      * Adds a point to this dataset.
      *
-     * @param point the point to add
+     * @param point the point to add (must not be null)
      */
     public void addPoint(Point point) {
         this.points.add(Objects.requireNonNull(point, "Point cannot be null"));
@@ -171,11 +226,13 @@ public class Dataset {
         if (!(o instanceof Dataset dataset)) return false;
         return name.equals(dataset.name) &&
                hexColor.equals(dataset.hexColor) &&
-               points.equals(dataset.points);
+               points.equals(dataset.points) &&
+               visible == dataset.visible &&
+               useSecondaryYAxis == dataset.useSecondaryYAxis;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, hexColor, points);
+        return Objects.hash(name, hexColor, points, visible, useSecondaryYAxis);
     }
 }
