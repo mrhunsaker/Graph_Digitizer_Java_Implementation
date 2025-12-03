@@ -24,6 +24,16 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Data model for JSON serialization of datasets.
  * Represents a single dataset with its metadata and points.
+ * <p>
+ * Fields include:
+ * <ul>
+ *   <li>{@code name} - dataset name</li>
+ *   <li>{@code color} - hex color string</li>
+ *   <li>{@code points} - list of [x,y] coordinate pairs</li>
+ *   <li>{@code visible} - whether the dataset should be visible</li>
+ *   <li>{@code use_secondary_y} - boolean flag indicating this dataset is
+ *       plotted against the secondary (right-hand) Y axis</li>
+ * </ul>
  */
 public class DatasetJson {
     @SerializedName("name")

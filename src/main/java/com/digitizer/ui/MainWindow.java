@@ -16,11 +16,6 @@
 
 package com.digitizer.ui;
 
-import com.digitizer.core.CalibrationState;
-import com.digitizer.core.Dataset;
-import com.digitizer.core.FileUtils;
-import com.digitizer.io.CsvExporter;
-import com.digitizer.io.JsonExporter;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -29,6 +24,16 @@ import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.digitizer.core.CalibrationState;
+import com.digitizer.core.Dataset;
+import com.digitizer.core.FileUtils;
+import com.digitizer.io.CsvExporter;
+import com.digitizer.io.JsonExporter;
+
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -53,8 +58,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Main window for the Graph Digitizer application.
@@ -1215,6 +1218,18 @@ public class MainWindow {
             String message = "Please enter a title before saving";
             statusBar.setStatus(message);
             AccessibilityHelper.announceAction(message);
+            try {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.initOwner(primaryStage);
+                alert.setTitle("Missing Title");
+                alert.setHeaderText("A project title is required");
+                alert.setContentText("Please enter a title before saving the project.");
+                alert.showAndWait();
+                // After the dialog is dismissed, move focus to the Title field so the user can type immediately
+                try {
+                    if (controlPanel != null) controlPanel.focusTitleField();
+                } catch (Exception ignore) {}
+            } catch (Exception ignore) {}
             return;
         }
         String safe = FileUtils.sanitizeFilename(title.trim());
@@ -1235,6 +1250,7 @@ public class MainWindow {
                     title.trim(),
                     controlPanel.getXLabel(),
                     controlPanel.getYLabel(),
+                    controlPanel.getY2Label(),
                     calibration,
                     datasets
                 );
@@ -1265,6 +1281,17 @@ public class MainWindow {
             String message = "Please enter a title before saving";
             statusBar.setStatus(message);
             AccessibilityHelper.announceAction(message);
+            try {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.initOwner(primaryStage);
+                alert.setTitle("Missing Title");
+                alert.setHeaderText("A project title is required");
+                alert.setContentText("Please enter a title before saving the project.");
+                alert.showAndWait();
+                try {
+                    if (controlPanel != null) controlPanel.focusTitleField();
+                } catch (Exception ignore) {}
+            } catch (Exception ignore) {}
             return;
         }
         String safe = FileUtils.sanitizeFilename(title.trim());
@@ -1317,6 +1344,7 @@ public class MainWindow {
                     controlPanel.setTitle(pj.title);
                     controlPanel.setXLabel(pj.xlabel);
                     controlPanel.setYLabel(pj.ylabel);
+                    controlPanel.setY2Label(pj.y2label);
                     controlPanel.refreshDatasetInfoDisplay();
                 }
                 if (canvasPanel != null) canvasPanel.redraw();

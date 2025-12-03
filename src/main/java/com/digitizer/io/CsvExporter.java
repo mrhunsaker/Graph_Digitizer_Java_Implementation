@@ -39,6 +39,14 @@ import com.digitizer.core.Point;
  * corresponding Y value for a given dataset. The exporter collates values
  * from multiple series and leaves empty cells when a dataset lacks a value
  * for a particular X.
+ * <p>
+ * Export behavior notes:
+ * <ul>
+ *   <li>Datasets that contain no points are omitted from the CSV header
+ *   and data columns so spreadsheets do not receive empty/unused columns.</li>
+ *   <li>Values are matched by X using a small tolerance; missing cells are
+ *   left blank.</li>
+ * </ul>
  */
 public class CsvExporter {
 
@@ -51,16 +59,28 @@ public class CsvExporter {
     /**
      * Exports datasets to a CSV file in wide format.
      * The first column contains x values, followed by one column per dataset containing y values.
+     * Datasets with no points are omitted from the CSV to avoid empty columns.
      * Missing values are left blank.
      *
      * @param filePath the path where the CSV file will be written
-     * @param datasets the datasets to export
+     * @param datasets the datasets to export (the exporter filters out empty series)
      * @throws IOException if writing to the file fails
      */
     public static void exportToCsv(String filePath, List<Dataset> datasets) throws IOException {
-        // Collect all unique x values across all datasets
+        // Filter out datasets that have no points (unused)
+        List<Dataset> filteredDatasets = new ArrayList<>();
+        List<Integer> originalIndexes = new ArrayList<>();
+        for (int i = 0; i < datasets.size(); i++) {
+            Dataset ds = datasets.get(i);
+            if (ds.getPoints() != null && !ds.getPoints().isEmpty()) {
+                filteredDatasets.add(ds);
+                originalIndexes.add(i);
+            }
+        }
+
+        // Collect all unique x values across filtered datasets
         Set<Double> xValues = new TreeSet<>();
-        for (Dataset dataset : datasets) {
+        for (Dataset dataset : filteredDatasets) {
             for (Point point : dataset.getPoints()) {
                 xValues.add(point.x());
             }
@@ -70,8 +90,8 @@ public class CsvExporter {
 
         // Create a map of x -> (dataset_index -> y_value)
         Map<Double, Map<Integer, Double>> dataMap = new HashMap<>();
-        for (int dsIdx = 0; dsIdx < datasets.size(); dsIdx++) {
-            Dataset dataset = datasets.get(dsIdx);
+        for (int dsIdx = 0; dsIdx < filteredDatasets.size(); dsIdx++) {
+            Dataset dataset = filteredDatasets.get(dsIdx);
             for (Point point : dataset.getPoints()) {
                 // Find or create the map for this x value with tolerance
                 Double key = findMatchingX(sortedXValues, point.x());
@@ -85,7 +105,7 @@ public class CsvExporter {
 
             // Write header
             printer.print("x");
-            for (Dataset dataset : datasets) {
+            for (Dataset dataset : filteredDatasets) {
                 printer.print(sanitizeHeaderName(dataset.getName()));
             }
             printer.println();
@@ -95,7 +115,7 @@ public class CsvExporter {
                 printer.print(String.format("%.10g", x));
                 Map<Integer, Double> yValues = dataMap.get(x);
 
-                for (int dsIdx = 0; dsIdx < datasets.size(); dsIdx++) {
+                for (int dsIdx = 0; dsIdx < filteredDatasets.size(); dsIdx++) {
                     if (yValues != null && yValues.containsKey(dsIdx)) {
                         printer.print(String.format("%.10g", yValues.get(dsIdx)));
                     } else {

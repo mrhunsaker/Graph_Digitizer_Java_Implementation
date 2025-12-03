@@ -33,9 +33,17 @@ import com.google.gson.JsonSyntaxException;
  * Handles JSON import and export of graph digitizer projects.
  * <p>
  * The JSON format contains project metadata (title and axis labels),
- * calibration settings (numeric ranges and log flags) and the complete list
- * of datasets and their points. The export path is compatible with the
- * {@link com.digitizer.io.ProjectJson} model.
+ * calibration settings (numeric ranges and log flags) and the list of
+ * datasets and their points. Export behavior notes:
+ * <ul>
+ *   <li>When provided, the secondary (right-hand) Y-axis title is written
+ *   to the top-level {@code y2label} property in the {@link com.digitizer.io.ProjectJson}.</li>
+ *   <li>Each dataset object contains a boolean {@code use_secondary_y} flag
+ *   set to {@code true} when that dataset is assigned to the secondary Y axis.</li>
+ *   <li>Datasets that contain no points are omitted from the exported JSON
+ *   to avoid clutter and empty series entries.</li>
+ * </ul>
+ * The export path is compatible with the {@link com.digitizer.io.ProjectJson} model.
  */
 public class JsonExporter {
 
@@ -47,22 +55,30 @@ public class JsonExporter {
 
     /**
      * Exports project data to a JSON file.
+     * <p>
+     * The exporter will skip any datasets that have no points (they will not
+     * appear in the resulting JSON). Each dataset entry includes its name,
+     * color, point list, visibility and the {@code use_secondary_y} flag.
      *
      * @param filePath        the path where the JSON file will be written
      * @param title           the project title
      * @param xlabel          the x-axis label
      * @param ylabel          the y-axis label
+     * @param y2label         the secondary (right-hand) Y-axis label (may be null/empty)
      * @param calibration     the calibration state (may be null; defaults applied if null)
      * @param datasets        the list of datasets to export
      * @throws IOException if writing to the file fails
      */
-    public static void exportToJson(String filePath, String title, String xlabel, String ylabel,
+    public static void exportToJson(String filePath, String title, String xlabel, String ylabel, String y2label,
                                    CalibrationState calibration, List<Dataset> datasets)
             throws IOException {
         
         // Build ProjectJson from input data
         List<DatasetJson> datasetJsonList = new ArrayList<>();
         for (Dataset dataset : datasets) {
+            // Skip datasets that have no points (unused)
+            if (dataset.getPoints() == null || dataset.getPoints().isEmpty()) continue;
+
             List<List<Double>> pointsList = new ArrayList<>();
             for (Point point : dataset.getPoints()) {
                 List<Double> pointPair = new ArrayList<>();
@@ -70,14 +86,14 @@ public class JsonExporter {
                 pointPair.add(point.y());
                 pointsList.add(pointPair);
             }
-            
-                DatasetJson dsJson = new DatasetJson(
-                    dataset.getName(),
-                    dataset.getHexColor(),
-                    pointsList,
-                    // include visibility flag
-                    (dataset instanceof com.digitizer.core.Dataset) ? ((com.digitizer.core.Dataset)dataset).isVisible() : true
-                );
+
+            DatasetJson dsJson = new DatasetJson(
+                dataset.getName(),
+                dataset.getHexColor(),
+                pointsList,
+                (dataset instanceof com.digitizer.core.Dataset) ? ((com.digitizer.core.Dataset)dataset).isVisible() : true,
+                dataset.isUseSecondaryYAxis()
+            );
             datasetJsonList.add(dsJson);
         }
 
@@ -99,18 +115,20 @@ public class JsonExporter {
         }
 
         ProjectJson project = new ProjectJson(
-                title,
-                xlabel,
-                ylabel,
-                xMin,
-                xMax,
-                yMin,
-                yMax,
-                xLog,
-                yLog,
-                datasetJsonList
+            title,
+            xlabel,
+            ylabel,
+            xMin,
+            xMax,
+            yMin,
+            yMax,
+            xLog,
+            yLog,
+            datasetJsonList
         );
-        // Populate secondary Y axis if present
+        // Set secondary Y axis label if provided
+        project.y2label = y2label == null ? "" : y2label;
+        // Populate secondary Y axis numeric range if present
         if (y2Min != null && y2Max != null) {
             project.y2Min = y2Min;
             project.y2Max = y2Max;
@@ -139,6 +157,11 @@ public class JsonExporter {
 
     /**
      * Converts imported JSON data back into application objects.
+     * <p>
+     * The converter restores dataset visibility and the {@code use_secondary_y}
+     * flag (mapping it to each {@link com.digitizer.core.Dataset}'s
+     * {@code setUseSecondaryYAxis} property) so imported projects preserve
+     * secondary-axis assignments.
      *
      * @param project the ProjectJson object imported from file
      * @param calibration the CalibrationState to populate
