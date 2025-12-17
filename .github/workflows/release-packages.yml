@@ -105,3 +105,64 @@ jobs:
           files: |
             target/generated_builds/**/*.dmg
           fail_on_unmatched_files: false
+
+  windows-msi:
+    name: Windows MSI
+    runs-on: windows-latest
+    env:
+      APP_NAME: GraphDigitizer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Derive version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Build jlink runtime image
+        shell: pwsh
+        run: |
+          $modules = "java.base,java.desktop,java.logging,java.xml,java.naming,java.sql,jdk.unsupported"
+          & "$env:JAVA_HOME\bin\jlink.exe" --add-modules $modules --output target\jlink-runtime --strip-debug --no-header-files --no-man-pages --compress=2
+
+      - name: Generate MSI with jpackage
+        shell: pwsh
+        run: |
+          $jar = Get-ChildItem -Path target -Filter "*.jar" | Where-Object { $_.Name -notmatch 'sources|original|tests' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $jar) { Write-Error "No JAR found"; exit 1 }
+          
+          New-Item -ItemType Directory -Path target\generated_builds -Force | Out-Null
+          
+          & "$env:JAVA_HOME\bin\jpackage.exe" `
+            --type msi `
+            --input $jar.DirectoryName `
+            --main-jar $jar.Name `
+            --main-class com.digitizer.ui.GraphDigitizerApp `
+            --name GraphDigitizer `
+            --app-version "$env:VERSION" `
+            --dest target\generated_builds `
+            --runtime-image target\jlink-runtime `
+            --win-dir-chooser `
+            --win-menu `
+            --win-shortcut `
+            --win-menu-group GraphDigitizer
+
+      - name: Upload Windows artifacts to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/generated_builds/**/*.msi
+          fail_on_unmatched_files: false
