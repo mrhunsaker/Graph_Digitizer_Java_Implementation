@@ -8,14 +8,14 @@
 .PARAMETER Password
   Password for the PFX (use ENV var or secret manager).
 .PARAMETER TimestampUrl
-  RFC3161 timestamp server URL (default: http://timestamp.digicert.com).
+  RFC3161 timestamp server URL (default: https://timestamp.digicert.com).
 .EXAMPLE
   pwsh scripts/sign-windows.ps1 -CertPath certs/code-signing.pfx -Password $env:PFX_PW
 #>
 param(
   [Parameter(Mandatory=$true)][string]$CertPath,
   [Parameter(Mandatory=$true)][securestring]$Password,
-  [string]$TimestampUrl = 'http://timestamp.digicert.com'
+  [string]$TimestampUrl = 'https://timestamp.digicert.com'
 )
 $exeFiles = Get-ChildItem -Path 'graph-digitizer-java/target' -Filter '*.exe' -ErrorAction SilentlyContinue
 if (-not $exeFiles) { Write-Warning 'No .exe files found to sign.'; exit 0 }

@@ -24,8 +24,15 @@ jobs:
                   key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
                   restore-keys: ${{ runner.os }}-m2-
 
-            - name: Build Maven site (includes apidocs)
-              run: mvn -B -DskipTests site
+            - name: Build Maven site and apidocs
+              run: |
+                  mvn -B -ntp -DskipTests site
+                  # Ensure apidocs are present; if not, generate explicitly
+                  if [ ! -d target/site/apidocs ]; then
+                    echo "apidocs not found after 'mvn site'; generating explicitly via javadoc:javadoc" >&2
+                    mvn -B -ntp -DskipTests javadoc:javadoc
+                  fi
+                  test -d target/site/apidocs || { echo "ERROR: target/site/apidocs still missing after generation" >&2; exit 1; }
 
             - name: Determine project version
               id: get-version
@@ -36,7 +43,12 @@ jobs:
                   mkdir -p build/site-workdir
                   cp -R target/site/apidocs build/site-workdir/apidocs-temp
                   chmod +x scripts/generate-javadoc-index.sh
-                  scripts/generate-javadoc-index.sh --root build/site-workdir --version "${{ steps.get-version.outputs.version }}" --latest --project-url https://github.com/YOUR_USERNAME/YOUR_REPO_NAME --package com.digitizer.ui
+                  scripts/generate-javadoc-index.sh \
+                    --root build/site-workdir \
+                    --version "${{ steps.get-version.outputs.version }}" \
+                    --latest \
+                    --project-url "https://github.com/${{ github.repository }}" \
+                    --package com.digitizer.ui
 
             - name: Deploy versioned Javadocs to GitHub Pages
               uses: peaceiris/actions-gh-pages@v3
