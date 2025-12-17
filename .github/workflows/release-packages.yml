@@ -52,12 +52,15 @@ jobs:
         run: chmod +x scripts/*.sh
 
       - name: Generate DEB
+        continue-on-error: true
         run: ./scripts/generate-deb.sh "$VERSION"
 
       - name: Generate RPM
+        continue-on-error: true
         run: ./scripts/generate-rpm.sh "$VERSION"
 
       - name: Generate AppImage
+        continue-on-error: true
         run: ./scripts/generate-appimage.sh "$VERSION"
 
       - name: Upload Linux artifacts to Release
