@@ -6,7 +6,7 @@ The Graph Digitizer application now features a **Themes menu** in the menu bar t
 
 ## Features
 
-### 📋 Available Themes
+###  Available Themes
 
 The application includes **14 professionally-designed themes** organized into two categories:
 
@@ -179,12 +179,12 @@ Each menu item is created dynamically from the available themes list, ensuring t
 
 ## Benefits
 
-✅ **Professional Appearance** - Switch between 14 professionally-designed themes  
-✅ **Personal Preference** - Users can choose their preferred color scheme  
-✅ **Accessibility** - All themes are fully keyboard-navigable and screen-reader friendly  
-✅ **Real-time Updates** - Theme changes apply immediately without restarting  
-✅ **Lightweight** - Uses FlatLaf which is optimized and minimal overhead  
-✅ **Cross-platform** - Looks great on Windows, macOS, and Linux  
+ **Professional Appearance** - Switch between 14 professionally-designed themes  
+ **Personal Preference** - Users can choose their preferred color scheme  
+ **Accessibility** - All themes are fully keyboard-navigable and screen-reader friendly  
+ **Real-time Updates** - Theme changes apply immediately without restarting  
+ **Lightweight** - Uses FlatLaf which is optimized and minimal overhead  
+ **Cross-platform** - Looks great on Windows, macOS, and Linux  
 
 ## Notes
 
@@ -265,7 +265,7 @@ The Themes menu provides a professional, accessible way for users to customize t
 
 ---
 
-**Build Status**: ✅ SUCCESS  
-**Dependencies**: ✅ FlatLaf 3.4.1 + FlatLaf IntelliJ Themes 3.4.1  
+**Build Status**:  SUCCESS  
+**Dependencies**:  FlatLaf 3.4.1 + FlatLaf IntelliJ Themes 3.4.1  
 **Themes Count**: 14  
-**Accessibility**: ✅ Full Support
+**Accessibility**:  Full Support

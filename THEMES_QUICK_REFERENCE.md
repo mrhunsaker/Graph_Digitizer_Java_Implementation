@@ -56,7 +56,7 @@ Your Graph Digitizer now has a **Themes menu** in the menu bar with 14 professio
 
 ✨ **Personalization** - Choose the look you prefer  
 👀 **Comfort** - Dark themes reduce eye strain in low light  
-📊 **Accessibility** - Some themes work better with certain color vision needs  
+ **Accessibility** - Some themes work better with certain color vision needs  
 🎨 **Professional** - 14 carefully-designed professional themes  
 
 ## Features
@@ -74,7 +74,7 @@ Your Graph Digitizer now has a **Themes menu** in the menu bar with 14 professio
 
 ## Tips
 
-💡 **Pro Tip**: Try **Dracula** for dark environments or **Solarized Light** for reading lots of text
+ **Pro Tip**: Try **Dracula** for dark environments or **Solarized Light** for reading lots of text
 
 ## Implementation
 

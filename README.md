@@ -3,7 +3,7 @@
 
 A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extracting numeric data points from raster images of graphs.
 
-## 📚 Documentation
+##  Documentation
 
 **1.1** (Java Edition)
 
@@ -25,7 +25,7 @@ A modern Java 21 / JavaFX implementation of the Graph Digitizer tool for extract
 
 - **[Implementation Guide](ACCESSIBILITY_IMPLEMENTATION.md)** - Technical implementation details
 
-- **[Implementation Complete](ACCESSIBILITY_IMPLEMENTATION_COMPLETE.md)** - ✅ All audit fixes applied
+- **[Implementation Complete](ACCESSIBILITY_IMPLEMENTATION_COMPLETE.md)** -  All audit fixes applied
 
 - **[Low Vision Audit](ACCESSIBILITY_AUDIT_LOW_VISION.md)** - Comprehensive accessibility audit results
 

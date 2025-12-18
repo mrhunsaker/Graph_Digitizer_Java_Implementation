@@ -1,11 +1,11 @@
-﻿# 🔧 Theme Manager Fix - JavaFX-Compatible Implementation
+﻿#  Theme Manager Fix - JavaFX-Compatible Implementation
 
 ## Problem Identified
 
 The original ThemeManager was using **Swing's UIManager and FlatLaf Look and Feel**, which don't affect JavaFX controls. This is why:
 
 
-- ✅ The message "Theme changed to: [Theme]" appeared in the status bar
+-  The message "Theme changed to: [Theme]" appeared in the status bar
 
 - ❌ But the actual UI colors didn't change
 
@@ -128,11 +128,11 @@ ThemeManager.setScene(scene);
 
    - Select any theme (e.g., "Dark")
 
-   - ✅ You should now see instant color change!
+   -  You should now see instant color change!
 
    - Try other themes: "Dracula", "Solarized Dark", "Arc", etc.
 
-   - ✅ All themes should apply instantly
+   -  All themes should apply instantly
 
 ---
 
@@ -168,17 +168,17 @@ These properties cascade through all JavaFX controls:
 
 JavaFX CSS is the **native way** to style JavaFX applications. Unlike Swing Look and Feel:
 
-✅ Directly styles JavaFX nodes  
-✅ Applies instantly without restart  
-✅ Works with all JavaFX controls  
-✅ No Swing dependencies needed  
-✅ Consistent across all platforms  
+ Directly styles JavaFX nodes  
+ Applies instantly without restart  
+ Works with all JavaFX controls  
+ No Swing dependencies needed  
+ Consistent across all platforms  
 
 ---
 
 ## Build Status
 
-✅ **BUILD SUCCESS**
+ **BUILD SUCCESS**
 
 
 - Compilation: Clean (0 errors)
@@ -191,7 +191,7 @@ JavaFX CSS is the **native way** to style JavaFX applications. Unlike Swing Look
 
 ## Backward Compatibility
 
-✅ **No Breaking Changes**
+ **No Breaking Changes**
 
 
 - All existing features still work
@@ -259,7 +259,7 @@ The fix replaces Swing-based themes with JavaFX CSS styling, which instantly upd
 
 ---
 
-**Status**: ✅ FIXED & VERIFIED  
-**Build**: ✅ SUCCESS  
-**Testing**: ✅ READY  
-**Production**: ✅ READY
+**Status**:  FIXED & VERIFIED  
+**Build**:  SUCCESS  
+**Testing**:  READY  
+**Production**:  READY

@@ -6,11 +6,11 @@
 **Language**: Java 21  
 **Build Tool**: Maven  
 **GUI Framework**: JavaFX 21  
-**Status**: ✅ Production Ready  
+**Status**:  Production Ready  
 
 ---
 
-## 📁 What's Included
+##  What's Included
 
 ### Core Application Files (26 Java Classes)
 
@@ -93,9 +93,9 @@
 
 ---
 
-## 🎯 Key Features Implemented
+##  Key Features Implemented
 
-### ✅ Core Features
+###  Core Features
 
 
 - [x] Load PNG/JPEG images
@@ -120,7 +120,7 @@
 
 - [x] Unit tests
 
-### 📋 Planned Features
+###  Planned Features
 
 
 - [ ] Snap X values and guide lines
@@ -137,7 +137,7 @@
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -171,7 +171,7 @@ mvn test
 
 ---
 
-## 📦 Project Structure
+##  Project Structure
 
 ```
 
@@ -230,7 +230,7 @@ graph-digitizer-java/
 
 ---
 
-## 🏗️ Architecture Overview
+##  Architecture Overview
 
 ### Layer Diagram
 
@@ -262,7 +262,7 @@ graph-digitizer-java/
 
 ---
 
-## 📚 Documentation Map
+##  Documentation Map
 
  | Document | Audience | Purpose |
  | ---------- | ---------- | --------- |
@@ -275,7 +275,7 @@ graph-digitizer-java/
 
 ---
 
-## 🔧 Build Configuration
+##  Build Configuration
 
 ### Maven Plugins
 
@@ -309,7 +309,7 @@ graph-digitizer-java/
 
 ---
 
-## 💡 Design Highlights
+##  Design Highlights
 
 ### Separation of Concerns
 
@@ -351,7 +351,7 @@ graph-digitizer-java/
 
 ---
 
-## 📋 File Formats
+##  File Formats
 
 ### JSON Format
 
@@ -384,7 +384,7 @@ x,Dataset_1,Dataset_2
 
 ---
 
-## 🎯 Common Tasks
+##  Common Tasks
 
 ### Build for Development
 
@@ -434,7 +434,7 @@ mvn dependency:tree
 
 ---
 
-## 📊 Statistics
+##  Statistics
 
  | Metric | Count |
  | -------- | ------- |
@@ -448,55 +448,55 @@ mvn dependency:tree
 
 ---
 
-## 🔐 Quality Assurance
+##  Quality Assurance
 
 ### Code Organization
 
 
-- ✅ Clear package structure
+-  Clear package structure
 
-- ✅ Separation of concerns
+-  Separation of concerns
 
-- ✅ No circular dependencies
+-  No circular dependencies
 
-- ✅ Comprehensive Javadoc
+-  Comprehensive Javadoc
 
 ### Testing
 
 
-- ✅ Unit tests for core utilities
+-  Unit tests for core utilities
 
-- ✅ Test structure mirrors source
+-  Test structure mirrors source
 
-- ✅ Tests are GUI-independent
+-  Tests are GUI-independent
 
-- ✅ Easy to add more tests
+-  Easy to add more tests
 
 ### Documentation
 
 
-- ✅ README with quick start
+-  README with quick start
 
-- ✅ Developer guide with examples
+-  Developer guide with examples
 
-- ✅ API documented with Javadoc
+-  API documented with Javadoc
 
-- ✅ Usage examples in code
+-  Usage examples in code
 
 ### Build
 
 
-- ✅ Maven POM properly configured
+-  Maven POM properly configured
 
-- ✅ All dependencies managed
+-  All dependencies managed
 
-- ✅ Plugins configured correctly
+-  Plugins configured correctly
 
-- ✅ Multiple output formats (JAR, FAT JAR)
+-  Multiple output formats (JAR, FAT JAR)
 
 ---
 
-## 🚦 Getting Started
+##  Getting Started
 
 ### For Users
 
@@ -533,7 +533,7 @@ mvn dependency:tree
 
 ---
 
-## 📝 License
+##  License
 
 Apache License 2.0  
 Copyright © 2025 Michael Ryan Hunsaker  
@@ -542,7 +542,7 @@ See `LICENSE` file for full text.
 
 ---
 
-## 🤝 Support
+##  Support
 
 
 - **Questions**: Check `README.md` and `DEVELOPER.md`
@@ -556,16 +556,16 @@ See `LICENSE` file for full text.
 **This project is complete, documented, and ready for**:
 
 
-- ✅ Compilation with Maven
+-  Compilation with Maven
 
-- ✅ Execution on Java 21+
+-  Execution on Java 21+
 
-- ✅ Extension with new features
+-  Extension with new features
 
-- ✅ Distribution as JAR
+-  Distribution as JAR
 
-- ✅ Integration into other projects
+-  Integration into other projects
 
-- ✅ Long-term maintenance
+-  Long-term maintenance
 
 **Total Delivery Time**: Fully functional Java 21 / Maven application with professional documentation.

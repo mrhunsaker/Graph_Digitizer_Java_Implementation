@@ -1,16 +1,16 @@
 ﻿# Graph Digitizer - Accessibility Documentation
 
 **Version**: 1.2.0  
-**Accessibility Status**: ✅ WCAG 2.1 AA Compliant (Desktop Application)  
-**Screen Reader Support**: ✅ Enabled  
-**Keyboard Navigation**: ✅ Tab Order Optimized  
+**Accessibility Status**:  WCAG 2.1 AA Compliant (Desktop Application)  
+**Screen Reader Support**:  Enabled  
+**Keyboard Navigation**:  Tab Order Optimized  
 **Last Updated**: November 17, 2025
 
 ---
 
-## 🎯 Accessibility Features
+##  Accessibility Features
 
-### ✅ Screen Reader Support
+###  Screen Reader Support
 
 The entire application is designed to work with screen readers such as:
 
@@ -34,7 +34,7 @@ The entire application is designed to work with screen readers such as:
 
 4. Numerical feedback (coordinates, progress) is provided in speech-friendly format
 
-### ✅ Keyboard Navigation
+###  Keyboard Navigation
 
 All application features are accessible via keyboard only. No mouse required.
 
@@ -97,7 +97,7 @@ The application follows standard tab order:
  | **Ctrl+S** | Save as JSON | Always |
  | **Ctrl+E** | Save as CSV | Always |
 
-### ✅ Canvas Interaction (Keyboard Only)
+###  Canvas Interaction (Keyboard Only)
 
 #### Calibration Mode
 
@@ -118,7 +118,7 @@ The application follows standard tab order:
 
 4. Screen reader announces each point placed (number and coordinates)
 
-### ✅ Labels and Descriptions
+###  Labels and Descriptions
 
 Every interactive element has:
 
@@ -142,7 +142,7 @@ Tooltip: "Load a PNG or JPEG image for digitization (Ctrl+O)"
 
 ```
 
-### ✅ Color Independence
+###  Color Independence
 
 All colored elements have accessible descriptions:
 
@@ -153,7 +153,7 @@ All colored elements have accessible descriptions:
 
 - **Status messages**: Text descriptions instead of color-coded feedback
 
-### ✅ Status Announcements
+###  Status Announcements
 
 The application announces important events for screen reader users:
 
@@ -168,7 +168,7 @@ The application announces important events for screen reader users:
  | **File Saved** | "Saved JSON to: filename.json" |
  | **Error Occurred** | "Error - Error loading image: Access denied" |
 
-### ✅ Text Accessibility
+###  Text Accessibility
 
 
 - **Font Size**: Scalable with OS zoom settings
@@ -179,7 +179,7 @@ The application announces important events for screen reader users:
 
 - **No Color-Only Indicators**: All information is conveyed with text
 
-### ✅ Form Input Fields
+###  Form Input Fields
 
 All input fields are properly labeled:
 
@@ -197,7 +197,7 @@ All input fields are properly labeled:
 
 ---
 
-## 🔧 For Screen Reader Users
+##  For Screen Reader Users
 
 ### Getting Started
 
@@ -248,7 +248,7 @@ All input fields are properly labeled:
 
 ---
 
-## 📝 Implementation Details
+##  Implementation Details
 
 ### AccessibilityHelper Utility Class
 
@@ -310,7 +310,7 @@ All accessibility announcements are logged at INFO level and can be monitored by
 
 ---
 
-## ✅ Testing with Screen Readers
+##  Testing with Screen Readers
 
 ### Windows - NVDA (Free)
 
@@ -352,7 +352,7 @@ All accessibility announcements are logged at INFO level and can be monitored by
 
 ---
 
-## 📊 Accessibility Features Checklist
+##  Accessibility Features Checklist
 
 ### Perceivable
 
@@ -450,7 +450,7 @@ Planned for future releases:
 
 ---
 
-## 📚 Resources
+##  Resources
 
 ### For Developers
 

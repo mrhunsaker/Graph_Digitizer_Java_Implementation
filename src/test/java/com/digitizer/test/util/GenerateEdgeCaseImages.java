@@ -66,7 +66,7 @@ public class GenerateEdgeCaseImages {
             TestImageGenerator.generateSinglePixelImage(singlePixelImage);
             System.out.println("✓ Generated: " + singlePixelImage.getName());
 
-            System.out.println("\n✅ Successfully generated 7 edge-case test images!");
+            System.out.println("\n Successfully generated 7 edge-case test images!");
 
         } catch (Exception e) {
             throw new RuntimeException("Error generating edge-case images", e);

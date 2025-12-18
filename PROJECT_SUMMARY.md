@@ -83,7 +83,7 @@ graph-digitizer-java/
 
 ## Core Features
 
-### ✅ Implemented
+###  Implemented
 
 
 1. **Image Loading** - PNG and JPEG support
@@ -110,7 +110,7 @@ graph-digitizer-java/
 
 10. **Unit Tests** - Core utilities and algorithms tested
 
-### 📋 Planned for Future
+###  Planned for Future
 
 
 1. **Snap X Values** - Batch coordinate snapping to grid
@@ -280,35 +280,35 @@ All configured in `pom.xml` with correct versions.
 
 ### Why Java 21?
 
-✅ Modern language features (records, pattern matching)  
-✅ Stable LTS foundation  
-✅ Excellent IDE support  
-✅ Large ecosystem  
-✅ Strong backward compatibility  
+ Modern language features (records, pattern matching)  
+ Stable LTS foundation  
+ Excellent IDE support  
+ Large ecosystem  
+ Strong backward compatibility  
 
 ### Why JavaFX?
 
-✅ Cross-platform (Windows/macOS/Linux)  
-✅ Part of OpenJDK  
-✅ Native look-and-feel  
-✅ CSS styling support  
-✅ Excellent 2D rendering  
+ Cross-platform (Windows/macOS/Linux)  
+ Part of OpenJDK  
+ Native look-and-feel  
+ CSS styling support  
+ Excellent 2D rendering  
 
 ### Why Maven?
 
-✅ Industry-standard for Java  
-✅ Easy dependency management  
-✅ Large plugin ecosystem  
-✅ Works with CI/CD  
-✅ Simple configuration  
+ Industry-standard for Java  
+ Easy dependency management  
+ Large plugin ecosystem  
+ Works with CI/CD  
+ Simple configuration  
 
 ### Why Separate Core from UI?
 
-✅ Testable without GUI frameworks  
-✅ Reusable as library  
-✅ Parallel development  
-✅ Easier to maintain  
-✅ Future CLI/headless usage  
+ Testable without GUI frameworks  
+ Reusable as library  
+ Parallel development  
+ Easier to maintain  
+ Future CLI/headless usage  
 
 ---
 
@@ -498,12 +498,12 @@ core/
 
  | Aspect | Status |
  | -------- | -------- |
- | Windows | ✅ Tested and working |
- | macOS | ✅ Should work (Java 21 + JavaFX) |
- | Linux | ✅ Should work (Java 21 + JavaFX) |
- | Java 21+ | ✅ Required |
- | Image Formats | ✅ PNG, JPEG |
- | Export Formats | ✅ JSON, CSV |
+ | Windows |  Tested and working |
+ | macOS |  Should work (Java 21 + JavaFX) |
+ | Linux |  Should work (Java 21 + JavaFX) |
+ | Java 21+ |  Required |
+ | Image Formats |  PNG, JPEG |
+ | Export Formats |  JSON, CSV |
 
 ---
 

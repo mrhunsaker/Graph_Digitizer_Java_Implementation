@@ -4,7 +4,7 @@
 
 ---
 
-## 🎯 Fastest Way to Get Started
+##  Fastest Way to Get Started
 
 ### Windows (NVDA)
 
@@ -280,7 +280,7 @@ Press **Tab** to move through controls in this order:
 
 ---
 
-## 💡 Pro Tips
+##  Pro Tips
 
 
 1. **Use Keyboard Shortcuts**: Ctrl+O, Ctrl+S, etc. are faster than tabbing
@@ -320,7 +320,7 @@ Press **Tab** to move through controls in this order:
 
 ---
 
-## ✅ What Works Perfectly
+##  What Works Perfectly
 
 
 - [x] Navigate with Tab key
@@ -347,7 +347,7 @@ Press **Tab** to move through controls in this order:
 
 ---
 
-## 🎯 Most Important Keys
+##  Most Important Keys
 
 **Just remember these three**:
 
@@ -364,4 +364,4 @@ Everything else uses these three keys!
 
 **Version**: 1.2.0  
 **Last Updated**: November 17, 2025  
-**Status**: Fully Accessible ✅
+**Status**: Fully Accessible 

@@ -49,7 +49,7 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 
 - **Tests**: Verifies image loading, dimensions, error status
 
-- **Status**: ✅ 13/16 tests passing
+- **Status**:  13/16 tests passing
 
 **Known Issues**:
 
@@ -73,7 +73,7 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 
   - Calibration reset behavior
 
-- **Status**: ✅ 4/4 tests passing
+- **Status**:  4/4 tests passing
 
 #### 3. ExportIntegrationTest (`src/test/java/com/digitizer/integration/ExportIntegrationTest.java`)
 
@@ -106,7 +106,7 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 
 - **Tests**: 9 tests covering extreme dimensions and aspect ratios
 
-- **Status**: ✅ 9/9 tests passing (with temp file cleanup warning)
+- **Status**:  9/9 tests passing (with temp file cleanup warning)
 
 **Known Issues**:
 
@@ -145,7 +145,7 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 
 - **Usage**: `mvn test -Dtest=GenerateEdgeCaseImages`
 
-- **Status**: ✅ Executed successfully, 7 images generated
+- **Status**:  Executed successfully, 7 images generated
 
 ## Test Results Summary
 
@@ -154,7 +154,7 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 
 - **Total Tests**: 36
 
-- **Passing**: 30 ✅
+- **Passing**: 30 
 
 - **Failing**: 3 ❌ (image format limitations)
 
@@ -163,15 +163,15 @@ Comprehensive test suite created for the Graph Digitizer application, including 
 ### Passing Test Categories
 
 
-1. ✅ **Calibration workflows** - All 4 tests passing
+1.  **Calibration workflows** - All 4 tests passing
 
-2. ✅ **Edge-case image loading** - All 9 tests passing (with cleanup warning)
+2.  **Edge-case image loading** - All 9 tests passing (with cleanup warning)
 
-3. ✅ **PNG/JPEG/BMP image loading** - 13/16 format tests passing
+3.  **PNG/JPEG/BMP image loading** - 13/16 format tests passing
 
-4. ✅ **CSV export** - Basic export tests passing
+4.  **CSV export** - Basic export tests passing
 
-5. ✅ **Edge-case image generation** - All 7 images generated successfully
+5.  **Edge-case image generation** - All 7 images generated successfully
 
 ### Known Limitations
 
