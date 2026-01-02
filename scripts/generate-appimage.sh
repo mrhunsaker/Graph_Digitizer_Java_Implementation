@@ -11,7 +11,7 @@ echo "=== Building AppImage for $APP_NAME version $VERSION ==="
 # Clean and create build directory
 rm -rf "$BUILD_DIR"
 mkdir -p "$APPDIR/usr/bin"
-mkdir -p "$APPDIR/usr/lib"
+mkdir -p "$APPDIR/usr/lib/jvm"
 mkdir -p "$APPDIR/usr/share/applications"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 
@@ -24,102 +24,35 @@ fi
 
 echo "Found JAR: $JAR_FILE"
 
-# Create minimal JRE with jlink (NO JavaFX modules - they will be bundled separately)
-echo "Creating custom JRE with jlink (without JavaFX)..."
-JLINK_MODULES="java.base,java.desktop,java.logging,java.xml,java.naming,java.sql,java.prefs,java.scripting,jdk.unsupported,jdk.crypto.ec"
-
-echo "Modules: $JLINK_MODULES"
-
-jlink \
-    --add-modules "$JLINK_MODULES" \
-    --output "$APPDIR/usr/lib/jre" \
-    --strip-debug \
-    --no-header-files \
-    --no-man-pages \
-    --compress=2
-
-echo "Custom JRE created successfully"
-
-# Copy shaded JAR to AppDir
+# Copy shaded JAR to AppDir (this JAR already contains ALL dependencies including JavaFX)
 cp "$JAR_FILE" "$APPDIR/usr/lib/$APP_NAME.jar"
-echo "Copied JAR to AppDir"
+echo "Copied shaded JAR to AppDir"
 
-# Copy JavaFX JARs from Maven dependencies
-echo "Copying JavaFX dependencies..."
-mkdir -p "$APPDIR/usr/lib/javafx"
-
-# Get the local Maven repository path
-MAVEN_REPO="${HOME}/.m2/repository"
-
-# JavaFX version from your pom.xml
-JAVAFX_VERSION="21.0.2"
-
-# Detect platform
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    JAVAFX_PLATFORM="linux"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    JAVAFX_PLATFORM="mac"
-else
-    JAVAFX_PLATFORM="linux"  # default to linux
-fi
-
-echo "Detected platform: $JAVAFX_PLATFORM"
-
-# Copy JavaFX JARs - try both platform-specific and non-platform JARs
-for module in base graphics controls fxml swing media web; do
-    # Try platform-specific JAR first
-    JAVAFX_JAR="$MAVEN_REPO/org/openjfx/javafx-$module/$JAVAFX_VERSION/javafx-$module-$JAVAFX_VERSION-$JAVAFX_PLATFORM.jar"
-    if [ -f "$JAVAFX_JAR" ]; then
-        echo "  ✓ Copying javafx-$module (platform-specific)"
-        cp "$JAVAFX_JAR" "$APPDIR/usr/lib/javafx/"
-    else
-        # Try non-platform JAR as fallback
-        JAVAFX_JAR_GENERIC="$MAVEN_REPO/org/openjfx/javafx-$module/$JAVAFX_VERSION/javafx-$module-$JAVAFX_VERSION.jar"
-        if [ -f "$JAVAFX_JAR_GENERIC" ]; then
-            echo "  ✓ Copying javafx-$module (generic)"
-            cp "$JAVAFX_JAR_GENERIC" "$APPDIR/usr/lib/javafx/"
-        else
-            echo "  ✗ WARNING: javafx-$module not found"
-        fi
-    fi
-done
-
-# Verify JavaFX JARs were copied
-JAVAFX_COUNT=$(find "$APPDIR/usr/lib/javafx" -name "*.jar" 2>/dev/null | wc -l)
-echo "Copied $JAVAFX_COUNT JavaFX JAR files"
-
-if [ "$JAVAFX_COUNT" -lt 3 ]; then
-    echo "ERROR: Not enough JavaFX JARs found. Expected at least 3 (base, graphics, controls)"
-    echo "Checking Maven repository at: $MAVEN_REPO"
-    echo "Looking for JavaFX version: $JAVAFX_VERSION"
-    echo ""
-    echo "Contents of javafx directory:"
-    ls -la "$APPDIR/usr/lib/javafx/" 2>/dev/null || echo "  Directory is empty or does not exist"
-    echo ""
-    echo "Attempting to find JavaFX in Maven repo:"
-    find "$MAVEN_REPO/org/openjfx" -name "*$JAVAFX_VERSION*.jar" 2>/dev/null | head -10 || echo "  No JavaFX JARs found"
+# Copy the current Java runtime (simpler than jlink, includes everything)
+echo "Copying Java runtime from JAVA_HOME..."
+if [ -z "${JAVA_HOME:-}" ]; then
+    echo "ERROR: JAVA_HOME is not set"
     exit 1
 fi
 
-# Create launcher script with JavaFX module path
+echo "Using Java from: $JAVA_HOME"
+cp -r "$JAVA_HOME" "$APPDIR/usr/lib/jvm/java"
+
+# Remove unnecessary files to reduce size
+echo "Removing unnecessary files from JRE..."
+rm -rf "$APPDIR/usr/lib/jvm/java/demo" 2>/dev/null || true
+rm -rf "$APPDIR/usr/lib/jvm/java/sample" 2>/dev/null || true
+rm -rf "$APPDIR/usr/lib/jvm/java/man" 2>/dev/null || true
+rm -rf "$APPDIR/usr/lib/jvm/java/src.zip" 2>/dev/null || true
+rm -rf "$APPDIR/usr/lib/jvm/java/lib/src.zip" 2>/dev/null || true
+
+echo "Java runtime copied successfully"
+
+# Create launcher script
 cat > "$APPDIR/usr/bin/$APP_NAME" << 'LAUNCHER_EOF'
 #!/bin/bash
 APPDIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
-JAVAFX_LIBS="$APPDIR/usr/lib/javafx"
-
-# Build module path from JavaFX JARs
-MODULE_PATH=""
-for jar in "$JAVAFX_LIBS"/*.jar; do
-    if [ -z "$MODULE_PATH" ]; then
-        MODULE_PATH="$jar"
-    else
-        MODULE_PATH="$MODULE_PATH:$jar"
-    fi
-done
-
-exec "$APPDIR/usr/lib/jre/bin/java" \
-    --module-path "$MODULE_PATH" \
-    --add-modules javafx.controls,javafx.fxml,javafx.swing \
+exec "$APPDIR/usr/lib/jvm/java/bin/java" \
     -jar "$APPDIR/usr/lib/GraphDigitizer.jar" \
     "$@"
 LAUNCHER_EOF
@@ -149,6 +82,11 @@ if [ -n "$ICON_SOURCE" ]; then
     cp "$ICON_SOURCE" "$APPDIR/$APP_NAME.png"
 else
     echo "WARNING: No icon found, AppImage will have no icon"
+    # Create a simple placeholder icon
+    echo "Creating placeholder icon..."
+    cat > "$APPDIR/$APP_NAME.png" << 'ICON_EOF'
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==
+ICON_EOF
 fi
 
 # Create desktop file
@@ -175,7 +113,7 @@ cat > "$APPDIR/usr/share/metainfo/$APP_NAME.appdata.xml" << METADATA_EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>com.digitizer.GraphDigitizer</id>
-  <name>Graph Digitizer</name>
+  <n>Graph Digitizer</n>
   <summary>Extract numeric data from graph images</summary>
   <description>
     <p>
@@ -194,6 +132,13 @@ cat > "$APPDIR/usr/share/metainfo/$APP_NAME.appdata.xml" << METADATA_EOF
 METADATA_EOF
 
 echo "Created desktop integration files"
+
+# Show AppDir structure
+echo ""
+echo "AppDir structure:"
+du -sh "$APPDIR"
+du -sh "$APPDIR/usr/lib/jvm/java" 2>/dev/null || echo "  JVM: size unknown"
+du -sh "$APPDIR/usr/lib/$APP_NAME.jar"
 
 # Build the AppImage
 echo ""
@@ -216,7 +161,7 @@ chmod +x "$OUTPUT_FILE"
 # Optional: Create zsync file for delta updates
 if command -v zsyncmake &> /dev/null; then
     echo "Creating zsync file for updates..."
-    zsyncmake "$OUTPUT_FILE" -o "$OUTPUT_FILE.zsync"
+    zsyncmake "$OUTPUT_FILE" -o "$OUTPUT_FILE.zsync" 2>/dev/null || echo "  (zsync creation skipped)"
 fi
 
 echo ""
