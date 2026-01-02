@@ -1,69 +1,138 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./generate-appimage.sh [app-version]
-# Uses jpackage to create an app-image, then (if available) runs appimagetool to produce an AppImage
+VERSION="${1:-1.0.0}"
+APP_NAME="GraphDigitizer"
+BUILD_DIR="target/generated_builds/appimage"
+APPDIR="$BUILD_DIR/$APP_NAME.AppDir"
 
-APP_NAME=${APP_NAME:-graph-digitizer}
-APP_VERSION=${1:-1.0.0}
+echo "=== Building AppImage for $APP_NAME version $VERSION ==="
 
-if [ -z "${JAVA_HOME:-}" ]; then
-  echo "ERROR: JAVA_HOME is not set. Please set JAVA_HOME to your JDK (with jpackage) and re-run." >&2
-  exit 1
+# Clean and create build directory
+rm -rf "$BUILD_DIR"
+mkdir -p "$APPDIR/usr/bin"
+mkdir -p "$APPDIR/usr/lib"
+mkdir -p "$APPDIR/usr/share/applications"
+mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+
+# Find the shaded JAR
+JAR_FILE=$(find target -name "graph-digitizer.jar" -type f | head -n 1)
+if [ -z "$JAR_FILE" ]; then
+    echo "ERROR: Could not find graph-digitizer.jar"
+    exit 1
 fi
 
-JPACKAGE="$JAVA_HOME/bin/jpackage"
-if [ ! -x "$JPACKAGE" ]; then
-  echo "ERROR: jpackage not found or not executable at $JPACKAGE" >&2
-  exit 1
-fi
+echo "Found JAR: $JAR_FILE"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TARGET_DIR="$SCRIPT_DIR/../target"
-DEST_DIR="$SCRIPT_DIR/../target/generated_builds"
+# Create jlink runtime (minimal JRE with JavaFX modules)
+echo "Creating custom JRE with jlink..."
+JLINK_MODULES="java.base,java.desktop,java.logging,java.xml,java.naming,java.sql,jdk.unsupported"
+JLINK_MODULES="$JLINK_MODULES,javafx.controls,javafx.fxml,javafx.swing,javafx.graphics,javafx.base"
 
-JAR=$(ls -t "$TARGET_DIR"/*.jar 2>/dev/null | grep -vE 'sources|original|tests' || true)
-JAR="$(echo "$JAR" | head -n1)"
+jlink \
+    --add-modules "$JLINK_MODULES" \
+    --output "$APPDIR/usr/lib/jre" \
+    --strip-debug \
+    --no-header-files \
+    --no-man-pages \
+    --compress=2
 
-if [ -z "$JAR" ]; then
-  echo "ERROR: No JAR found in $TARGET_DIR. Build first (mvn package)." >&2
-  exit 1
-fi
+# Copy JAR to AppDir
+cp "$JAR_FILE" "$APPDIR/usr/lib/$APP_NAME.jar"
 
-mkdir -p "$DEST_DIR"
-APPIMAGE_BUILD_DIR="$DEST_DIR/appimage"
-mkdir -p "$APPIMAGE_BUILD_DIR"
+# Create launcher script
+cat > "$APPDIR/usr/bin/$APP_NAME" << 'EOF'
+#!/bin/bash
+APPDIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+exec "$APPDIR/usr/lib/jre/bin/java" \
+    -jar "$APPDIR/usr/lib/GraphDigitizer.jar" \
+    "$@"
+EOF
 
-echo "Generating app-image via jpackage..."
-"$JPACKAGE" --type app-image --input "$(dirname "$JAR")" --main-jar "$(basename "$JAR")" --name "$APP_NAME" --app-version "$APP_VERSION" --dest "$APPIMAGE_BUILD_DIR" "${@:2}"
+chmod +x "$APPDIR/usr/bin/$APP_NAME"
 
-# jpackage will create a directory for the app-image. Locate it.
-APP_IMAGE_DIR=$(find "$APPIMAGE_BUILD_DIR" -maxdepth 1 -type d -name "*${APP_NAME}*" -print -quit || true)
-if [ -z "$APP_IMAGE_DIR" ]; then
-  # fallback: try to detect directory containing AppRun or .desktop
-  APP_IMAGE_DIR=$(find "$APPIMAGE_BUILD_DIR" -maxdepth 2 -type d -exec sh -c 'ls "{}"/AppRun 2>/dev/null >/dev/null && echo {}' \; -print -quit || true)
-fi
+# Create AppRun symlink
+ln -sf "usr/bin/$APP_NAME" "$APPDIR/AppRun"
 
-if [ -z "$APP_IMAGE_DIR" ]; then
-  echo "ERROR: Unable to locate the generated AppImage directory under $APPIMAGE_BUILD_DIR" >&2
-  exit 1
-fi
+# Copy icon (try multiple locations)
+ICON_SOURCE=""
+for icon_path in \
+    "build/icons/scatter-plot-256.png" \
+    "icons/scatter-plot-256.png" \
+    "../icons/scatter-plot-256.png"; do
+    if [ -f "$icon_path" ]; then
+        ICON_SOURCE="$icon_path"
+        break
+    fi
+done
 
-echo "App image folder: $APP_IMAGE_DIR"
-
-if command -v appimagetool >/dev/null 2>&1; then
-  echo "appimagetool found; building .AppImage..."
-  (cd "$APPIMAGE_BUILD_DIR" && appimagetool "$(basename "$APP_IMAGE_DIR")" )
-  echo "AppImage created in $APPIMAGE_BUILD_DIR"
+if [ -n "$ICON_SOURCE" ]; then
+    echo "Using icon: $ICON_SOURCE"
+    cp "$ICON_SOURCE" "$APPDIR/usr/share/icons/hicolor/256x256/apps/$APP_NAME.png"
+    cp "$ICON_SOURCE" "$APPDIR/$APP_NAME.png"
 else
-  # ensure app-image is copied into the generated builds area, dereferencing symlinks
-  OUT_APPIMAGE_DIR="$APPIMAGE_BUILD_DIR/$(basename "$APP_IMAGE_DIR")"
-  rm -rf "$OUT_APPIMAGE_DIR"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -aL "$APP_IMAGE_DIR"/ "$OUT_APPIMAGE_DIR"/
-  else
-    cp -rL "$APP_IMAGE_DIR"/* "$OUT_APPIMAGE_DIR"/ || true
-  fi
-  echo "appimagetool not found. Generated app-image is available at: $OUT_APPIMAGE_DIR" >&2
-  echo "Install appimagetool (https://github.com/AppImage/AppImageKit) to create a single-file .AppImage, or distribute the app-image folder." >&2
+    echo "WARNING: No icon found, AppImage will have no icon"
 fi
+
+# Create desktop file
+cat > "$APPDIR/usr/share/applications/$APP_NAME.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Name=Graph Digitizer
+GenericName=Graph Data Extraction Tool
+Comment=Extract numeric data points from graph images
+Exec=$APP_NAME %F
+Icon=$APP_NAME
+Categories=Science;Education;DataVisualization;
+Terminal=false
+StartupWMClass=GraphDigitizer
+MimeType=image/png;image/jpeg;image/tiff;image/bmp;
+EOF
+
+# Symlink desktop file to root
+ln -sf "usr/share/applications/$APP_NAME.desktop" "$APPDIR/$APP_NAME.desktop"
+
+# Create AppStream metadata (optional but recommended)
+mkdir -p "$APPDIR/usr/share/metainfo"
+cat > "$APPDIR/usr/share/metainfo/$APP_NAME.appdata.xml" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.digitizer.GraphDigitizer</id>
+  <name>Graph Digitizer</name>
+  <summary>Extract numeric data from graph images</summary>
+  <description>
+    <p>
+      An interactive GUI tool for extracting numeric data points from raster images of graphs.
+      Supports various image formats and exports to CSV/JSON.
+    </p>
+  </description>
+  <launchable type="desktop-id">$APP_NAME.desktop</launchable>
+  <provides>
+    <binary>$APP_NAME</binary>
+  </provides>
+  <releases>
+    <release version="$VERSION" date="$(date +%Y-%m-%d)"/>
+  </releases>
+</component>
+EOF
+
+# Build the AppImage
+echo "Building AppImage..."
+OUTPUT_FILE="$BUILD_DIR/$APP_NAME-$VERSION-x86_64.AppImage"
+
+appimagetool "$APPDIR" "$OUTPUT_FILE"
+
+echo "=== AppImage created successfully ==="
+echo "Location: $OUTPUT_FILE"
+echo "Size: $(du -h "$OUTPUT_FILE" | cut -f1)"
+
+# Make it executable
+chmod +x "$OUTPUT_FILE"
+
+# Optional: Create zsync file for delta updates
+if command -v zsyncmake &> /dev/null; then
+    echo "Creating zsync file for updates..."
+    zsyncmake "$OUTPUT_FILE" -o "$OUTPUT_FILE.zsync"
+fi
+
+echo "Done!"

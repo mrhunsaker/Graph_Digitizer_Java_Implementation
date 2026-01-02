@@ -141,6 +141,7 @@ to download platform-specific JavaFX artifacts (handled by Maven profiles in
 ````bash
 mvn clean package
 ```
+
 ### Running the Application
 
 Using Maven:
